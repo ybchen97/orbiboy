@@ -21,3 +21,11 @@ void fetch() {
     
     // increment program counter i.e. PC += 2
 }
+
+void decode() {
+    // switch cases for the different opcodes
+    // 35 different opcodes
+    
+    // decode the opcode from fetch()
+    // execute the function represented by the opcode
+}
