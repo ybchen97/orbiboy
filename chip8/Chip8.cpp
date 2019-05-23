@@ -1,6 +1,8 @@
 #include <iostream>
 #include <stack>
 #include <string>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
@@ -242,6 +244,21 @@ Start of Opcode Functions
 ================================================================================
 */
 
+//Calls RCA 1802 program at address NNN. Not necessary for most ROMs.
+void Chip8::opcode0NNN(WORD opcode) {
+
+}
+
+//Clears the screen
+void Chip8::opcode00E0() {
+
+}
+
+//Returns from a subroutine
+void Chip8::opcode00EE() {
+    
+}
+
 //Jumps to address NNN
 void Chip8::opcode1NNN(WORD opcode) {
     programCounter = opcode & 0x0FFF;
@@ -297,4 +314,201 @@ void Chip8::opcode7XNN(WORD opcode) {
     int X = (opcode & 0x0F00) >> 8;
 
     dataRegisters[X] += NN;
+}
+
+//Sets VX to the value of VY
+void Chip8::opcode8XY0(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
+    int Y = (opcode & 0x00F0) >> 4;
+
+    dataRegisters[X] = dataRegisters[Y];
+}
+
+//Sets VX to VX OR VY
+void Chip8::opcode8XY1(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
+    int Y = (opcode & 0x00F0) >> 4;
+
+    dataRegisters[X] = dataRegisters[X] | dataRegisters[Y];
+}
+
+//Sets VX to VX AND VY
+void Chip8::opcode8XY2(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
+    int Y = (opcode & 0x00F0) >> 4;
+
+    dataRegisters[X] = dataRegisters[X] & dataRegisters[Y];
+}
+
+//Sets VX to VX XOR VY
+void Chip8::opcode8XY3(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
+    int Y = (opcode & 0x00F0) >> 4;
+
+    dataRegisters[X] = dataRegisters[X] ^ dataRegisters[Y];
+}
+
+//Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't
+void Chip8::opcode8XY4(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
+    int Y = (opcode & 0x00F0) >> 4;
+
+    dataRegisters[X] = dataRegisters[X] + dataRegisters[Y];
+
+    if (dataRegisters[X] > 255) {
+        dataRegisters[0xF] = 1;
+    } else {
+        dataRegisters[0xF] = 0;
+    }
+}
+
+//VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
+void Chip8::opcode8XY5(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
+    int Y = (opcode & 0x00F0) >> 4;
+
+    if (dataRegisters[X] > dataRegisters[Y]) {
+        dataRegisters[0xF] = 1;
+    } else {
+        dataRegisters[0xF] = 0;
+    }
+
+    dataRegisters[X] = dataRegisters[X] - dataRegisters[Y];
+}
+
+//Stores the least significant bit of VX in VF and then shifts VX to the right by 1
+void Chip8::opcode8XY6(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
+
+    dataRegisters[0xF] = dataRegisters[X] & 0x1;
+    dataRegisters[X] >>= 1;
+}
+
+//Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't
+void Chip8::opcode8XY7(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
+    int Y = (opcode & 0x00F0) >> 4;
+
+    if (dataRegisters[Y] > dataRegisters[X) {
+        dataRegisters[0xF] = 1;
+    } else {
+        dataRegisters[0xF] = 0;
+    }
+
+    dataRegisters[X] = dataRegisters[Y] - dataRegisters[X];
+}
+
+//Stores the most significant bit of VX in VF and then shifts VX to the left by 1
+void Chip8::opcode8XYE(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
+
+    dataRegisters[0xF] = dataRegisters[X] >> 7;
+    dataRegisters[X] <<= 1;
+}
+
+//Skips the next instruction if VX doesn't equal VY
+void Chip8::opcode9XY0(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
+    int Y = (opcode & 0x00F0) >> 4;
+
+    if (dataRegisters[X] != dataRegisters[Y]) {
+        programCounter += 2;
+    }
+}
+
+//Sets I to the address NNN
+void Chip8::opcodeANNN(WORD opcode) {
+    I = opcode & 0x0FFF;
+}
+
+//Jumps to the address NNN plus V0
+void Chip8::opcodeBNNN(WORD opcode) {
+    programCounter = (opcode & 0x0FFF) + dataRegisters[0];
+}
+
+//Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN
+void Chip8::opcodeCXNN(WORD opcode) {
+    int NN = opcode & 0x00FF;
+    int X = (opcode & 0x0F00) >> 8;
+
+    dataRegisters[X] = (rand() % 256) & NN;
+}
+
+//Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels.
+//Each row of 8 pixels is read as bit-coded starting from memory location I; 
+//I value doesn’t change after the execution of this instruction.
+//As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn,
+//and to 0 if that doesn’t happen.
+void Chip8::opcodeDXYN(WORD opcode) {
+
+}
+
+//Skips the next instruction if the key stored in VX is pressed
+void Chip8::opcodeEX9E(WORD opcode) {
+
+}
+
+//Skips the next instruction if the key stored in VX isn't pressed
+void Chip8::opcodeEXA1(WORD opcode) {
+
+}
+
+//Sets VX to the value of the delay timer
+void Chip8::opcodeFX07(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
+
+    dataRegisters[X] = delayTimer;
+}
+
+//A key press is awaited, and then stored in VX
+void Chip8::opcodeFX0A(WORD opcode) {
+    
+}
+
+//Sets the delay timer to VX
+void Chip8::opcodeFX15(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
+
+    delayTimer = dataRegisters[X];
+}
+
+//Sets the sound timer to VX
+void Chip8::opcodeFX18(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
+
+    soundTimer = dataRegisters[X];
+}
+
+//Adds VX to I
+void Chip8::opcodeFX1E(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
+
+    I += dataRegisters[X];
+}
+
+//Sets I to the location of the sprite for the character in VX. 
+//Characters 0-F (in hexadecimal) are represented by a 4x5 font.
+void Chip8::opcodeFX29(WORD opcode) {
+    
+}
+
+//Stores the binary-coded decimal representation of VX, 
+//with the most significant of three digits at the address in I, 
+//the middle digit at I plus 1, and the least significant digit at I plus 2. 
+//(In other words, take the decimal representation of VX, place the hundreds digit 
+//in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.)
+void Chip8::opcodeFX33(WORD opcode) {
+
+}
+
+//Stores V0 to VX (including VX) in memory starting at address I. 
+//The offset from I is increased by 1 for each value written, but I itself is left unmodified.
+void Chip8::opcodeFX55(WORD opcode) {
+
+}
+
+//Fills V0 to VX (including VX) with values from memory starting at address I. 
+//The offset from I is increased by 1 for each value written, but I itself is left unmodified.
+void Chip8::opcodeFX65(WORD opcode) {
+
 }
