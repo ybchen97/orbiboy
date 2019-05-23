@@ -52,4 +52,9 @@ class Chip8 {
 
         }
 
+    BYTE gameMemory[4096];
+    BYTE dataRegisters[16];
+    WORD I;
+    WORD pc;
+
 };
