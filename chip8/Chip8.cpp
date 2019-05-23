@@ -34,8 +34,7 @@ class Chip8 {
 
         // Functions
         WORD fetch(WORD);
-        int decode(WORD);
-        void execute(int);
+        void execute(WORD);
 
 };
 
@@ -84,10 +83,8 @@ WORD Chip8::fetch(WORD pc) {
 
 }
 
-int Chip8::decode(WORD opcode) {
+void Chip8::execute(WORD opcode) {
 
-}
-
-void Chip8::execute(int num) {
-
+    // Use an array of function pointers to call functions directly
+    
 }
