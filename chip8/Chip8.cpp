@@ -36,6 +36,26 @@ class Chip8 {
         WORD fetch(WORD);
         void execute(WORD);
 
+        // Opcode functions
+
+        // Opcode tables
+        typedef void (*functionPtr)(WORD);
+
+        functionPtr opcodeRootTable[18] =
+        {
+
+        };
+
+        functionPtr opcode8Table[8] =
+        {
+
+        };
+        
+        functionPtr opcodeFTable[9] =
+        {
+
+        };
+
 };
 
 void Chip8::initialize() {
@@ -59,8 +79,7 @@ void Chip8::runEmulationCycle() {
         
         // fetch, decode and execute cycle
         WORD opcode = this->fetch(this->programCounter);
-        int functionNum = this->decode(opcode);
-        this->execute(functionNum);
+        this->execute(opcode);
 
     }
 
@@ -85,6 +104,12 @@ WORD Chip8::fetch(WORD pc) {
 
 void Chip8::execute(WORD opcode) {
 
-    // Use an array of function pointers to call functions directly
-    
+    // Use an array of function pointers (fTable) to call functions directly
+    // 18 elements in top level function table (fTable)
+    // Opcodes starting with 8 has 8 distinct functions
+    // Opcodes starting with F has 9 distinct functions
+
+    // Get the first 4 bits to call the appropriate function
+    this->opcodeRootTable[(opcode & 0xF000) >> 12](opcode);
+
 }
