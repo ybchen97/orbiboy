@@ -31,13 +31,50 @@ class Chip8 {
         WORD I;
         WORD programCounter;
         stack<WORD> gameStack;
+        BYTE delayTimer;
+        BYTE soundTimer;
 
         // Functions
         WORD fetch(WORD);
         void execute(WORD);
-        void opcode1NNN(WORD opcode);
 
         // Opcode functions
+        void callOpcode8(WORD);
+        void callOpcodeF(WORD);
+        void callOpcodeFX_5(WORD);
+
+        // opcode for 0
+        void opcode1NNN(WORD);
+        void opcode2NNN(WORD);
+        void opcode3XNN(WORD);
+        void opcode4XNN(WORD);
+        void opcode5XY0(WORD);
+        void opcode6XNN(WORD);
+        void opcode7XNN(WORD);
+        void opcode8XY0(WORD);
+        void opcode8XY1(WORD);
+        void opcode8XY2(WORD);
+        void opcode8XY3(WORD);
+        void opcode8XY4(WORD);
+        void opcode8XY5(WORD);
+        void opcode8XY6(WORD);
+        void opcode8XY7(WORD);
+        void opcode8XYE(WORD);
+        void opcode9XY0(WORD);
+        void opcodeANNN(WORD);
+        void opcodeBNNN(WORD);
+        void opcodeCXNN(WORD);
+        void opcodeDXYN(WORD);
+        // opcode for E
+        void opcodeFX07(WORD);
+        void opcodeFX0A(WORD);
+        void opcodeFX15(WORD);
+        void opcodeFX18(WORD);
+        void opcodeFX1E(WORD);
+        void opcodeFX29(WORD);
+        void opcodeFX33(WORD);
+        void opcodeFX55(WORD);
+        void opcodeFX65(WORD);
 
         // Opcode tables
         typedef void (*functionPtr)(WORD);
@@ -52,12 +89,44 @@ class Chip8 {
 
         };
         
-        functionPtr opcodeFTable[9] =
-        {
+        // Null method to fill spaces in opcodeFTable
+        void opcodeNull(WORD opcode) {
+            printf("Something went wrong!");
+        }
 
+        functionPtr opcodeFTable[15] =
+        {
+            // take note the order of opcodes are off, according to last 4 bits
         };
 
 };
+
+// Chip 8 font set: to be loaded into first 80 bytes of memory
+BYTE fontSet[80] =
+{ 
+  0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+  0x20, 0x60, 0x20, 0x20, 0x70, // 1
+  0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+  0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+  0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+  0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+  0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+  0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+  0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+  0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+  0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+  0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+  0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+  0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+  0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+  0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+};
+
+/*
+================================================================================
+Start of Chip8-level Functions
+================================================================================
+*/
 
 void Chip8::initialize() {
     
@@ -66,6 +135,15 @@ void Chip8::initialize() {
     memset(dataRegisters, 0, sizeof(dataRegisters));
     I = 0;
     programCounter = 0x200;
+
+    // Loading font set into first 80 bytes of gameMemory
+    for (int i = 0; i < 80; ++i) {
+        this->gameMemory[i] = fontSet[i];
+    }
+
+    // Setting timers to 0
+    this->delayTimer = 0;
+    this->soundTimer = 0;
 
 }
 
@@ -81,6 +159,15 @@ void Chip8::runEmulationCycle() {
         // fetch, decode and execute cycle
         WORD opcode = this->fetch(this->programCounter);
         this->execute(opcode);
+
+        // decrement delay and sound timers if greater than 0
+        if (this->delayTimer > 0) {
+            --(this->delayTimer);
+        }
+
+        if (this->soundTimer > 0) {
+            --(this->soundTimer);
+        }
 
     }
 
@@ -105,18 +192,55 @@ WORD Chip8::fetch(WORD pc) {
 
 void Chip8::execute(WORD opcode) {
 
-    // Use an array of function pointers (fTable) to call functions directly
-    // 18 elements in top level function table (fTable)
-    // Opcodes starting with 8 has 8 distinct functions
-    // Opcodes starting with F has 9 distinct functions
+    // Use an array of function pointers (opcodeRootTable) to call functions directly
+    // 18 elements in top level function table (opcodeRootTable)
+    // Opcodes starting with 8 has 8 distinct functions (opcode8Table)
+    // Opcodes starting with F has 9 distinct functions (opcodeFTable)
 
     // Get the first 4 bits to call the appropriate function
     this->opcodeRootTable[(opcode & 0xF000) >> 12](opcode);
-
-    // Use an array of function pointers to call functions directly
-    
     
 }
+
+void Chip8::callOpcode8(WORD opcode) {
+
+    // Use the last 4 bits to differentiate opcodes
+    BYTE last4bits = opcode & 0x00F;
+    if (last4bits == 0xE) {
+        // run opcode 8XYE
+        this->opcode8XYE(opcode);
+    } else {
+        this->opcode8Table[last4bits](opcode);
+    }
+
+}
+
+void Chip8::callOpcodeF(WORD opcode) {
+
+    // Use the last 4 bits to differentiate opcodes
+    BYTE last4bits = opcode & 0x00F;
+    this->opcodeFTable[last4bits](opcode);
+
+}
+
+void Chip8::callOpcodeFX_5(WORD opcode) {
+
+    // Get 7-4th bits to differentiate opcodes
+    BYTE bits = (opcode & 0x00F0) >> 4;
+    switch (bits) {
+        case 0x1: this->opcodeFX15(opcode); break;
+        case 0x5: this->opcodeFX55(opcode); break;
+        case 0x6: this->opcodeFX65(opcode); break;
+        default: break;
+    }
+
+}
+
+/*
+================================================================================
+Start of Opcode Functions
+================================================================================
+*/
 
 //Jumps to address NNN
 void Chip8::opcode1NNN(WORD opcode) {
@@ -125,7 +249,7 @@ void Chip8::opcode1NNN(WORD opcode) {
 
 //Calls subroutine at NNN
 void Chip8::opcode2NNN(WORD opcode) {
-    gameStack.push_back(programCounter);
+    gameStack.push(programCounter);
     programCounter = opcode & 0x0FFF;
 }
 
