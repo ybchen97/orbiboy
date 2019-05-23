@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <string>
 
 using namespace std;
 
@@ -17,9 +18,38 @@ class Chip8 {
     - Program counter;
     */
 
-    BYTE gameMemory[4096];
-    BYTE dataRegisters[16];
-    WORD I;
-    WORD pc
+    public:
+        // Functions
+        void initialize() {
+            // Initialize 
+        }
 
-}
+        void loadGame(string) {
+
+        }
+
+        void runEmulationCycle() {
+
+        }
+
+    private:
+        // Attributes
+        BYTE gameMemory[4096];
+        BYTE dataRegisters[16];
+        WORD I;
+        WORD programCounter;
+
+        // Functions
+        BYTE fetch(WORD) {
+
+        }
+
+        int decode(BYTE) {
+
+        }
+
+        void execute(int) {
+
+        }
+
+};
