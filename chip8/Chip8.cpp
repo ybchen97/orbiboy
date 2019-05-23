@@ -35,6 +35,7 @@ class Chip8 {
         // Functions
         WORD fetch(WORD);
         void execute(WORD);
+        void opcode1NNN(WORD opcode);
 
         // Opcode functions
 
@@ -112,4 +113,64 @@ void Chip8::execute(WORD opcode) {
     // Get the first 4 bits to call the appropriate function
     this->opcodeRootTable[(opcode & 0xF000) >> 12](opcode);
 
+    // Use an array of function pointers to call functions directly
+    
+    
+}
+
+//Jumps to address NNN
+void Chip8::opcode1NNN(WORD opcode) {
+    programCounter = opcode & 0x0FFF;
+}
+
+//Calls subroutine at NNN
+void Chip8::opcode2NNN(WORD opcode) {
+    gameStack.push_back(programCounter);
+    programCounter = opcode & 0x0FFF;
+}
+
+//Skips the next instruction if VX equals NN
+void Chip8::opcode3XNN(WORD opcode) {
+    int NN = opcode & 0x00FF;
+    int X = (opcode & 0x0F00) >> 8;
+
+    if (dataRegisters[X] == NN) {
+        programCounter += 2;
+    }
+}
+
+//Skips the next instruction if VX doesn't equal NN
+void Chip8::opcode4XNN(WORD opcode) {
+    int NN = opcode & 0x0FF;
+    int X = (opcode & 0x0F00) >> 8;
+
+    if (dataRegisters[X] != NN) {
+        programCounter += 2;
+    }
+}
+
+//Skips the next instruction if VX equals VY
+void Chip8::opcode5XY0(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
+    int Y = (opcode & 0x00F0) >> 4;
+
+    if (dataRegisters[X] == dataRegisters[Y]) {
+        programCounter += 2;
+    }
+}
+
+//Sets VX to NN
+void Chip8::opcode6XNN(WORD opcode) {
+    int NN = opcode & 0x00FF;
+    int X = (opcode & 0x0F00) >> 8;
+
+    dataRegisters[X] = NN;
+}
+
+//Adds NN to VX
+void Chip8::opcode7XNN(WORD opcode) {
+    int NN = opcode * 0x00FF;
+    int X = (opcode & 0x0F00) >> 8;
+
+    dataRegisters[X] += NN;
 }
