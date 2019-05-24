@@ -256,7 +256,8 @@ void Chip8::opcode00E0() {
 
 //Returns from a subroutine
 void Chip8::opcode00EE() {
-    
+    programCounter = gameStack.back();
+    gameStack.pop_back();
 }
 
 //Jumps to address NNN
@@ -266,7 +267,7 @@ void Chip8::opcode1NNN(WORD opcode) {
 
 //Calls subroutine at NNN
 void Chip8::opcode2NNN(WORD opcode) {
-    gameStack.push(programCounter);
+    gameStack.push_back(programCounter);
     programCounter = opcode & 0x0FFF;
 }
 
@@ -389,7 +390,7 @@ void Chip8::opcode8XY7(WORD opcode) {
     int X = (opcode & 0x0F00) >> 8;
     int Y = (opcode & 0x00F0) >> 4;
 
-    if (dataRegisters[Y] > dataRegisters[X) {
+    if (dataRegisters[Y] > dataRegisters[X]) {
         dataRegisters[0xF] = 1;
     } else {
         dataRegisters[0xF] = 0;
@@ -498,17 +499,38 @@ void Chip8::opcodeFX29(WORD opcode) {
 //(In other words, take the decimal representation of VX, place the hundreds digit 
 //in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.)
 void Chip8::opcodeFX33(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
 
+    int decimalVX = dataRegisters[X];
+    int ones = decimalVX % 10;
+    int tens = (decimalVX % 100) / 10;
+    int hundreds = decimalVX / 100;
+
+    gameMemory[I] = hundreds;
+    gameMemory[I + 1] = tens;
+    gameMemory[I + 2] = ones;
 }
 
 //Stores V0 to VX (including VX) in memory starting at address I. 
 //The offset from I is increased by 1 for each value written, but I itself is left unmodified.
 void Chip8::opcodeFX55(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
 
+    for (int i = 0; i <= X; ++i) {
+        gameMemory[I + i] = dataRegisters[i]; 
+    }
+
+    I += (X + 1);
 }
 
 //Fills V0 to VX (including VX) with values from memory starting at address I. 
 //The offset from I is increased by 1 for each value written, but I itself is left unmodified.
 void Chip8::opcodeFX65(WORD opcode) {
+    int X = (opcode & 0x0F00) >> 8;
 
+    for (int i = 0; i <= X; ++i) {
+        dataRegisters[i] = gameMemory[I + i];
+    }
+
+    I += (X + 1);
 }
