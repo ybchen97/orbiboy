@@ -88,14 +88,21 @@ class Chip8 {
         // Opcode tables
         typedef void (*functionPtr)(WORD);
 
-        functionPtr opcodeRootTable[18] =
+        functionPtr opcodeRootTable[16] =
         {
-
+            this->opcode0,    this->opcode1NNN, this->opcode2NNN,
+            this->opcode3XNN, this->opcode4XNN, this->opcode5XY0,
+            this->opcode6XNN, this->opcode7XNN, this->callOpcode8,
+            this->opcode9XY0, this->opcodeANNN, this->opcodeBNNN,
+            this->opcodeCXNN, this->opcodeDXYN, this->opcodeE, 
+            this->callOpcodeF
         };
 
         functionPtr opcode8Table[8] =
         {
-
+            this->opcode8XY0, this->opcode8XY1, this->opcode8XY2,
+            this->opcode8XY3, this->opcode8XY4, this->opcode8XY5,
+            this->opcode8XY6, this->opcode8XY7
         };
         
         // Null method to fill spaces in opcodeFTable
@@ -106,6 +113,21 @@ class Chip8 {
         functionPtr opcodeFTable[15] =
         {
             // take note the order of opcodes are off, according to last 4 bits
+            this->opcodeNull,
+            this->opcodeNull,
+            this->opcodeNull,
+            this->opcodeFX33,
+            this->opcodeNull,
+            this->callOpcodeFX_5,
+            this->opcodeNull,
+            this->opcodeFX07,
+            this->opcodeFX18,
+            this->opcodeFX29,
+            this->opcodeFX0A,
+            this->opcodeNull,
+            this->opcodeNull,
+            this->opcodeNull,
+            this->opcodeFX1E
         };
 
 };
