@@ -26,31 +26,21 @@ class Chip8 {
     */
 
     public:
+        // Attributes
+        BYTE keyState[16];
+        BYTE gameScreen[2048];
+        int drawFlag;
+
         // Functions
         void initialize();
         bool loadGame(string);
         void runEmulationCycle(); 
 
-    private:
-        // Attributes
-        BYTE gameMemory[4096];
-        BYTE dataRegisters[16];
-        WORD I;
-        WORD programCounter;
-        stack<WORD> gameStack;
-        BYTE delayTimer;
-        BYTE soundTimer;
-        BYTE gameScreen[64][32];
-        BYTE keyState[16];
-
-        // Functions
-        WORD fetch(WORD);
-        void execute(WORD);
-
         // Opcode functions
         void callOpcode8(WORD);
         void callOpcodeF(WORD);
         void callOpcodeFX_5(WORD);
+        void opcodeNull(WORD);
 
         void opcode0(WORD);
         void opcode1NNN(WORD);
@@ -85,51 +75,80 @@ class Chip8 {
         void opcodeFX55(WORD);
         void opcodeFX65(WORD);
 
-        // Opcode tables
-        typedef void (*functionPtr)(WORD);
+    private:
+        // Attributes
+        BYTE gameMemory[4096];
+        BYTE dataRegisters[16];
+        WORD I;
+        WORD programCounter;
+        stack<WORD> gameStack;
+        BYTE delayTimer;
+        BYTE soundTimer;
 
-        functionPtr opcodeRootTable[16] =
-        {
-            this->opcode0,    this->opcode1NNN, this->opcode2NNN,
-            this->opcode3XNN, this->opcode4XNN, this->opcode5XY0,
-            this->opcode6XNN, this->opcode7XNN, this->callOpcode8,
-            this->opcode9XY0, this->opcodeANNN, this->opcodeBNNN,
-            this->opcodeCXNN, this->opcodeDXYN, this->opcodeE, 
-            this->callOpcodeF
-        };
+        // Functions
+        WORD fetch(WORD);
+        void execute(WORD);
 
-        functionPtr opcode8Table[8] =
-        {
-            this->opcode8XY0, this->opcode8XY1, this->opcode8XY2,
-            this->opcode8XY3, this->opcode8XY4, this->opcode8XY5,
-            this->opcode8XY6, this->opcode8XY7
-        };
-        
-        // Null method to fill spaces in opcodeFTable
-        void opcodeNull(WORD opcode) {
-            printf("Something went wrong!");
-        }
+};
 
-        functionPtr opcodeFTable[15] =
-        {
-            // take note the order of opcodes are off, according to last 4 bits
-            this->opcodeNull,
-            this->opcodeNull,
-            this->opcodeNull,
-            this->opcodeFX33,
-            this->opcodeNull,
-            this->callOpcodeFX_5,
-            this->opcodeNull,
-            this->opcodeFX07,
-            this->opcodeFX18,
-            this->opcodeFX29,
-            this->opcodeFX0A,
-            this->opcodeNull,
-            this->opcodeNull,
-            this->opcodeNull,
-            this->opcodeFX1E
-        };
+// Opcode tables
+typedef void (Chip8::*opcodePtr)(WORD);
 
+opcodePtr opcodeRootTable[16] =
+{
+    &Chip8::opcode0,    
+    &Chip8::opcode1NNN, 
+    &Chip8::opcode2NNN,
+    &Chip8::opcode3XNN, 
+    &Chip8::opcode4XNN, 
+    &Chip8::opcode5XY0,
+    &Chip8::opcode6XNN, 
+    &Chip8::opcode7XNN, 
+    &Chip8::callOpcode8,
+    &Chip8::opcode9XY0, 
+    &Chip8::opcodeANNN, 
+    &Chip8::opcodeBNNN,
+    &Chip8::opcodeCXNN, 
+    &Chip8::opcodeDXYN, 
+    &Chip8::opcodeE, 
+    &Chip8::callOpcodeF
+};
+
+opcodePtr opcode8Table[8] =
+{
+    &Chip8::opcode8XY0, 
+    &Chip8::opcode8XY1, 
+    &Chip8::opcode8XY2,
+    &Chip8::opcode8XY3, 
+    &Chip8::opcode8XY4, 
+    &Chip8::opcode8XY5,
+    &Chip8::opcode8XY6, 
+    &Chip8::opcode8XY7
+};
+
+// Null method to fill spaces in opcodeFTable
+void Chip8::opcodeNull(WORD opcode) {
+    printf("Something went wrong!");
+}
+
+opcodePtr opcodeFTable[15] =
+{
+    // take note the order of opcodes are off, according to last 4 bits
+    &Chip8::opcodeNull,
+    &Chip8::opcodeNull,
+    &Chip8::opcodeNull,
+    &Chip8::opcodeFX33,
+    &Chip8::opcodeNull,
+    &Chip8::callOpcodeFX_5,
+    &Chip8::opcodeNull,
+    &Chip8::opcodeFX07,
+    &Chip8::opcodeFX18,
+    &Chip8::opcodeFX29,
+    &Chip8::opcodeFX0A,
+    &Chip8::opcodeNull,
+    &Chip8::opcodeNull,
+    &Chip8::opcodeNull,
+    &Chip8::opcodeFX1E
 };
 
 // Chip 8 font set: to be loaded into first 80 bytes of memory
@@ -166,7 +185,7 @@ void Chip8::initialize() {
     memset(dataRegisters, 0, sizeof(dataRegisters));
     I = 0;
     programCounter = 0x200;
-    memset(gameScreen, 0, 64 * 32); 
+    memset(gameScreen, 0, 2048); 
 
     // Loading font set into first 80 bytes of gameMemory
     for (int i = 0; i < 80; ++i) {
@@ -197,21 +216,18 @@ bool Chip8::loadGame(string romname) {
 void Chip8::runEmulationCycle() {
 
     // running emulation cycle
-    while (true) {
         
-        // fetch, decode and execute cycle
-        WORD opcode = this->fetch(this->programCounter);
-        this->execute(opcode);
+    // fetch, decode and execute cycle
+    WORD opcode = this->fetch(this->programCounter);
+    this->execute(opcode);
 
-        // decrement delay and sound timers if greater than 0
-        if (this->delayTimer > 0) {
-            --(this->delayTimer);
-        }
+    // decrement delay and sound timers if greater than 0
+    if (this->delayTimer > 0) {
+        --(this->delayTimer);
+    }
 
-        if (this->soundTimer > 0) {
-            --(this->soundTimer);
-        }
-
+    if (this->soundTimer > 0) {
+        --(this->soundTimer);
     }
 
 }
@@ -231,6 +247,8 @@ WORD Chip8::fetch(WORD pc) {
     // increment program counter i.e. PC += 
     this->programCounter += 2;
 
+    return opcode;
+
 }
 
 void Chip8::execute(WORD opcode) {
@@ -241,7 +259,7 @@ void Chip8::execute(WORD opcode) {
     // Opcodes starting with F has 9 distinct functions (opcodeFTable)
 
     // Get the first 4 bits to call the appropriate function
-    this->opcodeRootTable[(opcode & 0xF000) >> 12](opcode);
+    (this->*(opcodeRootTable[(opcode & 0xF000) >> 12]))(opcode);
     
 }
 
@@ -253,7 +271,7 @@ void Chip8::callOpcode8(WORD opcode) {
         // run opcode 8XYE
         this->opcode8XYE(opcode);
     } else {
-        this->opcode8Table[last4bits](opcode);
+        (this->*(opcode8Table[last4bits]))(opcode);
     }
 
 }
@@ -262,7 +280,7 @@ void Chip8::callOpcodeF(WORD opcode) {
 
     // Use the last 4 bits to differentiate opcodes
     BYTE last4bits = opcode & 0x00F;
-    this->opcodeFTable[last4bits](opcode);
+    (this->*(opcodeFTable[last4bits]))(opcode);
 
 }
 
@@ -291,7 +309,8 @@ void Chip8::opcode0(WORD opcode) {
     switch (last12bits) {
         case 0x0E0: 
             // Clears the screen
-            memset(gameScreen, 0, 64 * 32); 
+            memset(gameScreen, 0, 2048); 
+            drawFlag = 1;
             break;
         case 0x0EE: 
             // Returns from subroutine
@@ -506,20 +525,22 @@ void Chip8::opcodeDXYN(WORD opcode) {
             int mask = 1 << (7 - x);
             
             // if sprite pixel == 1, toggle screen pixel
-            if (row & mask == 1) {
+            if ((row & mask) == 1) {
                 int drawX = xCoord + x;
                 int drawY = yCoord + y;
 
-                if (gameScreen[drawX][drawY] == 1) {
+                if (gameScreen[drawY * 64 + drawX] == 1) {
                     dataRegisters[0xF] = 1;
                 }
                 
                 // Toggling screen pixel with XOR operation
-                gameScreen[drawX][drawY] ^= 1;
+                gameScreen[drawY * 64 + drawX] ^= 1;
             }
 
         }
     }
+
+    drawFlag = 1;
 
 }
 
