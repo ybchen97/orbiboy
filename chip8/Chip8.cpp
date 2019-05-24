@@ -18,6 +18,11 @@ class Chip8 {
     - 16 BYTE sized data registers V0-VF, represented by with a size 16 array
     - Address register I
     - Program counter;
+    - A delay timer that counts down to 0 at 60Hz if non-zero
+    - A sound timer - same as delay timer
+    - Game screen of 64 x 32 pixels
+    - 16 keys, represented by an array of size 16 which stores its state of
+    being pressed or not pressed. 1 == pressed, 0 == pressed
     */
 
     public:
@@ -35,6 +40,8 @@ class Chip8 {
         stack<WORD> gameStack;
         BYTE delayTimer;
         BYTE soundTimer;
+        BYTE gameScreen[64][32];
+        BYTE keyState[16];
 
         // Functions
         WORD fetch(WORD);
@@ -45,7 +52,7 @@ class Chip8 {
         void callOpcodeF(WORD);
         void callOpcodeFX_5(WORD);
 
-        // opcode for 0
+        void opcode0(WORD);
         void opcode1NNN(WORD);
         void opcode2NNN(WORD);
         void opcode3XNN(WORD);
@@ -67,7 +74,7 @@ class Chip8 {
         void opcodeBNNN(WORD);
         void opcodeCXNN(WORD);
         void opcodeDXYN(WORD);
-        // opcode for E
+        void opcodeE(WORD);
         void opcodeFX07(WORD);
         void opcodeFX0A(WORD);
         void opcodeFX15(WORD);
@@ -132,11 +139,12 @@ Start of Chip8-level Functions
 
 void Chip8::initialize() {
     
-    // Clears memory and registers, sets pc to 0x200
+    // Clears memory and registers, sets pc to 0x200, clears screen
     memset(gameMemory, 0, sizeof(gameMemory));
     memset(dataRegisters, 0, sizeof(dataRegisters));
     I = 0;
     programCounter = 0x200;
+    memset(gameScreen, 0, 64 * 32); 
 
     // Loading font set into first 80 bytes of gameMemory
     for (int i = 0; i < 80; ++i) {
@@ -244,20 +252,26 @@ Start of Opcode Functions
 ================================================================================
 */
 
-//Calls RCA 1802 program at address NNN. Not necessary for most ROMs.
-void Chip8::opcode0NNN(WORD opcode) {
+void Chip8::opcode0(WORD opcode) {
 
-}
+    WORD last12bits = opcode & 0x0FFF;
+    switch (last12bits) {
+        case 0x0E0: 
+            // Clears the screen
+            memset(gameScreen, 0, 64 * 32); 
+            break;
+        case 0x0EE: 
+            // Returns from subroutine
+            programCounter = gameStack.top();
+            gameStack.pop();
+            break;
+        default:
+            // Calls RCA 1802 program at address NNN.
+            // Not necessary for most ROMs.
+            printf("Opcode 0NNN is called! Not implemented!");
+            break;
+    }
 
-//Clears the screen
-void Chip8::opcode00E0() {
-
-}
-
-//Returns from a subroutine
-void Chip8::opcode00EE() {
-    programCounter = gameStack.back();
-    gameStack.pop_back();
 }
 
 //Jumps to address NNN
@@ -267,7 +281,7 @@ void Chip8::opcode1NNN(WORD opcode) {
 
 //Calls subroutine at NNN
 void Chip8::opcode2NNN(WORD opcode) {
-    gameStack.push_back(programCounter);
+    gameStack.push(programCounter);
     programCounter = opcode & 0x0FFF;
 }
 
@@ -442,16 +456,65 @@ void Chip8::opcodeCXNN(WORD opcode) {
 //and to 0 if that doesn’t happen.
 void Chip8::opcodeDXYN(WORD opcode) {
 
+    // Get x y coordinate and height
+    int xCoord = dataRegisters[(opcode & 0x0F00) >> 8];
+    int yCoord = dataRegisters[(opcode & 0x00F0) >> 4];
+    int height = dataRegisters[(opcode & 0x000F)];
+
+    dataRegisters[0xF] = 0;
+    
+    // Drawing sprite of width 8 and height height
+    for (int y = 0; y < height; ++y) {
+        // Get row of pixels from sprite 
+        BYTE row = gameMemory[I + y];
+
+        for (int x = 0; x < 8; ++x) {
+            // Get individual sprite pixel using bit mask
+            int mask = 1 << (7 - x);
+            
+            // if sprite pixel == 1, toggle screen pixel
+            if (row & mask == 1) {
+                int drawX = xCoord + x;
+                int drawY = yCoord + y;
+
+                if (gameScreen[drawX][drawY] == 1) {
+                    dataRegisters[0xF] = 1;
+                }
+                
+                // Toggling screen pixel with XOR operation
+                gameScreen[drawX][drawY] ^= 1;
+            }
+
+        }
+    }
+
 }
 
-//Skips the next instruction if the key stored in VX is pressed
-void Chip8::opcodeEX9E(WORD opcode) {
-
-}
-
-//Skips the next instruction if the key stored in VX isn't pressed
-void Chip8::opcodeEXA1(WORD opcode) {
-
+void Chip8::opcodeE(WORD opcode) {
+    BYTE last4bits = opcode & 0x000F;
+    switch (last4bits) {
+        case 0xE: {
+            // Opcode EX9E
+            //Skips the next instruction if the key stored in VX is pressed
+            BYTE keyReg = (opcode & 0x0F00) >> 8;
+            if (dataRegisters[keyReg] == 1) {
+                programCounter += 2;
+            }
+            break;
+        }
+        case 0x1: {
+            // Opcode EXA1
+            //Skips the next instruction if the key stored in VX isn't pressed
+            BYTE keyReg = (opcode & 0x0F00) >> 8;
+            if (dataRegisters[keyReg] == 0) {
+                programCounter += 2;
+            }
+            break;
+        }
+        default:
+            printf("Something is wrong in opcodeE()!");
+            break;
+    }
 }
 
 //Sets VX to the value of the delay timer
@@ -490,7 +553,7 @@ void Chip8::opcodeFX1E(WORD opcode) {
 //Sets I to the location of the sprite for the character in VX. 
 //Characters 0-F (in hexadecimal) are represented by a 4x5 font.
 void Chip8::opcodeFX29(WORD opcode) {
-    
+    I = dataRegisters[(opcode & 0x0F00) >> 8] * 5; // since each font is 5 bytes long and starts at 0x0000 in gameMemory
 }
 
 //Stores the binary-coded decimal representation of VX, 
