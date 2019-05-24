@@ -28,7 +28,7 @@ class Chip8 {
     public:
         // Functions
         void initialize();
-        void loadGame(string);
+        bool loadGame(string);
         void runEmulationCycle(); 
 
     private:
@@ -179,8 +179,19 @@ void Chip8::initialize() {
 
 }
 
-void Chip8::loadGame(string path) {
+bool Chip8::loadGame(string romname) {
+    //load in the game
+    FILE* in = fopen(romname.c_str(), "rb") ;
 
+    // check rom exists
+    if (0 == in) {
+        return false ;
+    }
+
+    fread(&gameMemory[0x200], ftell(in), 1, in) ;
+    fclose(in) ;
+
+    return true ;
 }
 
 void Chip8::runEmulationCycle() {
