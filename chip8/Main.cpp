@@ -74,8 +74,8 @@ int main(int argc, char **argv) {
 
     load:
     // Attempt to load ROM
-    if (!chip8.loadGame("TETRIS")) {
-        printf("Some problem occured while loading!");
+    if (!chip8.loadGame("chip8/TETRIS")) {
+        printf("Some problem occured while loading!\n");
         return 2;
     }
 

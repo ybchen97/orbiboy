@@ -1,2 +1,4 @@
 /.vscode
 /*.code-workspace
+/chip8/Main
+/chip8/Main.dSYM
