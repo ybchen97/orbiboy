@@ -1,4 +1,4 @@
 /.vscode
 /*.code-workspace
-/chip8/Main
-/chip8/Main.dSYM
+/chip8/runGame
+/chip8/runGame.dSYM
