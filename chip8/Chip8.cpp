@@ -129,7 +129,7 @@ opcodePtr opcode8Table[8] =
 
 // Null method to fill spaces in opcodeFTable
 void Chip8::opcodeNull(WORD opcode) {
-    printf("Something went wrong!");
+    printf("Something went wrong! opcodeNull is called!\n");
 }
 
 opcodePtr opcodeFTable[15] =
@@ -285,7 +285,7 @@ void Chip8::execute(WORD opcode) {
 void Chip8::callOpcode8(WORD opcode) {
 
     // Use the last 4 bits to differentiate opcodes
-    BYTE last4bits = opcode & 0x00F;
+    BYTE last4bits = opcode & 0x000F;
     if (last4bits == 0xE) {
         // run opcode 8XYE
         this->opcode8XYE(opcode);
@@ -298,7 +298,7 @@ void Chip8::callOpcode8(WORD opcode) {
 void Chip8::callOpcodeF(WORD opcode) {
 
     // Use the last 4 bits to differentiate opcodes
-    BYTE last4bits = opcode & 0x00F;
+    BYTE last4bits = opcode & 0x000F;
     (this->*(opcodeFTable[last4bits]))(opcode);
 
 }
@@ -311,7 +311,9 @@ void Chip8::callOpcodeFX_5(WORD opcode) {
         case 0x1: this->opcodeFX15(opcode); break;
         case 0x5: this->opcodeFX55(opcode); break;
         case 0x6: this->opcodeFX65(opcode); break;
-        default: break;
+        default: 
+            printf("Something went wrong in callOpcodeFX_5!\n");
+            break;
     }
 
 }
@@ -337,12 +339,11 @@ void Chip8::opcode0(WORD opcode) {
             // Returns from subroutine
             programCounter = gameStack.top();
             gameStack.pop();
-            this->jumpFlag = 0;
             break;
         default:
             // Calls RCA 1802 program at address NNN.
             // Not necessary for most ROMs.
-            printf("Opcode 0NNN is called! Not implemented!");
+            printf("Opcode 0NNN is called! Not implemented!\n");
             break;
     }
 
@@ -385,7 +386,7 @@ void Chip8::opcode4XNN(WORD opcode) {
 
     printf("opcode4XNN called\n");
 
-    int NN = opcode & 0x0FF;
+    int NN = opcode & 0x00FF;
     int X = (opcode & 0x0F00) >> 8;
 
     if (dataRegisters[X] != NN) {
@@ -482,8 +483,8 @@ void Chip8::opcode8XY4(WORD opcode) {
 
     dataRegisters[X] = dataRegisters[X] + dataRegisters[Y];
 
-    if (dataRegisters[X] > 255) {
-        dataRegisters[0xF] = 1;
+    if(dataRegisters[(opcode & 0x00F0) >> 4] > (0xFF - dataRegisters[(opcode & 0x0F00) >> 8])) {
+        dataRegisters[0xF] = 1; // carry
     } else {
         dataRegisters[0xF] = 0;
     }
@@ -598,7 +599,7 @@ void Chip8::opcodeDXYN(WORD opcode) {
     // Get x y coordinate and height
     int xCoord = dataRegisters[(opcode & 0x0F00) >> 8];
     int yCoord = dataRegisters[(opcode & 0x00F0) >> 4];
-    int height = dataRegisters[(opcode & 0x000F)];
+    int height = opcode & 0x000F;
 
     dataRegisters[0xF] = 0;
     
@@ -676,7 +677,21 @@ void Chip8::opcodeFX0A(WORD opcode) {
 
     printf("opcodeFX0A called\n");
 
-    
+    bool key_pressed = false;
+
+    for (int i = 0; i < 16; ++i) {
+        if(keyState[i] != 0) {
+            dataRegisters[(opcode & 0x0F00) >> 8] = i;
+            key_pressed = true;
+        }
+    }
+
+    // If no key is pressed, return and try again.
+    if(!key_pressed) {
+        this->jumpFlag = 1;
+        return;
+    }
+
 }
 
 //Sets the delay timer to VX
