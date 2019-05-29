@@ -72,16 +72,24 @@ int main(int argc, char **argv) {
     // Temporary pixel buffer
     uint32_t pixels[2048];
 
-    load:
     // Attempt to load ROM
-    if (!chip8.loadGame("TETRIS")) {
+    if (!chip8.loadGame("INVADERS")) {
         printf("Some problem occured while loading!\n");
         return 2;
     }
 
+    // Emulation speed settings
+    int fps = 60;
+    int cyclesPerSecond = 400;
+    int cyclesPerFrame = cyclesPerSecond / fps;
+    chrono::duration<int, milli> oneSecond(1000);
+    auto oneFrame = oneSecond/ fps;
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+
     // Emulation loop
     while (true) {
-        chip8.runEmulationCycle();
 
         // Process SDL events
         SDL_Event e;
@@ -92,12 +100,6 @@ int main(int argc, char **argv) {
             if (e.type == SDL_KEYDOWN) {
                 if (e.key.keysym.sym == SDLK_ESCAPE)
                     exit(0);
-
-/*
-                if (e.key.keysym.sym == SDLK_F1)
-                    goto load;      // *gasp*, a goto statement!
-                                    // Used to reset/reload ROM
-*/
 
                 for (int i = 0; i < 16; ++i) {
                     if (e.key.keysym.sym == keymap[i]) {
@@ -117,10 +119,18 @@ int main(int argc, char **argv) {
             }
         }
 
-        // If draw occurred, redraw SDL screen
-        if (chip8.drawFlag == 1) {
-            chip8.drawFlag = 0;
+        auto current = std::chrono::high_resolution_clock::now();
 
+        if (current > start + oneFrame) {
+            chip8.decrementTimers();
+
+            // Run emulation cycle
+            for (int i = 0; i < cyclesPerFrame; ++i) {
+                chip8.runEmulationCycle();
+            }
+            start = current;
+
+            // Update screen pixels
             // Store pixels in temporary buffer
             for (int i = 0; i < 2048; ++i) {
                 BYTE pixel = chip8.gameScreen[i];
@@ -133,9 +143,6 @@ int main(int argc, char **argv) {
             SDL_RenderCopy(renderer, sdlTexture, NULL, NULL);
             SDL_RenderPresent(renderer);
         }
-
-        // Sleep to slow down emulation speed
-        std::this_thread::sleep_for(std::chrono::microseconds(1200));
 
     }
 

@@ -35,6 +35,7 @@ class Chip8 {
         void initialize();
         bool loadGame(string);
         void runEmulationCycle(); 
+        void decrementTimers();
 
         // Opcode functions
         void callOpcode8(WORD);
@@ -241,6 +242,10 @@ void Chip8::runEmulationCycle() {
         this->jumpFlag = 0;
     }
 
+}
+
+void Chip8::decrementTimers() {
+
     // decrement delay and sound timers if greater than 0
     if (this->delayTimer > 0) {
         --(this->delayTimer);
@@ -249,7 +254,7 @@ void Chip8::runEmulationCycle() {
     if (this->soundTimer > 0) {
         --(this->soundTimer);
     }
-
+    
 }
 
 WORD Chip8::fetch(WORD pc) {
@@ -281,6 +286,12 @@ void Chip8::execute(WORD opcode) {
     (this->*(opcodeRootTable[(opcode & 0xF000) >> 12]))(opcode);
     
 }
+
+/*
+================================================================================
+Start of Opcode Functions
+================================================================================
+*/
 
 void Chip8::callOpcode8(WORD opcode) {
 
@@ -317,12 +328,6 @@ void Chip8::callOpcodeFX_5(WORD opcode) {
     }
 
 }
-
-/*
-================================================================================
-Start of Opcode Functions
-================================================================================
-*/
 
 void Chip8::opcode0(WORD opcode) {
 
