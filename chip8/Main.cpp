@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
     uint32_t pixels[2048];
 
     // Attempt to load ROM
-    if (!chip8.loadGame("INVADERS")) {
+    if (!chip8.loadGame("TETRIS")) {
         printf("Some problem occured while loading!\n");
         return 2;
     }
