@@ -102,6 +102,7 @@ int main(int argc, char **argv) {
                 for (int i = 0; i < 16; ++i) {
                     if (e.key.keysym.sym == keymap[i]) {
                         chip8.keyState[i] = 1;
+                        cout << "Key " << i << " state: " << chip8.keyState[i] << endl;
                     }
                 }
             }
@@ -110,6 +111,7 @@ int main(int argc, char **argv) {
                 for (int i = 0; i < 16; ++i) {
                     if (e.key.keysym.sym == keymap[i]) {
                         chip8.keyState[i] = 0;
+                        cout << "Key " << i << " state: " << chip8.keyState[i] << endl;
                     }
                 }
             }

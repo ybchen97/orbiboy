@@ -27,7 +27,7 @@ class Chip8 {
 
     public:
         // Attributes
-        BYTE keyState[16];
+        int keyState[16];
         BYTE gameScreen[2048];
         int drawFlag;
 
@@ -641,8 +641,8 @@ void Chip8::opcodeE(WORD opcode) {
         case 0xE: {
             // Opcode EX9E
             //Skips the next instruction if the key stored in VX is pressed
-            BYTE keyReg = (opcode & 0x0F00) >> 8;
-            if (dataRegisters[keyReg] == 1) {
+            BYTE keyReg = dataRegisters[(opcode & 0x0F00) >> 8];
+            if (keyState[keyReg] == 1) {
                 programCounter += 2;
             }
             break;
@@ -650,8 +650,8 @@ void Chip8::opcodeE(WORD opcode) {
         case 0x1: {
             // Opcode EXA1
             //Skips the next instruction if the key stored in VX isn't pressed
-            BYTE keyReg = (opcode & 0x0F00) >> 8;
-            if (dataRegisters[keyReg] == 0) {
+            BYTE keyReg = dataRegisters[(opcode & 0x0F00) >> 8];
+            if (keyState[keyReg] == 0) {
                 programCounter += 2;
             }
             break;
@@ -720,6 +720,14 @@ void Chip8::opcodeFX1E(WORD opcode) {
     printf("opcodeFX1E called\n");
 
     int X = (opcode & 0x0F00) >> 8;
+
+    // VF is set to 1 when range overflow (I+VX>0xFFF), else 0
+    // This is an undocumented feature, provided by wikipedia
+    if (I + dataRegisters[X] > 0xFFF) {
+        dataRegisters[0xF] = 1;
+    } else {
+        dataRegisters[0xF] = 0;
+    }
 
     I += dataRegisters[X];
 }
