@@ -130,7 +130,7 @@ opcodePtr opcode8Table[8] =
 
 // Null method to fill spaces in opcodeFTable
 void Chip8::opcodeNull(WORD opcode) {
-    printf("Something went wrong! opcodeNull is called!\n");
+    //printf("Something went wrong! opcodeNull is called!\n");
 }
 
 opcodePtr opcodeFTable[15] =
@@ -269,7 +269,7 @@ WORD Chip8::fetch(WORD pc) {
     
     WORD opcode = (gameMemory[pc] << 8) | gameMemory[pc + 1];
 
-    cout << "Opcode " << hex << opcode << " fetched" << endl;
+    //cout << "Opcode " << hex << opcode << " fetched" << endl;
 
     return opcode;
 
@@ -323,7 +323,7 @@ void Chip8::callOpcodeFX_5(WORD opcode) {
         case 0x5: this->opcodeFX55(opcode); break;
         case 0x6: this->opcodeFX65(opcode); break;
         default: 
-            printf("Something went wrong in callOpcodeFX_5!\n");
+            //printf("Something went wrong in callOpcodeFX_5!\n");
             break;
     }
 
@@ -331,7 +331,7 @@ void Chip8::callOpcodeFX_5(WORD opcode) {
 
 void Chip8::opcode0(WORD opcode) {
 
-    printf("opcode0 called\n");
+    //printf("opcode0 called\n");
 
     WORD last12bits = opcode & 0x0FFF;
     switch (last12bits) {
@@ -348,7 +348,7 @@ void Chip8::opcode0(WORD opcode) {
         default:
             // Calls RCA 1802 program at address NNN.
             // Not necessary for most ROMs.
-            printf("Opcode 0NNN is called! Not implemented!\n");
+            //printf("Opcode 0NNN is called! Not implemented!\n");
             break;
     }
 
@@ -357,7 +357,7 @@ void Chip8::opcode0(WORD opcode) {
 //Jumps to address NNN
 void Chip8::opcode1NNN(WORD opcode) {
 
-    printf("opcode1NNN called\n");
+    //printf("opcode1NNN called\n");
 
     programCounter = opcode & 0x0FFF;
     this->jumpFlag = 1;
@@ -366,7 +366,7 @@ void Chip8::opcode1NNN(WORD opcode) {
 //Calls subroutine at NNN
 void Chip8::opcode2NNN(WORD opcode) {
 
-    printf("opcode2NNN called\n");
+    //printf("opcode2NNN called\n");
 
     gameStack.push(programCounter);
     programCounter = opcode & 0x0FFF;
@@ -376,7 +376,7 @@ void Chip8::opcode2NNN(WORD opcode) {
 //Skips the next instruction if VX equals NN
 void Chip8::opcode3XNN(WORD opcode) {
 
-    printf("opcode3XNN called\n");
+    //printf("opcode3XNN called\n");
 
     int NN = opcode & 0x00FF;
     int X = (opcode & 0x0F00) >> 8;
@@ -389,7 +389,7 @@ void Chip8::opcode3XNN(WORD opcode) {
 //Skips the next instruction if VX doesn't equal NN
 void Chip8::opcode4XNN(WORD opcode) {
 
-    printf("opcode4XNN called\n");
+    //printf("opcode4XNN called\n");
 
     int NN = opcode & 0x00FF;
     int X = (opcode & 0x0F00) >> 8;
@@ -402,7 +402,7 @@ void Chip8::opcode4XNN(WORD opcode) {
 //Skips the next instruction if VX equals VY
 void Chip8::opcode5XY0(WORD opcode) {
 
-    printf("opcode5XY0 called\n");
+    //printf("opcode5XY0 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
     int Y = (opcode & 0x00F0) >> 4;
@@ -415,7 +415,7 @@ void Chip8::opcode5XY0(WORD opcode) {
 //Sets VX to NN
 void Chip8::opcode6XNN(WORD opcode) {
 
-    printf("opcode6XNN called\n");
+    //printf("opcode6XNN called\n");
 
     int NN = opcode & 0x00FF;
     int X = (opcode & 0x0F00) >> 8;
@@ -426,7 +426,7 @@ void Chip8::opcode6XNN(WORD opcode) {
 //Adds NN to VX
 void Chip8::opcode7XNN(WORD opcode) {
 
-    printf("opcode7XNN called\n");
+    //printf("opcode7XNN called\n");
 
     int NN = opcode & 0x00FF;
     int X = (opcode & 0x0F00) >> 8;
@@ -437,7 +437,7 @@ void Chip8::opcode7XNN(WORD opcode) {
 //Sets VX to the value of VY
 void Chip8::opcode8XY0(WORD opcode) {
 
-    printf("opcode8XY0 called\n");
+    //printf("opcode8XY0 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
     int Y = (opcode & 0x00F0) >> 4;
@@ -448,7 +448,7 @@ void Chip8::opcode8XY0(WORD opcode) {
 //Sets VX to VX OR VY
 void Chip8::opcode8XY1(WORD opcode) {
 
-    printf("opcode8XY1 called\n");
+    //printf("opcode8XY1 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
     int Y = (opcode & 0x00F0) >> 4;
@@ -459,7 +459,7 @@ void Chip8::opcode8XY1(WORD opcode) {
 //Sets VX to VX AND VY
 void Chip8::opcode8XY2(WORD opcode) {
 
-    printf("opcode8XY2 called\n");
+    //printf("opcode8XY2 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
     int Y = (opcode & 0x00F0) >> 4;
@@ -470,7 +470,7 @@ void Chip8::opcode8XY2(WORD opcode) {
 //Sets VX to VX XOR VY
 void Chip8::opcode8XY3(WORD opcode) {
 
-    printf("opcode8XY3 called\n");
+    //printf("opcode8XY3 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
     int Y = (opcode & 0x00F0) >> 4;
@@ -481,7 +481,7 @@ void Chip8::opcode8XY3(WORD opcode) {
 //Adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't
 void Chip8::opcode8XY4(WORD opcode) {
 
-    printf("opcode8XY4 called\n");
+    //printf("opcode8XY4 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
     int Y = (opcode & 0x00F0) >> 4;
@@ -498,7 +498,7 @@ void Chip8::opcode8XY4(WORD opcode) {
 //VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
 void Chip8::opcode8XY5(WORD opcode) {
 
-    printf("opcode8XY5 called\n");
+    //printf("opcode8XY5 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
     int Y = (opcode & 0x00F0) >> 4;
@@ -515,7 +515,7 @@ void Chip8::opcode8XY5(WORD opcode) {
 //Stores the least significant bit of VX in VF and then shifts VX to the right by 1
 void Chip8::opcode8XY6(WORD opcode) {
 
-    printf("opcode8XY6 called\n");
+    //printf("opcode8XY6 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
 
@@ -526,7 +526,7 @@ void Chip8::opcode8XY6(WORD opcode) {
 //Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't
 void Chip8::opcode8XY7(WORD opcode) {
 
-    printf("opcode8XY7 called\n");
+    //printf("opcode8XY7 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
     int Y = (opcode & 0x00F0) >> 4;
@@ -543,7 +543,7 @@ void Chip8::opcode8XY7(WORD opcode) {
 //Stores the most significant bit of VX in VF and then shifts VX to the left by 1
 void Chip8::opcode8XYE(WORD opcode) {
 
-    printf("opcode8XYE called\n");
+    //printf("opcode8XYE called\n");
 
     int X = (opcode & 0x0F00) >> 8;
 
@@ -554,7 +554,7 @@ void Chip8::opcode8XYE(WORD opcode) {
 //Skips the next instruction if VX doesn't equal VY
 void Chip8::opcode9XY0(WORD opcode) {
 
-    printf("opcode9XY0 called\n");
+    //printf("opcode9XY0 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
     int Y = (opcode & 0x00F0) >> 4;
@@ -567,7 +567,7 @@ void Chip8::opcode9XY0(WORD opcode) {
 //Sets I to the address NNN
 void Chip8::opcodeANNN(WORD opcode) {
 
-    printf("opcodeANNN called\n");
+    //printf("opcodeANNN called\n");
 
     I = opcode & 0x0FFF;
 }
@@ -575,7 +575,7 @@ void Chip8::opcodeANNN(WORD opcode) {
 //Jumps to the address NNN plus V0
 void Chip8::opcodeBNNN(WORD opcode) {
 
-    printf("opcodeBNNN called\n");
+    //printf("opcodeBNNN called\n");
 
     programCounter = (opcode & 0x0FFF) + dataRegisters[0];
     this->jumpFlag = 1;
@@ -584,7 +584,7 @@ void Chip8::opcodeBNNN(WORD opcode) {
 //Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN
 void Chip8::opcodeCXNN(WORD opcode) {
 
-    printf("opcodeCXNN called\n");
+    //printf("opcodeCXNN called\n");
 
     int NN = opcode & 0x00FF;
     int X = (opcode & 0x0F00) >> 8;
@@ -599,7 +599,7 @@ void Chip8::opcodeCXNN(WORD opcode) {
 //and to 0 if that doesn’t happen.
 void Chip8::opcodeDXYN(WORD opcode) {
 
-    printf("opcodeDXYN called\n");
+    //printf("opcodeDXYN called\n");
 
     // Get x y coordinate and height
     int xCoord = dataRegisters[(opcode & 0x0F00) >> 8];
@@ -639,7 +639,7 @@ void Chip8::opcodeDXYN(WORD opcode) {
 
 void Chip8::opcodeE(WORD opcode) {
 
-    printf("opcodeE called\n");
+    //printf("opcodeE called\n");
 
     BYTE last4bits = opcode & 0x000F;
     switch (last4bits) {
@@ -662,7 +662,7 @@ void Chip8::opcodeE(WORD opcode) {
             break;
         }
         default:
-            printf("Something is wrong in opcodeE()!");
+            //printf("Something is wrong in opcodeE()!");
             break;
     }
 }
@@ -670,7 +670,7 @@ void Chip8::opcodeE(WORD opcode) {
 //Sets VX to the value of the delay timer
 void Chip8::opcodeFX07(WORD opcode) {
 
-    printf("opcodeFX07 called\n");
+    //printf("opcodeFX07 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
 
@@ -680,7 +680,7 @@ void Chip8::opcodeFX07(WORD opcode) {
 //A key press is awaited, and then stored in VX
 void Chip8::opcodeFX0A(WORD opcode) {
 
-    printf("opcodeFX0A called\n");
+    //printf("opcodeFX0A called\n");
 
     bool key_pressed = false;
 
@@ -702,7 +702,7 @@ void Chip8::opcodeFX0A(WORD opcode) {
 //Sets the delay timer to VX
 void Chip8::opcodeFX15(WORD opcode) {
 
-    printf("opcodeFX15 called\n");
+    //printf("opcodeFX15 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
 
@@ -712,7 +712,7 @@ void Chip8::opcodeFX15(WORD opcode) {
 //Sets the sound timer to VX
 void Chip8::opcodeFX18(WORD opcode) {
 
-    printf("opcodeFX18 called\n");
+    //printf("opcodeFX18 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
 
@@ -722,7 +722,7 @@ void Chip8::opcodeFX18(WORD opcode) {
 //Adds VX to I
 void Chip8::opcodeFX1E(WORD opcode) {
 
-    printf("opcodeFX1E called\n");
+    //printf("opcodeFX1E called\n");
 
     int X = (opcode & 0x0F00) >> 8;
 
@@ -741,7 +741,7 @@ void Chip8::opcodeFX1E(WORD opcode) {
 //Characters 0-F (in hexadecimal) are represented by a 4x5 font.
 void Chip8::opcodeFX29(WORD opcode) {
 
-    printf("opcodeFX29 called\n");
+    //printf("opcodeFX29 called\n");
 
     I = dataRegisters[(opcode & 0x0F00) >> 8] * 5; // since each font is 5 bytes long and starts at 0x0000 in gameMemory
 }
@@ -753,7 +753,7 @@ void Chip8::opcodeFX29(WORD opcode) {
 //in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.)
 void Chip8::opcodeFX33(WORD opcode) {
 
-    printf("opcodeFX33 called\n");
+    //printf("opcodeFX33 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
 
@@ -771,7 +771,7 @@ void Chip8::opcodeFX33(WORD opcode) {
 //The offset from I is increased by 1 for each value written, but I itself is left unmodified.
 void Chip8::opcodeFX55(WORD opcode) {
 
-    printf("opcodeFX55 called\n");
+    //printf("opcodeFX55 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
 
@@ -786,7 +786,7 @@ void Chip8::opcodeFX55(WORD opcode) {
 //The offset from I is increased by 1 for each value written, but I itself is left unmodified.
 void Chip8::opcodeFX65(WORD opcode) {
 
-    printf("opcodeFX65 called\n");
+    //printf("opcodeFX65 called\n");
 
     int X = (opcode & 0x0F00) >> 8;
 

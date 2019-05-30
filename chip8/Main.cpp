@@ -30,7 +30,7 @@ BYTE keymap[16] = {
     SDLK_v,
 };
 
-int main(int argc, char **argv) {
+int main(int argc, char *argv[]) {
 
     // Initialize Chip8
     Chip8 chip8 = Chip8();
@@ -73,7 +73,9 @@ int main(int argc, char **argv) {
     uint32_t pixels[2048];
 
     // Attempt to load ROM
-    if (!chip8.loadGame("TETRIS")) {
+    string fileName = argv[1];
+    fileName = "roms/" + fileName;
+    if (!chip8.loadGame(fileName)) {
         printf("Some problem occured while loading!\n");
         return 2;
     }
@@ -104,7 +106,7 @@ int main(int argc, char **argv) {
                 for (int i = 0; i < 16; ++i) {
                     if (e.key.keysym.sym == keymap[i]) {
                         chip8.keyState[i] = 1;
-                        cout << "Key " << i << " state: " << chip8.keyState[i] << endl;
+                        //cout << "Key " << i << " state: " << chip8.keyState[i] << endl;
                     }
                 }
             }
@@ -113,7 +115,7 @@ int main(int argc, char **argv) {
                 for (int i = 0; i < 16; ++i) {
                     if (e.key.keysym.sym == keymap[i]) {
                         chip8.keyState[i] = 0;
-                        cout << "Key " << i << " state: " << chip8.keyState[i] << endl;
+                        //cout << "Key " << i << " state: " << chip8.keyState[i] << endl;
                     }
                 }
             }
