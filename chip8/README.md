@@ -6,7 +6,6 @@ Tetris                    | Space Invaders
 :------------------------:|:-----------------------------------:
 ![Tetris](pics/Tetris.png)|![Space Invaders](pics/Invaders.png)
 Pong                      | UFO
-:------------------------:|:-----------------------------------:
 ![Pong](pics/Pong.png)    |![UFO](pics/UFO.png)
 
 ## How to run
