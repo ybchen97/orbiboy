@@ -2,5 +2,4 @@
 /*.code-workspace
 /chip8/runGame
 /chip8/runGame.dSYM
-/chip8/roms/*
 .DS_Store
