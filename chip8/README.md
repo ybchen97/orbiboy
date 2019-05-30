@@ -1,6 +1,6 @@
 # Chip8 Emulator
 
-A simple Chip8 Emulator that runs Chip8 games such as Invaders, Tetris, Pong etc on your computer. Written in C++, as a primer to prep us for developing a Gameboy Emulator.
+A simple Chip8 Emulator that runs Chip8 games such as Invaders, Tetris, Pong etc on your computer. Written in C++, as a primer to prep us for developing a Gameboy Emulator. Currently there is no sound component for this emulator.
 
 Tetris                    | Space Invaders
 :------------------------:|:-----------------------------------:
