@@ -16,8 +16,8 @@ $ brew install SDL2
 
 I'm currently using clang from Apple LLVM, so:
 ```
-$ clang++ chip8/Main.cpp -o chip8/runGame -lSDL2
-$ chip8/runGame <romfile name>
+$ clang++ Main.cpp -o runGame -lSDL2
+$ ./runGame <romfile name>
 ```
 
 Public domain roms can be downloaded online and placed in the `roms` directory to run games. It is currently empty.
