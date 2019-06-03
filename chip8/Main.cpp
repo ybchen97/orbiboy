@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
 
     // Emulation speed settings
     int fps = 60;
-    int cyclesPerSecond = 400;
+    int cyclesPerSecond = 800;
     int cyclesPerFrame = cyclesPerSecond / fps;
     chrono::duration<int, milli> oneSecond(1000);
     auto oneFrame = oneSecond/ fps;
