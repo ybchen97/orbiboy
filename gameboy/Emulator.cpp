@@ -187,6 +187,10 @@ void Emulator::update() {
     this->RenderScreen(); //wishful thinking
 }
 
+void Emulator::updateTimers(int cycles) {
+    
+}
+
 void Emulator::writeMem(WORD address, BYTE data) {
     if (address < 0x8000) {}
 
