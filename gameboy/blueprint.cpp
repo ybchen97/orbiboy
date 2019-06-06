@@ -35,7 +35,7 @@ General Memory Map:
 A000-BFFF   8KB External RAM     (in cartridge, switchable bank, if any)
 C000-CFFF   4KB Work RAM Bank 0 (WRAM)
 D000-DFFF   4KB Work RAM Bank 1 (WRAM)  (switchable bank 1-7 in CGB Mode)
-E000-FDFF   Same as C000-DDFF (ECHO)    (typically not used)
+E000-FDFF   Same as C000-DDFF (ECHO RAM)    (typically not used)
 FE00-FE9F   Sprite Attribute Table (OAM)
 FEA0-FEFF   Not Usable
 FF00-FF7F   I/O Ports
