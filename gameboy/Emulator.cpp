@@ -81,7 +81,7 @@ class Emulator {
         BYTE readMem(WORD) const;
 
     private:
-        //Declaring attributes
+        //Attributes
 
         //8 bit registers, which are paired to behave like a 16 bit register
         //To accesss the first register, RegXX.high
@@ -169,6 +169,22 @@ bool Emulator::loadGame(string file_path) {
     fclose(in);
 
     return true;
+}
+
+void Emulator::update() {
+
+    const int maxCycles = 000000000;
+    int cyclesCount = 0;
+
+    while (cyclesCount < maxCycles) {
+        int cycles = this->executeNextOpcode(); //executeNextOpcode will return the number of cycles taken
+        cyclesCount += cycles;            //wishful thinking now
+
+        this->updateTimers(cycles); //wishful thinking
+        this->updateGraphics(cycles); //wishful thinking
+        this->handleInterrupts(); //wishful thinking
+    }
+    this->RenderScreen(); //wishful thinking
 }
 
 void Emulator::writeMem(WORD address, BYTE data) {
