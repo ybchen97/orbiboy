@@ -45,6 +45,15 @@ https://gekkio.fi/files/gb-docs/gbctr.pdf
 
 */
 
+#include <string>
+
+//For the flag bits in register F
+#define FLAG_ZERO 7;
+#define FLAG_SUB 6;
+#define FLAG_HALFCARRY 5;
+#define FLAG_CARRY 4;
+
+using namespace std;
 
 typedef unsigned char BYTE;
 typedef char SIGNED_BYTE;
@@ -59,21 +68,20 @@ union Register {
     };
 };
 
-//For the flag bits in register F
-#define FLAG_ZERO 7;
-#define FLAG_SUB 6;
-#define FLAG_HALFCARRY 5;
-#define FLAG_CARRY 4;
 
-class CPU {
+class Emulator {
 
     public:
+        // Attributes
+
+        // Functions
+        void initialize();
+        bool loadGame(string);
+        void writeMem(WORD, BYTE);
+        BYTE readMem(WORD) const;
 
     private:
         //Declaring attributes
-
-        //Main memory of Gameboy, 0x10000 bytes in size
-        BYTE gbMem[0x10000];
 
         //8 bit registers, which are paired to behave like a 16 bit register
         //To accesss the first register, RegXX.high
@@ -88,13 +96,13 @@ class CPU {
         Register programCounter;
         Register stackPointer;
 
-        BYTE cartridgeMem[0x200000];
-
+        BYTE internalMem[0x10000]; // internal memory from 0x0000 - 0xFFFF
+        BYTE catridgeMem[0x200000]; // Catridge memory up to 2MB (2 * 2^20)
 
 
 };
 
-void CPU::initialise() {
+void Emulator::initialize() {
 
     regAF.regstr = 0x01B0; 
     regBC.regstr = 0x0013; 
@@ -137,7 +145,7 @@ void CPU::initialise() {
 
 }
 
-bool CPU::loadGame(string file_path) {
+bool Emulator::loadGame(string file_path) {
 
     memset(cartridgeMem, 0, sizeof(cartridgeMem));
     
@@ -161,4 +169,25 @@ bool CPU::loadGame(string file_path) {
     fclose(in);
 
     return true;
+}
+
+void Emulator::writeMem(WORD address, BYTE data) {
+    if (address < 0x8000) {}
+
+    // writing to Echo RAM also writes to work RAM
+    else if ((address >= 0xE000) && (address <= 0xFDFF)) {
+        this->internalMem[address] = data;
+        writeMem(address - 0x2000, data);
+    }
+
+    else if ((address >= 0xFEA0) && (address <= 0xFEFF)) {}
+
+    else {
+        this->internalMem[address] = data;
+    }
+
+}
+
+BYTE Emulator::readMem(WORD address) const {
+
 }
