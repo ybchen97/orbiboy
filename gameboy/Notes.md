@@ -1,5 +1,11 @@
-# Possible Code Refactoring
+# Possible Code Refactoring & Bug Locations
 
+## Bug locations
+
+#### Discrepancies to note:
+- Missing MBC2 section in writeMem at address A000-A1FF
+
+## Code refactoring
 - Further breaking down and abstracting out parts of the emulator so it's not
   just one big humongous class
 
