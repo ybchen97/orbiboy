@@ -46,6 +46,7 @@ https://gekkio.fi/files/gb-docs/gbctr.pdf
 */
 
 #include <string>
+#include <cassert>
 
 //For the flag bits in register F
 #define FLAG_ZERO 7;
@@ -256,16 +257,14 @@ void Emulator::writeMem(WORD address, BYTE data) {
 void Emulator::handleBanking(WORD address, BYTE data) {
     // do RAM enabling
     if (address < 0x2000) {
-        if (this->MBC1 || this->MBC2) {
-            this->doRAMBankEnable(address, data);
-        }
+        this->doRAMBankEnable(address, data);
     }
 
     // do ROM bank change
-    else if ((address >= 0x200) && (address <= 0x3FFF)) {
-        if (this->MBC1 || this->MBC2) {
-            this->doChangeLoROMBank(data);
-        }
+    else if ((address >= 0x2000) && (address <= 0x3FFF)) {
+        if (this->MBC1) this->doChangeLoROMBank(data);
+        // if MBC2, LSB of upper address byte must be 1 to select ROM bank
+        else if ((address && 0x0100) == 0x0) this->doChangeLoROMBank(data);
     }
 
     // do ROM or RAM bank change
@@ -289,3 +288,75 @@ void Emulator::handleBanking(WORD address, BYTE data) {
 
 }
 
+void Emulator::doRAMBankEnable(WORD address, BYTE data) {
+
+    // for MBC2, LSB of upper byte of address must be 0 to do enable
+    if (this->MBC2) {
+        if (((address >> 8) & 0x1) == 1) return;
+    }
+
+    BYTE testData = data & 0xF;
+    if (testData == 0xA) {
+        this->enableRAM = true;
+    } else if (testData == 0x0) {
+        this->enableRAM = false;
+    }
+
+}
+
+void Emulator::doChangeLoROMBank(BYTE data) {
+    
+    // if MBC2, current ROM bank is lower nibble of data
+    if (this->MBC2) {
+        this->currentROMBank = data & 0xF;
+        if (this->currentROMBank == 0x0) this->currentROMBank = 0x1;
+        return;
+    }
+
+    BYTE lower5bits = data & 0x1F;
+    
+    // if lower5bits == 0x0, gameboy automatically sets it to 0x1 as ROM 0 can 
+    // always be accessed from 0x0000-3FFF
+    if (lower5bits == 0x0) lower5bits = 0x1;
+    
+    this->currentROMBank &= 0xE0; // mask the last 5 bits to 0
+    this->currentROMBank |= lower5bits; // match last 5 bits to lower5bits
+
+}
+
+void Emulator::doChangeHiROMBank(BYTE data) {
+
+    // change bit 6-5 of currentROMBank to bit 6-5 of data
+
+    // turn off the upper 3 bits of the current rom (since bit 7 must == 0)
+    this->currentROMBank &= 0x1F;
+
+    data &= 0xE0; // turn off the lower 5 bits of the data
+    this->currentROMBank |= data; // match higher 3 bits of data
+
+    // to make sure bit 7 == 0? might cause error here, might just only read 
+    // first 7 bits from the 8 bit address to find which ROM bank to use. not 
+    // sure, please check!
+    assert((this->currentROMBank >> 7) == 0x0);
+
+}
+
+void Emulator::doRAMBankChange(BYTE data) {
+    // only 4 RAM banks to choose from, 0x0-3
+    this->currentRAMBank = data & 0x3;
+}
+
+void Emulator::doChangeROMRAMMode(BYTE data) {
+    
+    // ROM banking mode: 0x0
+    // RAM banking mode: 0x1
+    BYTE newData = data & 0x1;
+    this->ROMBanking = newData == 0x0;
+    
+    // The program may freely switch between both modes, the only limitiation 
+    // is that only RAM Bank 00h can be used during Mode 0, and only ROM Banks 
+    // 00-1Fh can be used during Mode 1.
+    if (this->ROMBanking) {
+        this->currentRAMBank = 0x0;
+    }
+}
