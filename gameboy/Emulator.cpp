@@ -48,11 +48,17 @@ https://gekkio.fi/files/gb-docs/gbctr.pdf
 #include <string>
 #include <cassert>
 
-//For the flag bits in register F
+// For the flag bits in register F
 #define FLAG_ZERO 7;
 #define FLAG_SUB 6;
 #define FLAG_HALFCARRY 5;
 #define FLAG_CARRY 4;
+
+// For timer registers
+#define DIVIDER 0xFF04
+#define TIMA 0xFF05;
+#define TMA 0xFF06;
+#define TMC 0xFF07
 
 using namespace std;
 
@@ -82,7 +88,7 @@ class Emulator {
         BYTE readMem(WORD) const;
 
     private:
-        //Declaring attributes
+        //Attributes
 
         //8 bit registers, which are paired to behave like a 16 bit register
         //To accesss the first register, RegXX.high
@@ -252,6 +258,31 @@ void Emulator::writeMem(WORD address, BYTE data) {
         this->internalMem[address] = data;
     }
 
+    /*
+
+    if (address == 0xFF04) { // FF04 is divider register, its value is reset to 0 if game attempts to write to it
+        this->internalMem[0xFF04] = 0;
+    }
+
+    if (address == 0xFF07) { // FF07 is timer controller, if game changes the freq, the counter must change accordingly
+        // get the currentFreq, do the writing, then compare with newFreq. if different, counter must be updated
+
+        BYTE currentFreq = this->readMem(0xFF07) & 0x3; // to extract bit 1 and 0 of timer controller register
+        internalMem[0xFF07] = data; // write the data to the address
+        BYTE newFreq = this->readMem(0xFF07) & 0x3;
+
+        if (currentFreq != newFreq) { // if the freq has changed
+            switch (newFreq) {
+                case 0: this->timerCounter = 1024; this->timerCounterFixed = 1024; break; // 4096Hz
+                case 1: this->timerCounter = 16; break; this->timerCounterFixed = 16; // 262144Hz
+                case 2: this->timerCounter = 64; break; this->timerCounterFixed = 64; // 65536Hz
+                case 3: this->timerCounter = 256; this->timerCounterFixed = 256; break; // 16384Hz
+            }
+        }
+    }
+
+    */
+
 }
 
 void Emulator::handleBanking(WORD address, BYTE data) {
@@ -358,5 +389,89 @@ void Emulator::doChangeROMRAMMode(BYTE data) {
     // 00-1Fh can be used during Mode 1.
     if (this->ROMBanking) {
         this->currentRAMBank = 0x0;
+    }
+}
+
+void Emulator::update() {
+
+    const int maxCycles = 000000000;
+    int cyclesCount = 0;
+
+    while (cyclesCount < maxCycles) {
+        int cycles = this->executeNextOpcode(); //executeNextOpcode will return the number of cycles taken
+        cyclesCount += cycles;            //wishful thinking now
+
+        this->updateTimers(cycles); //wishful thinking
+        this->updateGraphics(cycles); //wishful thinking
+        this->handleInterrupts(); //wishful thinking
+    }
+    this->RenderScreen(); //wishful thinking
+}
+
+void Emulator::updateTimers(int cycles) {
+
+    /*
+
+    Cycles -> Length of time that the instructions take to execute
+        Too short to meaningfully use seconds, so use cycles instead
+        Multiples of 4
+    
+    FF04 Divider Register
+    FF05 Timer Counter TIMA
+    FF06 Timer Modulo TMA
+    FF07 Timer Control TAC/TMC
+
+    FF07 Timer control -> 3 bit register, | 2 1 0 |
+    Bit 2 -> whether timer is enabled (1)
+    Bit 1 and 0:
+    00 -> 4096Hz (1024 counter)
+    01 -> 262144Hz (16 counter)
+    10 -> 65536Hz (64 counter)
+    11 -> 16384Hz (256 counter)
+
+
+    Divider is incremented at 16384Hz, writing any value to this register resets it to 0x00
+
+    FF05 TIMA is incremented at a freq specified by FF07 TAC. If TIMA overflows (>0xFF), trigger an interrupt 
+        and reset it to the value specified by FF06 TMA
+
+    By default, TIMA should increment at 4096HZ (4096 times per second). 
+    So, TIMA works as a timer (to keep track of time, to emulate/represent the passage of time basically).
+
+    The CPU clock speed is 4194304Hz, which to my understanding can just be interpreted as 4194304 cycles / second.
+    Peg the increment of TIMA to that, and we should increment TIMA every 4194304/4096 = 1024 cycles.
+
+    In main emulation update loop (which is run at 60Hz, not relevant to timer?), an opcode is executed.
+        The execution takes a certain number of cycles (4, 8, 12, 16 etc.)
+        Within updateTimer, keep a counter of cycles elapsed.
+        If the number of cycles reaches 1024 (or whatever it should be depending on the timer control),
+            update the timer registers accordingly.
+            Else, just updateTimers does nothing (?).
+
+    Divider Register is special in that it is independent from the other Timer registers. 
+    It is always incremented at 16384Hz, and when it overflows, it is set back to 0.
+
+    Consider defining DIVIDER TIMA TMA TMC as 0xFF04 0xFF05 0xFF06 0xFF07 respectively
+    */
+
+    this->dividerCounter += cycles; // TO DECLARE SOMEWHERE
+    this->timerCounter -= cycles; // TO DECLARE SOMEWHERE. DECLARE timerCounterFixed AS WELL!!!
+    // Decrement counter instead of increment so just need to keep track if <= 0
+
+    // Handle divider register first
+
+    if (this->dividerCounter >= 256) {
+       this->dividerCounter = 0; // reset it to start counting for upcoming cycles
+       this->internalMem[DIVIDER] = this->internalMem[DIVIDER] + 1; // directly modifying instead of using writeMem
+    }
+   
+    if (this->timerCounter <= 0) { // To increment TIMA
+        if (readMem(TIMA) == 0xFF) { // TIMA is at 255, about to overflow
+            writeMem(TIMA, readMem(TMA)); // set value of TIMA to value of TMA
+            //triggerInterrupt(2); // The interrupt triggered is corresponded to bit 2 of interrupt register
+            this->timerCounter = this->timerCounterFixed; // Reset counter to the original value
+        } else {
+            writeMem(TIMA, readMem(TIMA) + 1); // TIMA is incremented by 1
+        }
     }
 }
