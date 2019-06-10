@@ -46,6 +46,7 @@ https://gekkio.fi/files/gb-docs/gbctr.pdf
 */
 
 #include <string>
+#include <cassert>
 
 // For the flag bits in register F
 #define FLAG_ZERO 7;
@@ -81,7 +82,7 @@ class Emulator {
         // Attributes
 
         // Functions
-        void initialize();
+        void resetCPU();
         bool loadGame(string);
         void writeMem(WORD, BYTE);
         BYTE readMem(WORD) const;
@@ -102,58 +103,92 @@ class Emulator {
         Register programCounter;
         Register stackPointer;
 
+        // Memory items
         BYTE internalMem[0x10000]; // internal memory from 0x0000 - 0xFFFF
-        BYTE catridgeMem[0x200000]; // Catridge memory up to 2MB (2 * 2^20)
+        BYTE cartridgeMem[0x200000]; // Catridge memory up to 2MB (2 * 2^20)
+        BYTE currentROMBank; // tells which ROM bank the game is using
+        BYTE RAMBanks[0x8000]; // all RAM banks
+        BYTE currentRAMBank; // tells which RAM bank the game is using
+        
+        bool enableRAM;
+        bool MBC1;
+        bool MBC2;
+        bool ROMBanking;
 
+        // Functions
+        void handleBanking(WORD, BYTE);
+        void doRAMBankEnable(WORD, BYTE);
+        void doChangeLoROMBank(BYTE);
+        void doChangeHiROMBank(BYTE);
+        void doRAMBankChange(BYTE);
+        void doChangeROMRAMMode(BYTE);
 
 };
 
-void Emulator::initialize() {
+void Emulator::resetCPU() {
 
-    regAF.regstr = 0x01B0; 
-    regBC.regstr = 0x0013; 
-    regDE.regstr = 0x00D8;
-    regHL.regstr = 0x014D;
-    stackPointer.regstr = 0xFFFE;
-    programCounter.regstr = 0x100; 
+    this->regAF.regstr = 0x01B0; 
+    this->regBC.regstr = 0x0013; 
+    this->regDE.regstr = 0x00D8;
+    this->regHL.regstr = 0x014D;
+    this->stackPointer.regstr = 0xFFFE;
+    this->programCounter.regstr = 0x100; 
 
-    gbMem[0xFF05] = 0x00; 
-    gbMem[0xFF06] = 0x00;
-    gbMem[0xFF07] = 0x00; 
-    gbMem[0xFF10] = 0x80; 
-    gbMem[0xFF11] = 0xBF; 
-    gbMem[0xFF12] = 0xF3; 
-    gbMem[0xFF14] = 0xBF; 
-    gbMem[0xFF16] = 0x3F; 
-    gbMem[0xFF17] = 0x00; 
-    gbMem[0xFF19] = 0xBF; 
-    gbMem[0xFF1A] = 0x7F; 
-    gbMem[0xFF1B] = 0xFF; 
-    gbMem[0xFF1C] = 0x9F; 
-    gbMem[0xFF1E] = 0xBF; 
-    gbMem[0xFF20] = 0xFF; 
-    gbMem[0xFF21] = 0x00; 
-    gbMem[0xFF22] = 0x00; 
-    gbMem[0xFF23] = 0xBF; 
-    gbMem[0xFF24] = 0x77; 
-    gbMem[0xFF25] = 0xF3;
-    gbMem[0xFF26] = 0xF1; 
-    gbMem[0xFF40] = 0x91; 
-    gbMem[0xFF42] = 0x00; 
-    gbMem[0xFF43] = 0x00; 
-    gbMem[0xFF45] = 0x00; 
-    gbMem[0xFF47] = 0xFC; 
-    gbMem[0xFF48] = 0xFF; 
-    gbMem[0xFF49] = 0xFF; 
-    gbMem[0xFF4A] = 0x00; 
-    gbMem[0xFF4B] = 0x00; 
-    gbMem[0xFFFF] = 0x00;
+    this->internalMem[0xFF05] = 0x00; 
+    this->internalMem[0xFF06] = 0x00;
+    this->internalMem[0xFF07] = 0x00; 
+    this->internalMem[0xFF10] = 0x80; 
+    this->internalMem[0xFF11] = 0xBF; 
+    this->internalMem[0xFF12] = 0xF3; 
+    this->internalMem[0xFF14] = 0xBF; 
+    this->internalMem[0xFF16] = 0x3F; 
+    this->internalMem[0xFF17] = 0x00; 
+    this->internalMem[0xFF19] = 0xBF; 
+    this->internalMem[0xFF1A] = 0x7F; 
+    this->internalMem[0xFF1B] = 0xFF; 
+    this->internalMem[0xFF1C] = 0x9F; 
+    this->internalMem[0xFF1E] = 0xBF; 
+    this->internalMem[0xFF20] = 0xFF; 
+    this->internalMem[0xFF21] = 0x00; 
+    this->internalMem[0xFF22] = 0x00; 
+    this->internalMem[0xFF23] = 0xBF; 
+    this->internalMem[0xFF24] = 0x77; 
+    this->internalMem[0xFF25] = 0xF3;
+    this->internalMem[0xFF26] = 0xF1; 
+    this->internalMem[0xFF40] = 0x91; 
+    this->internalMem[0xFF42] = 0x00; 
+    this->internalMem[0xFF43] = 0x00; 
+    this->internalMem[0xFF45] = 0x00; 
+    this->internalMem[0xFF47] = 0xFC; 
+    this->internalMem[0xFF48] = 0xFF; 
+    this->internalMem[0xFF49] = 0xFF; 
+    this->internalMem[0xFF4A] = 0x00; 
+    this->internalMem[0xFF4B] = 0x00; 
+    this->internalMem[0xFFFF] = 0x00;
+
+    this->MBC1 = false;
+    this->MBC2 = false;
+
+    // Choosing which MBC to use
+    switch (this->cartridgeMem[0x147]) {
+        case 1 : this->MBC1 = true ; break;
+        case 2 : this->MBC1 = true ; break;
+        case 3 : this->MBC1 = true ; break;
+        case 5 : this->MBC2 = true ; break;
+        case 6 : this->MBC2 = true ; break;
+        default : break; 
+    }
+
+    this->currentROMBank = 1;
+
+    memset(this->RAMBanks, 0, sizeof(this->RAMBanks));
+    this->currentRAMBank = 0;
 
 }
 
 bool Emulator::loadGame(string file_path) {
 
-    memset(cartridgeMem, 0, sizeof(cartridgeMem));
+    memset(this->cartridgeMem, 0, sizeof(this->cartridgeMem));
     
     //load in the game
     FILE* in;
@@ -171,10 +206,190 @@ bool Emulator::loadGame(string file_path) {
     rewind(in);
     
     // Read file into gameMemory
-    fread(&cartridgeMem, fileSize, 1, in);
+    fread(this->cartridgeMem, fileSize, 1, in);
     fclose(in);
 
     return true;
+}
+
+BYTE Emulator::readMem(WORD address) const {
+
+    // If reading from switchable ROM banking area
+    if ((address >= 0x4000) && (address <= 0x7FFF)) {
+        WORD newAddress = (this->currentROMBank * 0x4000) + (address - 0x4000);
+        return this->cartridgeMem[newAddress];
+    } 
+    
+    // If reading from the switchable RAM banking area
+    else if ((address >= 0xA000) && (address <= 0xBFFF)) {
+        WORD newAddress = (this->currentRAMBank * 0x2000) + (address - 0xA000);
+        return this->cartridgeMem[newAddress];
+    }
+
+    // else return what's in the memory
+    return this->cartridgeMem[address];
+
+}
+
+void Emulator::writeMem(WORD address, BYTE data) {
+
+    // write attempts to ROM
+    if (address < 0x8000) {
+        this->handleBanking(address, data);
+    }
+
+    // write attempts to RAM
+    else if ((address >= 0xA000) && (address <= 0xBFFF)) {
+        if (this->enableRAM) {
+            WORD newAddress = (address - 0xA000) + (this->currentRAMBank * 0x2000);
+            this->RAMBanks[newAddress] = data;
+        }
+    }
+
+    // writing to Echo RAM also writes to work RAM
+    else if ((address >= 0xE000) && (address <= 0xFDFF)) {
+        this->internalMem[address] = data;
+        this->writeMem(address - 0x2000, data);
+    }
+
+    else if ((address >= 0xFEA0) && (address <= 0xFEFF)) {}
+
+    else {
+        this->internalMem[address] = data;
+    }
+
+    /*
+
+    if (address == 0xFF04) { // FF04 is divider register, its value is reset to 0 if game attempts to write to it
+        this->internalMem[0xFF04] = 0;
+    }
+
+    if (address == 0xFF07) { // FF07 is timer controller, if game changes the freq, the counter must change accordingly
+        // get the currentFreq, do the writing, then compare with newFreq. if different, counter must be updated
+
+        BYTE currentFreq = this->readMem(0xFF07) & 0x3; // to extract bit 1 and 0 of timer controller register
+        internalMem[0xFF07] = data; // write the data to the address
+        BYTE newFreq = this->readMem(0xFF07) & 0x3;
+
+        if (currentFreq != newFreq) { // if the freq has changed
+            switch (newFreq) {
+                case 0: this->timerCounter = 1024; this->timerCounterFixed = 1024; break; // 4096Hz
+                case 1: this->timerCounter = 16; break; this->timerCounterFixed = 16; // 262144Hz
+                case 2: this->timerCounter = 64; break; this->timerCounterFixed = 64; // 65536Hz
+                case 3: this->timerCounter = 256; this->timerCounterFixed = 256; break; // 16384Hz
+            }
+        }
+    }
+
+    */
+
+}
+
+void Emulator::handleBanking(WORD address, BYTE data) {
+    // do RAM enabling
+    if (address < 0x2000) {
+        this->doRAMBankEnable(address, data);
+    }
+
+    // do ROM bank change
+    else if ((address >= 0x2000) && (address <= 0x3FFF)) {
+        if (this->MBC1) this->doChangeLoROMBank(data);
+        // if MBC2, LSB of upper address byte must be 1 to select ROM bank
+        else if ((address && 0x0100) == 0x0) this->doChangeLoROMBank(data);
+    }
+
+    // do ROM or RAM bank change
+    else if ((address >= 0x4000) && (address <= 0x5FFF)) {
+        if (this->MBC1) {
+            if (this->ROMBanking) {
+                this->doChangeHiROMBank(data);
+            } else {
+                this->doRAMBankChange(data);
+            }
+        }
+    }
+
+    // this changes whether we are doing ROM banking
+    // or RAM banking with the above if statement
+    else if ((address >= 0x6000) && (address <= 0x7FFF)) {
+        if (this->MBC1) {
+            this->doChangeROMRAMMode(data);
+        }
+    }
+
+}
+
+void Emulator::doRAMBankEnable(WORD address, BYTE data) {
+
+    // for MBC2, LSB of upper byte of address must be 0 to do enable
+    if (this->MBC2) {
+        if (((address >> 8) & 0x1) == 1) return;
+    }
+
+    BYTE testData = data & 0xF;
+    if (testData == 0xA) {
+        this->enableRAM = true;
+    } else if (testData == 0x0) {
+        this->enableRAM = false;
+    }
+
+}
+
+void Emulator::doChangeLoROMBank(BYTE data) {
+    
+    // if MBC2, current ROM bank is lower nibble of data
+    if (this->MBC2) {
+        this->currentROMBank = data & 0xF;
+        if (this->currentROMBank == 0x0) this->currentROMBank = 0x1;
+        return;
+    }
+
+    BYTE lower5bits = data & 0x1F;
+    
+    // if lower5bits == 0x0, gameboy automatically sets it to 0x1 as ROM 0 can 
+    // always be accessed from 0x0000-3FFF
+    if (lower5bits == 0x0) lower5bits = 0x1;
+    
+    this->currentROMBank &= 0xE0; // mask the last 5 bits to 0
+    this->currentROMBank |= lower5bits; // match last 5 bits to lower5bits
+
+}
+
+void Emulator::doChangeHiROMBank(BYTE data) {
+
+    // change bit 6-5 of currentROMBank to bit 6-5 of data
+
+    // turn off the upper 3 bits of the current rom (since bit 7 must == 0)
+    this->currentROMBank &= 0x1F;
+
+    data &= 0xE0; // turn off the lower 5 bits of the data
+    this->currentROMBank |= data; // match higher 3 bits of data
+
+    // to make sure bit 7 == 0? might cause error here, might just only read 
+    // first 7 bits from the 8 bit address to find which ROM bank to use. not 
+    // sure, please check!
+    assert((this->currentROMBank >> 7) == 0x0);
+
+}
+
+void Emulator::doRAMBankChange(BYTE data) {
+    // only 4 RAM banks to choose from, 0x0-3
+    this->currentRAMBank = data & 0x3;
+}
+
+void Emulator::doChangeROMRAMMode(BYTE data) {
+    
+    // ROM banking mode: 0x0
+    // RAM banking mode: 0x1
+    BYTE newData = data & 0x1;
+    this->ROMBanking = newData == 0x0;
+    
+    // The program may freely switch between both modes, the only limitiation 
+    // is that only RAM Bank 00h can be used during Mode 0, and only ROM Banks 
+    // 00-1Fh can be used during Mode 1.
+    if (this->ROMBanking) {
+        this->currentRAMBank = 0x0;
+    }
 }
 
 void Emulator::update() {
@@ -259,51 +474,4 @@ void Emulator::updateTimers(int cycles) {
             writeMem(TIMA, readMem(TIMA) + 1); // TIMA is incremented by 1
         }
     }
-
-}
-
-void Emulator::writeMem(WORD address, BYTE data) {
-    if (address < 0x8000) {}
-
-    // writing to Echo RAM also writes to work RAM
-    else if ((address >= 0xE000) && (address <= 0xFDFF)) {
-        this->internalMem[address] = data;
-        writeMem(address - 0x2000, data);
-    }
-
-    else if ((address >= 0xFEA0) && (address <= 0xFEFF)) {}
-
-    else {
-        this->internalMem[address] = data;
-    }
-
-    /*
-
-    if (address == 0xFF04) { // FF04 is divider register, its value is reset to 0 if game attempts to write to it
-        this->internalMem[0xFF04] = 0;
-    }
-
-    if (address == 0xFF07) { // FF07 is timer controller, if game changes the freq, the counter must change accordingly
-        // get the currentFreq, do the writing, then compare with newFreq. if different, counter must be updated
-
-        BYTE currentFreq = this->readMem(0xFF07) & 0x3; // to extract bit 1 and 0 of timer controller register
-        internalMem[0xFF07] = data; // write the data to the address
-        BYTE newFreq = this->readMem(0xFF07) & 0x3;
-
-        if (currentFreq != newFreq) { // if the freq has changed
-            switch (newFreq) {
-                case 0: this->timerCounter = 1024; this->timerCounterFixed = 1024; break; // 4096Hz
-                case 1: this->timerCounter = 16; break; this->timerCounterFixed = 16; // 262144Hz
-                case 2: this->timerCounter = 64; break; this->timerCounterFixed = 64; // 65536Hz
-                case 3: this->timerCounter = 256; this->timerCounterFixed = 256; break; // 16384Hz
-            }
-        }
-    }
-
-    */
-
-}
-
-BYTE Emulator::readMem(WORD address) const {
-
 }
