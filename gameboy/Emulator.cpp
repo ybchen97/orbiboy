@@ -322,12 +322,12 @@ void Emulator::writeMem(WORD address, BYTE data) {
                     break; // 4096Hz
                 case 0b01: 
                     this->timerCounter = 16;
-                    break; 
-                    this->timerUpdateConstant = 16; // 262144Hz
+                    this->timerUpdateConstant = 16;
+                    break; // 262144Hz
                 case 0b10: 
                     this->timerCounter = 64; 
-                    break; 
-                    this->timerUpdateConstant = 64; // 65536Hz
+                    this->timerUpdateConstant = 64;
+                    break; // 65536Hz
                 case 0b11: 
                     this->timerCounter = 256; 
                     this->timerUpdateConstant = 256; 
