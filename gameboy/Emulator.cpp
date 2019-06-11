@@ -121,6 +121,8 @@ class Emulator {
         int timerUpdateConstant;
         int dividerCounter;
 
+        bool InterruptMasterEnabled; // Interrupt Master Enabledswitch
+
         // FUNCTIONS
 
         void handleBanking(WORD, BYTE);
@@ -133,6 +135,10 @@ class Emulator {
         void update();
         void updateTimers(int);
         bool clockEnabled();
+
+        void flagInterrupt(int);
+        void handleInterrupts();
+        void triggerInterrupt(int);
 
 };
 /*
@@ -232,7 +238,7 @@ bool Emulator::loadGame(string file_path) {
     return true;
 }
 
-void Emulator::update() {
+void Emulator::update() { // MAIN UPDATE LOOP
 
     // update function called 60 times per second -> screen rendered @ 60fps
 
@@ -453,6 +459,77 @@ void Emulator::doChangeROMRAMMode(BYTE data) {
 
 /*
 ********************************************************************************
+INTERRUPT FUNCTIONS
+********************************************************************************
+*/
+
+/*
+
+Within the main emulation update loop, interrupts can be flagged (the 4 different interrupts being emulated).
+
+Interrupt Master Enabled switch - bool turned on and off by CPU instructions EI & DI (Enable/Disable Interrupts)
+
+Interrupt Request Register - 0xFF0F
+Interrupt Enabled Register - 0xFFFF
+
+After interrupts are flagged, interrupts are handled at the end of the loop.
+While handling interrupts, for any flagged interrupts, they will be triggered.
+
+*/
+
+void Emulator::flagInterrupt(int interruptID) { 
+    BYTE requestReg = this->readMem(0xFF0F);
+    requestReg |= (0b1 << interruptID); // Set the corresponding bit in the interrupt req register 0xFF0F
+    this->writeMem(0xFF0F, requestReg); // Update the request register;
+}
+
+void Emulator::handleInterrupts() {
+    if (InterruptMasterEnabled) { // Check if the IME switch is true
+        BYTE requestReg = this->readMem(0xFF0F);
+        BYTE enabledReg = this->readMem(0xFFFF);
+
+        if ((requestReg & enabledReg) > 0) { // If there are any valid interrupt requests enabled
+            this->InterruptMasterEnabled = false; // Disable further interrupts
+            
+            this->stackPointer--;
+            this->writeMem(this->stackPointer, this->programCounter.high);
+            this->stackPointer--;
+            this->writeMem(this->stackPointer, this->programCounter.low); 
+            // Saves current PC to SP, SP is now pointing at bottom of PC. Need to increment SP by 2 when returning
+
+            for (int i = 0; i < 5; i++) { // Go through the bits and service the flagged interrupts
+                bool isFlagged = (requestReg >> i) & 0x1 == 1;
+                bool isEnabled = (enabledReg >> i) & 0x1 == 1; 
+                if (isFlagged && isEnabled) { // If n-th bit is flagged and enabled, trigger the corresponding interrupt
+                    triggerInterrupt(i);
+                }
+            }
+        }
+    }
+}
+
+void Emulator::triggerInterrupt(int interruptID) {
+    BYTE requestReg = readMem(0xFF0F);
+    requestReg ^= (0b1 << interruptID); // Resetting the n-th bit
+    this->writeMem(0xFF0F, requestReg); 
+    switch (interruptID) {
+        case 0 : // V-Blank
+            this->programCounter = 0x40;
+            break;
+        case 1 : // LCD
+            this->programCounter = 0x48;
+            break;
+        case 2 : // Timer
+            this->programCounter = 0x50;
+            break;
+        case 4 : // Joypad
+            this->programCounter = 0x60;
+            break;
+    }
+}
+
+/*
+********************************************************************************
 TIMER UPDATE FUNCTIONS
 ********************************************************************************
 */
@@ -525,7 +602,7 @@ void Emulator::updateTimers(int cycles) {
             if (this->readMem(TIMA) == 0xFF) { 
                 this->writeMem(TIMA, this->readMem(TMA)); // set value of TIMA to value of TMA
                 
-                this->triggerInterrupt(2); // The interrupt triggered is corresponded to bit 2 of interrupt register
+                this->flagInterrupt(2); // The interrupt flagged is corresponded to bit 2 of interrupt register
                 
             } else {
                 this->writeMem(TIMA, this->readMem(TIMA) + 1); // TIMA is incremented by 1
