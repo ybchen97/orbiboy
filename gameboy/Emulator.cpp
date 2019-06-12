@@ -88,6 +88,11 @@ class Emulator {
         void writeMem(WORD, BYTE);
         BYTE readMem(WORD) const;
 
+        // Utility
+        bool isBitSet(BYTE, int);
+        BYTE bitSet(BYTE, int);
+        BYTE bitReset(BYTE, int);
+
     private:
         // ATTRIBUTES
 
@@ -121,6 +126,9 @@ class Emulator {
         int timerUpdateConstant;
         int dividerCounter;
 
+        // Interrupt
+        bool InterruptMasterEnabled; // Interrupt Master Enabledswitch
+
         // Graphics
         int scanlineCycleCount;
 
@@ -139,10 +147,15 @@ class Emulator {
         void updateTimers(int);
         bool clockEnabled();
 
+        // Interrupt
+        void flagInterrupt(int);
+        void handleInterrupts();
+        void triggerInterrupt(int);
+
         // Graphics
         void updateGraphics(int);
         void setLCDStatus();
-        bool LCDEnabled() const;
+        bool LCDEnabled();
 
 };
 /*
@@ -245,7 +258,7 @@ bool Emulator::loadGame(string file_path) {
     return true;
 }
 
-void Emulator::update() {
+void Emulator::update() { // MAIN UPDATE LOOP
 
     // update function called 60 times per second -> screen rendered @ 60fps
 
@@ -372,7 +385,7 @@ void Emulator::handleBanking(WORD address, BYTE data) {
     else if ((address >= 0x2000) && (address <= 0x3FFF)) {
         if (this->MBC1) this->doChangeLoROMBank(data);
         // if MBC2, LSB of upper address byte must be 1 to select ROM bank
-        else if (((address >> 8) & 0x1) == 0x1) this->doChangeLoROMBank(data);
+        else if (this->isBitSet(address, 8)) this->doChangeLoROMBank(data);
     }
 
     // do ROM or RAM bank change
@@ -400,7 +413,7 @@ void Emulator::doRAMBankEnable(WORD address, BYTE data) {
 
     // for MBC2, LSB of upper byte of address must be 0 to do enable
     if (this->MBC2) {
-        if (((address >> 8) & 0x1) == 0x1) return;
+        if (this->isBitSet(address, 8)) return;
     }
 
     BYTE testData = data & 0xF;
@@ -466,6 +479,77 @@ void Emulator::doChangeROMRAMMode(BYTE data) {
     // 00-1Fh can be used during Mode 1.
     if (this->ROMBanking) {
         this->currentRAMBank = 0x0;
+    }
+}
+
+/*
+********************************************************************************
+INTERRUPT FUNCTIONS
+********************************************************************************
+*/
+
+/*
+
+Within the main emulation update loop, interrupts can be flagged (the 4 different interrupts being emulated).
+
+Interrupt Master Enabled switch - bool turned on and off by CPU instructions EI & DI (Enable/Disable Interrupts)
+
+Interrupt Request Register - 0xFF0F
+Interrupt Enabled Register - 0xFFFF
+
+After interrupts are flagged, interrupts are handled at the end of the loop.
+While handling interrupts, for any flagged interrupts, they will be triggered.
+
+*/
+
+void Emulator::flagInterrupt(int interruptID) { 
+    BYTE requestReg = this->readMem(0xFF0F);
+    bitSet(requestReg, interruptID); // Set the corresponding bit in the interrupt req register 0xFF0F
+    this->writeMem(0xFF0F, requestReg); // Update the request register;
+}
+
+void Emulator::handleInterrupts() {
+    if (InterruptMasterEnabled) { // Check if the IME switch is true
+        BYTE requestReg = this->readMem(0xFF0F);
+        BYTE enabledReg = this->readMem(0xFFFF);
+
+        if ((requestReg & enabledReg) > 0) { // If there are any valid interrupt requests enabled
+            this->InterruptMasterEnabled = false; // Disable further interrupts
+            
+            this->stackPointer--;
+            this->writeMem(this->stackPointer, this->programCounter.high);
+            this->stackPointer--;
+            this->writeMem(this->stackPointer, this->programCounter.low); 
+            // Saves current PC to SP, SP is now pointing at bottom of PC. Need to increment SP by 2 when returning
+
+            for (int i = 0; i < 5; i++) { // Go through the bits and service the flagged interrupts
+                bool isFlagged = isBitSet(requestReg, i);
+                bool isEnabled = isBitSet(enabledReg, i);
+                if (isFlagged && isEnabled) { // If n-th bit is flagged and enabled, trigger the corresponding interrupt
+                    triggerInterrupt(i);
+                }
+            }
+        }
+    }
+}
+
+void Emulator::triggerInterrupt(int interruptID) {
+    BYTE requestReg = readMem(0xFF0F);
+    bitReset(requestReg, interruptID); // Resetting the n-th bit
+    this->writeMem(0xFF0F, requestReg); 
+    switch (interruptID) {
+        case 0 : // V-Blank
+            this->programCounter = 0x40;
+            break;
+        case 1 : // LCD
+            this->programCounter = 0x48;
+            break;
+        case 2 : // Timer
+            this->programCounter = 0x50;
+            break;
+        case 4 : // Joypad
+            this->programCounter = 0x60;
+            break;
     }
 }
 
@@ -543,7 +627,7 @@ void Emulator::updateTimers(int cycles) {
             if (this->readMem(TIMA) == 0xFF) { 
                 this->writeMem(TIMA, this->readMem(TMA)); // set value of TIMA to value of TMA
                 
-                this->flagInterrupt(2); // The interrupt triggered is corresponded to bit 2 of interrupt register
+                this->flagInterrupt(2); // The interrupt flagged is corresponded to bit 2 of interrupt register
                 
             } else {
                 this->writeMem(TIMA, this->readMem(TIMA) + 1); // TIMA is incremented by 1
@@ -557,9 +641,8 @@ void Emulator::updateTimers(int cycles) {
 
 bool Emulator::clockEnabled() {
     // Bit 2 of TAC specifies whether timer is enabled(1) or disabled(0)
-    return ((this->readMem(TAC) >> 2) & 0x1) == 1;
+    return this->isBitSet(this->readMem(TAC), 2);
 }
-
 
 /*
 ********************************************************************************
@@ -658,8 +741,8 @@ void Emulator::setLCDStatus() {
         this->scanlineCycleCount = 456;
         this->internalMem[0xFF44] = 0;
         // set last 2 bits of status to 01
-        status |= 0b01;
-        status &= ~0b10;
+        status = this->bitSet(status, 0);
+        status = this->bitReset(status, 1);
 
         this->writeMem(0xFF41, status);
         return;
@@ -675,10 +758,10 @@ void Emulator::setLCDStatus() {
     if (currentLine >= 144) {
         newMode = 1;
         // set last 2 bits of status to 01
-        status |= 0b01;
-        status &= ~0b10;
+        status = this->bitSet(status, 0);
+        status = this->bitReset(status, 1);
         // check if vblank interrupt (bit 4) is enabled
-        needInterrupt = ((status >> 4) & 0x1) == 1;
+        needInterrupt = this->isBitSet(status, 4);
     } else  {
         
         /*
@@ -695,26 +778,28 @@ void Emulator::setLCDStatus() {
         if (this->scanlineCycleCount > 376) {
             newMode = 2;
             // set last 2 bits of status to 10
-            status &= ~0b01;
-            status |= 0b10;
+            status = this->bitReset(status, 0);
+            status = this->bitSet(status, 1);
             // check if OAM interrupt (bit 5) is enabled
-            needInterrupt = ((status >> 5) & 0x1) == 1;
+            needInterrupt = this->isBitSet(status, 5);
         }
 
         // mode 3: 376 - 172 = 204
         else if (this->scanlineCycleCount > 204) {
             newMode = 3;
             // set last 2 bits of status to 11
-            status |= 0b11;
+            status = this->bitSet(status, 0);
+            status = this->bitSet(status, 1);
         }
 
         // mode 0
         else {
             newMode = 0;
             // set last 2 bits of status to 00
-            status &= ~0b11;
+            status = this->bitReset(status, 0);
+            status = this->bitReset(status, 1);
             // check if hblank interrupt (bit 3) is enabled
-            needInterrupt = ((status >> 3) & 0x1) == 1;
+            needInterrupt = this->isBitSet(status, 3);
         }
     }
 
@@ -726,20 +811,40 @@ void Emulator::setLCDStatus() {
     // check for the coincidence flag
     if (currentLine == this->readMem(0xFF45)) {
         // set coincidence flag (bit 2) to 1
-        status |= 0b100;
+        status = this->bitSet(status, 2);
         // check if coincidence flag interrupt (bit 6) is enabled
-        if (((status >> 6) & 0x1) == 0x1) {
+        if (this->isBitSet(status, 6)) {
             this->flagInterrupt(1);
         }
     } else {
         // set coincidence flag (bit 2) to 0
-        status &= ~0b100;
+        status = this->bitReset(status, 2);
     }
 
     this->writeMem(0xFF41, status);
 
 }
 
-bool Emulator::LCDEnabled() const {
-    return (this->readMem(0xFF40) >> 7) == 0x1;
+bool Emulator::LCDEnabled() {
+    return this->isBitSet(this->readMem(0xFF40), 7);
+}
+
+/*
+********************************************************************************
+Utility Functions
+********************************************************************************
+*/
+
+bool Emulator::isBitSet(BYTE data, int position) {
+    return (data >> position) & 0x1 == 0x1;
+}
+
+BYTE Emulator::bitSet(BYTE data, int position) {
+    int mask = 1 << position;
+    return data |= mask;
+}
+
+BYTE Emulator::bitReset(BYTE data, int position) {
+    int mask = ~(1 << position);
+    return data &= mask;
 }
