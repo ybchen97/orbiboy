@@ -121,8 +121,13 @@ class Emulator {
         int timerUpdateConstant;
         int dividerCounter;
 
-        // FUNCTIONS
+        // Graphics
+        int scanlineCycleCount;
 
+        // FUNCTIONS
+        void update();
+
+        // Memory
         void handleBanking(WORD, BYTE);
         void doRAMBankEnable(WORD, BYTE);
         void doChangeLoROMBank(BYTE);
@@ -130,9 +135,14 @@ class Emulator {
         void doRAMBankChange(BYTE);
         void doChangeROMRAMMode(BYTE);
 
-        void update();
+        // Timer
         void updateTimers(int);
         bool clockEnabled();
+
+        // Graphics
+        void updateGraphics(int);
+        void setLCDStatus();
+        bool LCDEnabled() const;
 
 };
 /*
@@ -149,9 +159,9 @@ void Emulator::resetCPU() {
     this->stackPointer.regstr = 0xFFFE;
     this->programCounter.regstr = 0x100; 
 
-    this->internalMem[0xFF05] = 0x00; 
-    this->internalMem[0xFF06] = 0x00;
-    this->internalMem[0xFF07] = 0x00; 
+    this->internalMem[0xFF05] = 0x00; // TIMA
+    this->internalMem[0xFF06] = 0x00; // TMA
+    this->internalMem[0xFF07] = 0x00; // TAC
     this->internalMem[0xFF10] = 0x80; 
     this->internalMem[0xFF11] = 0xBF; 
     this->internalMem[0xFF12] = 0xF3; 
@@ -173,13 +183,13 @@ void Emulator::resetCPU() {
     this->internalMem[0xFF40] = 0x91; 
     this->internalMem[0xFF42] = 0x00; 
     this->internalMem[0xFF43] = 0x00; 
-    this->internalMem[0xFF45] = 0x00; 
+    this->internalMem[0xFF45] = 0x00; // LYC
     this->internalMem[0xFF47] = 0xFC; 
     this->internalMem[0xFF48] = 0xFF; 
     this->internalMem[0xFF49] = 0xFF; 
     this->internalMem[0xFF4A] = 0x00; 
     this->internalMem[0xFF4B] = 0x00; 
-    this->internalMem[0xFFFF] = 0x00;
+    this->internalMem[0xFFFF] = 0x00; // IE
 
     this->MBC1 = false;
     this->MBC2 = false;
@@ -203,6 +213,9 @@ void Emulator::resetCPU() {
     this->timerUpdateConstant = 1024;
     this->timerCounter = 1024;
     this->dividerCounter = 0;
+
+    // Graphics
+    this->scanlineCycleCount = 456;
 
 }
 
@@ -337,6 +350,11 @@ void Emulator::writeMem(WORD address, BYTE data) {
             }
         }
     }
+
+    // reset the current scanline to 0 if game tries to write to it
+    else if (address == 0xFF44) {
+        this->internalMem[address] = 0;
+    }
     
     else {
         this->internalMem[address] = data;
@@ -354,7 +372,7 @@ void Emulator::handleBanking(WORD address, BYTE data) {
     else if ((address >= 0x2000) && (address <= 0x3FFF)) {
         if (this->MBC1) this->doChangeLoROMBank(data);
         // if MBC2, LSB of upper address byte must be 1 to select ROM bank
-        else if ((address && 0x0100) == 0x0) this->doChangeLoROMBank(data);
+        else if (((address >> 8) & 0x1) == 0x1) this->doChangeLoROMBank(data);
     }
 
     // do ROM or RAM bank change
@@ -382,7 +400,7 @@ void Emulator::doRAMBankEnable(WORD address, BYTE data) {
 
     // for MBC2, LSB of upper byte of address must be 0 to do enable
     if (this->MBC2) {
-        if (((address >> 8) & 0x1) == 1) return;
+        if (((address >> 8) & 0x1) == 0x1) return;
     }
 
     BYTE testData = data & 0xF;
@@ -427,7 +445,7 @@ void Emulator::doChangeHiROMBank(BYTE data) {
     // to make sure bit 7 == 0? might cause error here, might just only read 
     // first 7 bits from the 8 bit address to find which ROM bank to use. not 
     // sure, please check!
-    assert((this->currentROMBank >> 7) == 0x0);
+    assert(((this->currentROMBank >> 7) & 0x1) == 0x0);
 
 }
 
@@ -525,7 +543,7 @@ void Emulator::updateTimers(int cycles) {
             if (this->readMem(TIMA) == 0xFF) { 
                 this->writeMem(TIMA, this->readMem(TMA)); // set value of TIMA to value of TMA
                 
-                this->triggerInterrupt(2); // The interrupt triggered is corresponded to bit 2 of interrupt register
+                this->flagInterrupt(2); // The interrupt triggered is corresponded to bit 2 of interrupt register
                 
             } else {
                 this->writeMem(TIMA, this->readMem(TIMA) + 1); // TIMA is incremented by 1
@@ -539,5 +557,189 @@ void Emulator::updateTimers(int cycles) {
 
 bool Emulator::clockEnabled() {
     // Bit 2 of TAC specifies whether timer is enabled(1) or disabled(0)
-    return (this->readMem(TAC) >> 2) == 1;
+    return ((this->readMem(TAC) >> 2) & 0x1) == 1;
+}
+
+
+/*
+********************************************************************************
+GRAPHICS
+********************************************************************************
+*/
+
+/*
+
+LCD Controller operates at 2^22 Hz dot clock (pixels drawn per second) which is 
+the same as the CPU clock speed. This means each dot takes 1 cycle to be drawn.
+
+An entire frame consists of 154 scanlines
+Screen resolution: 160x144 (scanlines 0-143: visible)
+10 line vblank (scanlines 144-153: invisible)
+Each scanline 456 clock cycles to run -> entire frame 70224 clock cycles
+
+Register 0xFF44 is the current scanline
+
+++ Register 0xFF41 ++
+Register 0xFF41 holds current status of LCD controller
+The LCD controller has 4 different modes, reflected by bits 1 & 0 of 0xFF41:
+
+00: H-Blank
+01: V-Blank
+10: Searching Sprites Atts (OAM: Object Attribute Memory)
+11: Transfering Data to LCD Driver
+
+Bits 3, 4, and 5 represents mode 0, 1, and 2 interrupts respectively if set:
+
+Bit 3: Mode 0 H-BlankInterrupt enabled
+Bit 4: Mode 1 V-Blank Interrupt enabled
+Bit 5: Mode 2 OAM Interrupt enabled
+
+Thus, when the LCD mode changes to 0, 1 or 2 and the corresponding bit is set, 
+then an LCD interrupt is requested. This is only checked when the mode changes
+and not during the duration of these modes.
+
+When LCD is disabled, LCD controller mode must be set to mode 1
+
+Bit 2 is the coincidence flag. It is set to 1 if register 0xFF44 has the same 
+value of register 0xFF55 otherwise it is 0.
+Bit 6 is the coincidence flag interrupt. Works the same as bits 3, 4 & 5: if
+Bit 2 is set and Bit 6 is enabled (set to 1), an LCD interrupt is requested.
+
+Bit 7 is unimplemented
+++ End of 0xFF41 ++
+
+
+
+*/
+
+void Emulator::updateGraphics(int cycles) {
+
+    this->setLCDStatus();
+
+    if (LCDEnabled()) {
+        this->scanlineCycleCount -= cycles;
+    } else {
+        return;
+    }
+
+    // move onto the next scanline
+    if (this->scanlineCycleCount <= 0) {
+        // need to update directly since gameboy will always reset scanline to 0
+        // if attempting to write to 0xFF44 in memory
+        this->internalMem[0xFF44]++;
+        BYTE currentLine = this->readMem(0xFF44);
+
+        this->scanlineCycleCount = 456;
+
+        // encountered vblank period
+        if (currentLine == 144) {
+            this->flagInterrupt(0);
+        }
+
+        // if gone past scanline 153 reset to 0
+        else if (currentLine > 153) {
+            this->internalMem[0xFF44] = 0;
+        }
+
+        // draw the current scanline
+        else if (currentLine < 144) {
+            this->drawScanLine();
+        }
+    }
+
+}
+
+void Emulator::setLCDStatus() {
+
+    BYTE status = this->readMem(0xFF41);
+
+    if (!LCDEnabled()) {
+        // set the mode to 1 during lcd disabled and reset scanline
+        this->scanlineCycleCount = 456;
+        this->internalMem[0xFF44] = 0;
+        // set last 2 bits of status to 01
+        status |= 0b01;
+        status &= ~0b10;
+
+        this->writeMem(0xFF41, status);
+        return;
+    }
+
+    BYTE currentLine = this->readMem(0xFF44);
+    BYTE currentMode = status & 0x3;
+
+    BYTE newMode = 0;
+    bool needInterrupt = false;
+
+    // in vblank so set mode to 1
+    if (currentLine >= 144) {
+        newMode = 1;
+        // set last 2 bits of status to 01
+        status |= 0b01;
+        status &= ~0b10;
+        // check if vblank interrupt (bit 4) is enabled
+        needInterrupt = ((status >> 4) & 0x1) == 1;
+    } else  {
+        
+        /*
+        LCD controller cycles through modes 2, 3 & 0
+        Mode 2 lasts roughly 80 cycles
+        Mode 3 lasts roughly 172 cycles
+        Mode 0 takes up the remaining cycles
+
+        Each time a new mode is entered (except mode 3), an interrupt will be 
+        called
+        */
+
+        // mode 2: 456 - 80 = 376
+        if (this->scanlineCycleCount > 376) {
+            newMode = 2;
+            // set last 2 bits of status to 10
+            status &= ~0b01;
+            status |= 0b10;
+            // check if OAM interrupt (bit 5) is enabled
+            needInterrupt = ((status >> 5) & 0x1) == 1;
+        }
+
+        // mode 3: 376 - 172 = 204
+        else if (this->scanlineCycleCount > 204) {
+            newMode = 3;
+            // set last 2 bits of status to 11
+            status |= 0b11;
+        }
+
+        // mode 0
+        else {
+            newMode = 0;
+            // set last 2 bits of status to 00
+            status &= ~0b11;
+            // check if hblank interrupt (bit 3) is enabled
+            needInterrupt = ((status >> 3) & 0x1) == 1;
+        }
+    }
+
+    // if a new mode is entered, request interrupt
+    if (needInterrupt && (newMode != currentMode)) {
+        this->flagInterrupt(1);
+    }
+
+    // check for the coincidence flag
+    if (currentLine == this->readMem(0xFF45)) {
+        // set coincidence flag (bit 2) to 1
+        status |= 0b100;
+        // check if coincidence flag interrupt (bit 6) is enabled
+        if (((status >> 6) & 0x1) == 0x1) {
+            this->flagInterrupt(1);
+        }
+    } else {
+        // set coincidence flag (bit 2) to 0
+        status &= ~0b100;
+    }
+
+    this->writeMem(0xFF41, status);
+
+}
+
+bool Emulator::LCDEnabled() const {
+    return (this->readMem(0xFF40) >> 7) == 0x1;
 }
