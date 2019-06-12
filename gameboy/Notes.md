@@ -5,6 +5,9 @@
 #### Discrepancies to note:
 - Missing MBC2 section in writeMem at address A000-A1FF
 
+#### Others
+- Usage of bitwise not (~) on binary numbers. Not sure if cpp can differentiate context and difference between two's complement & unsigned integer. Appears in setLCDStatus() under the graphics section
+
 ## Code refactoring
 - Further breaking down and abstracting out parts of the emulator so it's not
   just one big humongous class
