@@ -227,6 +227,9 @@ void Emulator::resetCPU() {
     this->timerCounter = 1024;
     this->dividerCounter = 0;
 
+    // Interrupts
+    this->InterruptMasterEnabled = false;
+
     // Graphics
     this->scanlineCycleCount = 456;
 
@@ -516,10 +519,10 @@ void Emulator::handleInterrupts() {
         if ((requestReg & enabledReg) > 0) { // If there are any valid interrupt requests enabled
             this->InterruptMasterEnabled = false; // Disable further interrupts
             
-            this->stackPointer--;
-            this->writeMem(this->stackPointer, this->programCounter.high);
-            this->stackPointer--;
-            this->writeMem(this->stackPointer, this->programCounter.low); 
+            this->stackPointer.regstr--;
+            this->writeMem(this->stackPointer.regstr, this->programCounter.high);
+            this->stackPointer.regstr--;
+            this->writeMem(this->stackPointer.regstr, this->programCounter.low); 
             // Saves current PC to SP, SP is now pointing at bottom of PC. Need to increment SP by 2 when returning
 
             for (int i = 0; i < 5; i++) { // Go through the bits and service the flagged interrupts
@@ -539,16 +542,16 @@ void Emulator::triggerInterrupt(int interruptID) {
     this->writeMem(0xFF0F, requestReg); 
     switch (interruptID) {
         case 0 : // V-Blank
-            this->programCounter = 0x40;
+            this->programCounter.regstr = 0x40;
             break;
         case 1 : // LCD
-            this->programCounter = 0x48;
+            this->programCounter.regstr = 0x48;
             break;
         case 2 : // Timer
-            this->programCounter = 0x50;
+            this->programCounter.regstr = 0x50;
             break;
         case 4 : // Joypad
-            this->programCounter = 0x60;
+            this->programCounter.regstr = 0x60;
             break;
     }
 }

@@ -34,3 +34,7 @@ if (address <= 0x1FFF) {
     ...
 }
 ```
+# Useful links
+
+Debugging possibly helpful
+https://www.reddit.com/r/EmuDev/comments/a1pt87/need_help_with_gameboy_emulator_lcd_controller/
