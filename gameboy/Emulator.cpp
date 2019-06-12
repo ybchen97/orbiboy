@@ -479,7 +479,7 @@ While handling interrupts, for any flagged interrupts, they will be triggered.
 
 void Emulator::flagInterrupt(int interruptID) { 
     BYTE requestReg = this->readMem(0xFF0F);
-    requestReg |= (0b1 << interruptID); // Set the corresponding bit in the interrupt req register 0xFF0F
+    bitSet(requestReg, interruptID); // Set the corresponding bit in the interrupt req register 0xFF0F
     this->writeMem(0xFF0F, requestReg); // Update the request register;
 }
 
@@ -498,8 +498,8 @@ void Emulator::handleInterrupts() {
             // Saves current PC to SP, SP is now pointing at bottom of PC. Need to increment SP by 2 when returning
 
             for (int i = 0; i < 5; i++) { // Go through the bits and service the flagged interrupts
-                bool isFlagged = (requestReg >> i) & 0x1 == 1;
-                bool isEnabled = (enabledReg >> i) & 0x1 == 1; 
+                bool isFlagged = isBitSet(requestReg, i);
+                bool isEnabled = isBitSet(enabledReg, i);
                 if (isFlagged && isEnabled) { // If n-th bit is flagged and enabled, trigger the corresponding interrupt
                     triggerInterrupt(i);
                 }
@@ -510,7 +510,7 @@ void Emulator::handleInterrupts() {
 
 void Emulator::triggerInterrupt(int interruptID) {
     BYTE requestReg = readMem(0xFF0F);
-    requestReg ^= (0b1 << interruptID); // Resetting the n-th bit
+    bitReset(requestReg, interruptID); // Resetting the n-th bit
     this->writeMem(0xFF0F, requestReg); 
     switch (interruptID) {
         case 0 : // V-Blank
@@ -616,5 +616,5 @@ void Emulator::updateTimers(int cycles) {
 
 bool Emulator::clockEnabled() {
     // Bit 2 of TAC specifies whether timer is enabled(1) or disabled(0)
-    return (this->readMem(TAC) >> 2) == 1;
+    return isBitSet(this->readMem(TAC), 2);
 }
