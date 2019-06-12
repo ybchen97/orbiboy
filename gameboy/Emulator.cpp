@@ -157,6 +157,8 @@ class Emulator {
         void setLCDStatus();
         bool LCDEnabled();
 
+        void doDMATransfer(BYTE);
+
 };
 /*
 ********************************************************************************
@@ -372,6 +374,11 @@ void Emulator::writeMem(WORD address, BYTE data) {
         this->internalMem[address] = 0;
     }
     
+    // launches a DMA to access the Sprites Attributes table
+    else if (address == 0xFF46) {
+        this->doDMATransfer(data);
+    }
+
     else {
         this->internalMem[address] = data;
     }
@@ -522,7 +529,11 @@ void Emulator::handleInterrupts() {
             this->stackPointer.regstr--;
             this->writeMem(this->stackPointer.regstr, this->programCounter.high);
             this->stackPointer.regstr--;
+<<<<<<< HEAD
             this->writeMem(this->stackPointer.regstr, this->programCounter.low); 
+=======
+            this->writeMem(this->stackPointer.regstr, this->programCounter.low);
+>>>>>>> 029a8a403bd4f4bde73acd6f71f4d0df278c6895
             // Saves current PC to SP, SP is now pointing at bottom of PC. Need to increment SP by 2 when returning
 
             for (int i = 0; i < 5; i++) { // Go through the bits and service the flagged interrupts
@@ -830,6 +841,24 @@ void Emulator::setLCDStatus() {
 
 bool Emulator::LCDEnabled() {
     return this->isBitSet(this->readMem(0xFF40), 7);
+}
+
+void Emulator::doDMATransfer(BYTE data) {
+    
+    /*
+    Data written in the DMA register is the first byte of actual address.
+    DMA transfers always begin with 0x00 in the lower byte, and it copies 
+    exactly 160 bytes (0x00-9F) so the lower bits will never be in the 0xA0-FF 
+    range.
+
+    Destination is 0xFE00-FE9F (160 bytes), which is the Sprite Attribute Table
+
+    Part on only being able to access HRAM during DMA transfer is unimplemented
+    */
+    WORD address = data << 8; 
+    for (int i = 0x00; i < 0xA0; i++) {
+        this->writeMem(0xFE00 + i, this->readMem(address + i));
+    }
 }
 
 /*
