@@ -6,6 +6,7 @@
 - Missing MBC2 section in writeMem at address A000-A1FF
 
 #### Others
+- Not completely sure on the exact workings of sprite priority in renderSprites(). Need to do more research
 - Usage of bitwise not (~) on binary numbers. Not sure if cpp can differentiate context and difference between two's complement & unsigned integer. Appears in setLCDStatus() under the graphics section
 
 ## Code refactoring
