@@ -64,7 +64,7 @@ https://gekkio.fi/files/gb-docs/gbctr.pdf
 using namespace std;
 
 typedef unsigned char BYTE;
-typedef char SIGNED_BYTE;
+typedef signed char SIGNED_BYTE;
 typedef unsigned short WORD; 
 typedef signed short SIGNED_WORD;
 
@@ -76,6 +76,12 @@ union Register {
     };
 };
 
+enum COLOUR {
+    WHITE,
+    LIGHT_GRAY,
+    DARK_GRAY,
+    BLACK
+};
 
 class Emulator {
 
@@ -89,9 +95,9 @@ class Emulator {
         BYTE readMem(WORD) const;
 
         // Utility
-        bool isBitSet(BYTE, int);
-        BYTE bitSet(BYTE, int);
-        BYTE bitReset(BYTE, int);
+        bool isBitSet(BYTE, int) const;
+        BYTE bitSet(BYTE, int) const;
+        BYTE bitReset(BYTE, int) const;
 
     private:
         // ATTRIBUTES
@@ -156,7 +162,7 @@ class Emulator {
         void triggerInterrupt(int);
 
         // Joypad
-        BYTE getJoypadState();
+        BYTE getJoypadState() const;
         void buttonPressed(int);
         void buttonReleased(int);
 
@@ -164,6 +170,11 @@ class Emulator {
         void updateGraphics(int);
         void setLCDStatus();
         bool LCDEnabled();
+
+        void drawScanLine();
+        void renderTiles(BYTE);
+        void renderSprites(BYTE);
+        COLOUR getColour(BYTE, WORD) const;
 
         void doDMATransfer(BYTE);
 
@@ -541,7 +552,7 @@ void Emulator::handleInterrupts() {
             this->stackPointer.regstr--;
             this->writeMem(this->stackPointer.regstr, this->programCounter.high);
             this->stackPointer.regstr--;
-            this->writeMem(this->stackPointer.regstr, this->programCounter.low); 
+            this->writeMem(this->stackPointer.regstr, this->programCounter.low);
             // Saves current PC to SP, SP is now pointing at bottom of PC. Need to increment SP by 2 when returning
 
             for (int i = 0; i < 5; i++) { // Go through the bits and service the flagged interrupts
@@ -754,7 +765,7 @@ void Emulator::buttonReleased(int key) {
     this->joypadState = this->bitSet(this->joypadState, key);
 }
 
-BYTE Emulator::getJoypadState() {
+BYTE Emulator::getJoypadState() const {
     BYTE joypadReg = this->internalMem[0xFF00];
     joypadReg &= 0xF0; // Sets bits 0-3 to 0;
 
@@ -821,7 +832,54 @@ Bit 2 is set and Bit 6 is enabled (set to 1), an LCD interrupt is requested.
 Bit 7 is unimplemented
 ++ End of 0xFF41 ++
 
+++ Register 0xFF40 ++
+Register 0xFF40 is the LCD main control register.
 
+Bit 7 - LCD Display Enable             (0=Off, 1=On)
+Bit 6 - Window Tile Map Display Select (0=9800-9BFF, 1=9C00-9FFF)
+Bit 5 - Window Display Enable          (0=Off, 1=On)
+Bit 4 - BG & Window Tile Data Select   (0=8800-97FF, 1=8000-8FFF)
+Bit 3 - BG Tile Map Display Select     (0=9800-9BFF, 1=9C00-9FFF)
+Bit 2 - OBJ (Sprite) Size              (0=8x8, 1=8x16)
+Bit 1 - OBJ (Sprite) Display Enable    (0=Off, 1=On)
+Bit 0 - BG/Window Display/Priority     (0=Off, 1=On)
+++ End of 0xFF40 ++
+
+Difference between Tile Data & Tile Map:
+Tile Data is the the information that describes what the tile looks like and is 
+stored in VRAM area $8000-97FF. Tile Map, on the other hand, refers to the 
+32 X 32 background tile mapping that the gameboy screen can possibly show. The 
+actual resolution of the gameboy screen is 256x256 pixels (32x32 tiles), but 
+can only show up to 160x144 pixels of viewing area on this 256x256 background. 
+The Tile Map contains the number of the tiles going to be displayed, and this 
+number is used to retrieve its data from the Tile Data memory location. It is 
+literally the tile number, so you take the number, multiply it by the size of 
+each tile in the memory, and add it to the base address of where the tile data 
+is located at to obtain the tile data information.
+
+Tile Data is stored in VRAM at addresses $8000-97FF; with one tile being 16 
+bytes large, this area defines data for 384 tiles.
+
+There are three "blocks" of 128 tiles each:
+- Block 0 is $8000-87FF
+- Block 1 is $8800-8FFF
+- Block 2 is $9000-97FF
+
+Tiles are always indexed using a 8-bit integer, but the addressing method may 
+differ. The "8000 method" uses $8000 as its base pointer and uses an unsigned 
+addressing, meaning that tiles 0-127 are in block 0, and tiles 128-255 are in 
+block 1. The "8800 method" uses $9000 as its base pointer and uses a signed 
+addressing. To put it differently, "8000 addressing" takes tiles 0-127 from 
+block 0 and tiles 128-255 from block 1, whereas "8800 addressing" takes tiles 
+0-127 from block 2 and tiles 128-255 from block 1. (You can notice that block 1 
+is shared by both addressing methods)
+
+Sprites always use 8000 addressing, but the BG and Window can use either mode, controlled by LCDC bit 4.
+
+Sprites are located in VRAM at address 0x8000-8FFF. Sprite attributes are 
+located in the Sprite Attribute Table (OAM - Object Attribute Memory) at 
+0xFE00-FE9F. The Gameboy video controller can display up to 40 sprites, with 
+each sprite taking up 4 bytes in the OAM.
 
 */
 
@@ -867,7 +925,7 @@ void Emulator::setLCDStatus() {
     BYTE status = this->readMem(0xFF41);
 
     if (!LCDEnabled()) {
-        // set the mode to 1 during lcd disabled and reset scanline
+        // set the mode to 1 (vblank) during lcd disabled and reset scanline
         this->scanlineCycleCount = 456;
         this->internalMem[0xFF44] = 0;
         // set last 2 bits of status to 01
@@ -959,6 +1017,308 @@ bool Emulator::LCDEnabled() {
     return this->isBitSet(this->readMem(0xFF40), 7);
 }
 
+void Emulator::drawScanLine() {
+    BYTE lcdControl = this->readMem(0xFF40);
+    if (this->isBitSet(lcdControl, 0)) {
+        this->renderTiles(lcdControl);
+    }
+
+    if (this->isBitSet(lcdControl, 1)) {
+        this->renderSprites(lcdControl);
+    }
+}
+
+void Emulator::renderTiles(BYTE lcdControl) {
+
+    /*
+    Steps to render tiles:
+    1. Find out tile identifier number from background tile map
+    2. Using the tile identifier number, get the tile data from VRAM
+    3. Using the tile data, draw out the tile
+    */
+
+    // Get coordinates of viewport
+    BYTE scrollY = this->readMem(0xFF42);
+    BYTE scrollX = this->readMem(0xFF43);
+    BYTE windowY = this->readMem(0xFF4A);
+    BYTE windowX = this->readMem(0xFF4B) - 7;
+
+    // Check if window is enabled and if current scanline is within windowY
+    bool usingWindow = false;
+    if (this->isBitSet(lcdControl, 5) && (windowY <= this->readMem(0xFF44))) {
+        usingWindow = true;
+    }
+
+    // Get Tile Data location & addressing mode
+    WORD tileDataLocation;
+    bool unsignedAddressing;
+
+    if (this->isBitSet(lcdControl, 4)) {
+        // location: 0x8000-8FFF
+        tileDataLocation = 0x8000;
+        unsignedAddressing = true;
+    } else {
+        // location: 0x8800-97FF
+        tileDataLocation = 0x8800;
+        unsignedAddressing = false;
+    }
+
+    // Get background Tile Map location
+    WORD tileMapLocation;
+    if (!usingWindow) {
+        if (this->isBitSet(lcdControl, 3)) {
+            tileMapLocation = 0x9C00;
+        } else {
+            tileMapLocation = 0x9800;
+        }
+    } else {
+        if (this->isBitSet(lcdControl, 3)) {
+            tileMapLocation = 0x9C00;
+        } else {
+            tileMapLocation = 0x9800;
+        }
+    }
+
+    // Get tile row the "offset" for the current line of pixels in the tile
+    BYTE tileY;
+    BYTE tileYOffset;
+    if (!usingWindow) {
+        tileY = (BYTE)(((scrollY + this->readMem(0xFF44)) / 8) % 32);
+        tileYOffset = (BYTE)((scrollY + this->readMem(0xFF04)) % 8);
+    } else {
+        // POSSIBLE BUG: need to % 32 to wrap???
+        // Or because window is not scrollable and always display from top left?
+        tileY = (BYTE)((this->readMem(0xFF44) - windowY) / 8);
+        tileYOffset = (BYTE)((this->readMem(0xFF04) - windowY) % 8);
+    }
+
+    // For loop to draw the current line of pixels
+    for (int pixel = 0; pixel < 160; pixel++) {
+
+        // Get tile x
+        BYTE tileX = (BYTE)(((scrollX + pixel) / 8) % 32);
+
+        if (usingWindow && (pixel >= windowX)) {
+            // This suggests that the window tile map only ever starts 
+            // displaying from the left
+            tileX = (BYTE)((pixel - windowX) / 8);
+        }
+
+        // Calculate tile identifier number from tileY & tileX
+        BYTE tileNum = this->readMem(tileMapLocation + (tileY*32) + tileX);
+        
+        // Get tile data address
+        WORD tileDataAddress;
+        if (unsignedAddressing) {
+            // Tile number is unsigned and each tile is 16 bytes
+            tileDataAddress = tileDataLocation + (tileNum * 16);
+        } else {
+            // Tile number is signed and each tile is 16 bytes
+            tileDataAddress = tileDataLocation + (static_cast<SIGNED_BYTE>(tileNum) * 16);
+            // tileDataAddress here is in the region 0x8800-97FF
+            assert(tileDataAddress >= 0x8800 == true);
+        }
+
+        // Each line is 2 bytes long, to get the current line, add the offset
+        tileDataAddress += (tileYOffset << 1);
+
+        // Read the 2 bytes of data
+        BYTE b1 = this->readMem(tileDataAddress);
+        BYTE b2 = this->readMem(tileDataAddress + 1);
+
+        // Figure out the colour palette
+        BYTE bit = 7 - ((scrollX + pixel) % 8);
+        BYTE colourBit0 = this->isBitSet(b1, bit) ? 0b01 : 0b00;
+        BYTE colourBit1 = this->isBitSet(b2, bit) ? 0b10 : 0b00;
+
+        // Get the colour
+        COLOUR colour = this->getColour(colourBit1 + colourBit0, 0xFF47);
+        
+        // Default colour is black where RGB = [0,0,0]
+        int red = 0; 
+        int green = 0;
+        int blue = 0;
+
+        switch (colour) {
+            case WHITE: 
+                red = 255;
+                green = 255;
+                blue = 255;
+                break;
+            case LIGHT_GRAY:
+                red = 0xCC;
+                green = 0xCC;
+                blue = 0xCC;
+                break;
+            case DARK_GRAY:
+                red = 0x77;
+                green = 0x77;
+                blue = 0x77;
+                break;
+        }
+
+        // Update Screen pixels
+        // BYTE currentLine = this->readMem(0xFF44);
+        // this->gameScreen[pixel][currentLine][0] = red;
+        // this->gameScreen[pixel][currentLine][1] = green;
+        // this->gameScreen[pixel][currentLine][2] = blue;
+
+    }
+
+}
+
+COLOUR Emulator::getColour(BYTE colourNum, WORD address) const {
+
+    // Reading colour palette from memory
+    BYTE palette = this->readMem(address);
+    /*
+    Register FF47 contains the colour palette for background. It assigns gray 
+    shades to the colour numbers as follows:
+    Bit 7-6 - Shade for Color Number 3
+    Bit 5-4 - Shade for Color Number 2
+    Bit 3-2 - Shade for Color Number 1
+    Bit 1-0 - Shade for Color Number 0 */
+
+    // Get the actual colourID
+    int mask = 0b11;
+    int colourID = (palette >> (colourNum << 1)) & mask;
+
+    // Convert ID into emulator colour
+    COLOUR res;
+    switch (colourID) {
+        case 0b00: res = WHITE; break;
+        case 0b01: res = LIGHT_GRAY; break;
+        case 0b10: res = DARK_GRAY; break;
+        case 0b11: res = BLACK; break;
+    }
+
+    return res;
+
+}
+
+void Emulator::renderSprites(BYTE lcdControl) {
+
+    // Check sprite size
+    bool use8x16 = false;
+    if (this->isBitSet(lcdControl, 2)) {
+        use8x16 = true;
+    }
+    
+    // Cycling through the 40 sprites in OAM for draw loop
+    for (int sprite = 0; sprite < 40; sprite++) {
+
+        // Sprite occupies 4 bytes in OAM
+        // BYTE0: Y position - 16
+        // BYTE1: X position - 8
+        // BYTE2: Tile identifier number. Used to look up tile pattern in VRAM
+        // BYTE3: Sprite attributes
+        BYTE index = sprite << 2;
+        BYTE yPos = this->readMem(0xFE00 + index) - 16;
+        BYTE xPos = this->readMem(0xFE00 + index + 1) - 8;
+        BYTE tileNum = this->readMem(0xFE00 + index + 2);
+        BYTE attributes = this->readMem(0xFE00 + index + 3);
+
+        bool yFlip = this->isBitSet(attributes, 6);
+        bool xFlip = this->isBitSet(attributes, 5);
+
+        int scanLine = this->readMem(0xFF44);
+
+        int ySize = use8x16 ? 16 : 8;
+
+        // Is the current scanline being drawn at the sprite location?
+        if ((scanLine >= yPos) && (scanLine < (yPos + ySize))) {
+
+            // Get the offset for the current line being drawn in the tile
+            int tileYOffset = scanLine - yPos;
+
+            // Read the sprite backwards in y axis if yFlip == true
+            if (yFlip) {
+                tileYOffset -= ySize;
+                tileYOffset *= -1;
+            }
+
+            tileYOffset <<= 1; // since each line is 2 bytes long
+            // Get the data address for the current line from the tile number
+            WORD lineDataAddress = (0x8000 + (tileNum * 16)) + tileYOffset;
+
+            // Read the 2 bytes of data
+            BYTE b1 = this->readMem(lineDataAddress);
+            BYTE b2 = this->readMem(lineDataAddress + 1);
+
+            // It is easier to read in from right to left as
+            // pixel 0 is bit 7
+            // pixel 1 is bit 6...
+            for (int tilePixel = 7; tilePixel >= 0; tilePixel--) {
+                
+                int colourBit = tilePixel;
+                
+                // read the sprite backwards in x axis if xFlip == true
+                if (xFlip) {
+                    colourBit -= 7;
+                    colourBit *= -1;
+                }
+
+                // The rest is the same as in renderTiles
+                // Figure out the colour palette
+                BYTE colourBit0 = this->isBitSet(b1, colourBit) ? 0b01 : 0b00;
+                BYTE colourBit1 = this->isBitSet(b2, colourBit) ? 0b10 : 0b00;
+
+                // Get the colour
+                WORD cAddress = this->isBitSet(attributes, 4) ? 0xFF49 : 0xFF48;
+                COLOUR colour = this->getColour(colourBit1+colourBit0,cAddress);
+
+                // white is transparent for sprites
+                if (colour == WHITE) {
+                    continue;
+                }
+
+                // Default colour is black where RGB = [0,0,0]
+                int red = 0;
+                int green = 0;
+                int blue = 0;
+
+                switch (colour) {
+                    // IS THIS CASE REALLY NEEDED??
+                    case WHITE: 
+                        red = 255;
+                        green = 255;
+                        blue = 255;
+                        break;
+                    case LIGHT_GRAY:
+                        red = 0xCC;
+                        green = 0xCC;
+                        blue = 0xCC;
+                        break;
+                    case DARK_GRAY:
+                        red = 0x77;
+                        green = 0x77;
+                        blue = 0x77;
+                        break;        
+                }
+
+                // Get the pixel to draw
+                int xPix = 0 - tilePixel;
+                xPix += 7;
+                int pixel = xPos + xPix;
+
+                // check if pixel is hidden behind background
+                if (this->isBitSet(attributes, 7)) {
+                    if ( (m_ScreenData[scanLine][pixel][0] != 255) || (m_ScreenData[scanLine][pixel][1] != 255) || (m_ScreenData[scanLine][pixel][2] != 255) )
+                        continue ;
+                }
+                // Update Screen pixels
+                // this->gameScreen[pixel][scanLine][0] = red;
+                // this->gameScreen[pixel][scanLine][1] = green;
+                // this->gameScreen[pixel][scanLine][2] = blue;
+
+            }
+
+        }
+
+    }
+
+}
+
 void Emulator::doDMATransfer(BYTE data) {
     
     /*
@@ -983,16 +1343,16 @@ Utility Functions
 ********************************************************************************
 */
 
-bool Emulator::isBitSet(BYTE data, int position) {
+bool Emulator::isBitSet(BYTE data, int position) const {
     return (data >> position) & 0x1 == 0x1;
 }
 
-BYTE Emulator::bitSet(BYTE data, int position) {
+BYTE Emulator::bitSet(BYTE data, int position) const {
     int mask = 1 << position;
     return data |= mask;
 }
 
-BYTE Emulator::bitReset(BYTE data, int position) {
+BYTE Emulator::bitReset(BYTE data, int position) const {
     int mask = ~(1 << position);
     return data &= mask;
 }
