@@ -38,3 +38,7 @@ if (address <= 0x1FFF) {
 
 Debugging possibly helpful
 https://www.reddit.com/r/EmuDev/comments/a1pt87/need_help_with_gameboy_emulator_lcd_controller/
+
+https://github.com/Gekkio/mooneye-gb/blob/master/docs/accuracy.markdown
+
+getJoypadState() using my own understanding, when debugging check again

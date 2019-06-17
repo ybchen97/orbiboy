@@ -129,6 +129,9 @@ class Emulator {
         // Interrupt
         bool InterruptMasterEnabled; // Interrupt Master Enabledswitch
 
+        // Joypad
+        BYTE joypadState;
+
         // Graphics
         int scanlineCycleCount;
 
@@ -151,6 +154,11 @@ class Emulator {
         void flagInterrupt(int);
         void handleInterrupts();
         void triggerInterrupt(int);
+
+        // Joypad
+        BYTE getJoypadState();
+        void buttonPressed(int);
+        void buttonReleased(int);
 
         // Graphics
         void updateGraphics(int);
@@ -299,6 +307,10 @@ BYTE Emulator::readMem(WORD address) const {
     else if ((address >= 0xA000) && (address <= 0xBFFF)) {
         WORD newAddress = (this->currentRAMBank * 0x2000) + (address - 0xA000);
         return this->cartridgeMem[newAddress];
+    }
+    // Joypad Register
+    else if (address == 0xFF00) { 
+        return this->getJoypadState();
     }
 
     // else return what's in the memory
@@ -529,11 +541,7 @@ void Emulator::handleInterrupts() {
             this->stackPointer.regstr--;
             this->writeMem(this->stackPointer.regstr, this->programCounter.high);
             this->stackPointer.regstr--;
-<<<<<<< HEAD
             this->writeMem(this->stackPointer.regstr, this->programCounter.low); 
-=======
-            this->writeMem(this->stackPointer.regstr, this->programCounter.low);
->>>>>>> 029a8a403bd4f4bde73acd6f71f4d0df278c6895
             // Saves current PC to SP, SP is now pointing at bottom of PC. Need to increment SP by 2 when returning
 
             for (int i = 0; i < 5; i++) { // Go through the bits and service the flagged interrupts
@@ -657,6 +665,114 @@ bool Emulator::clockEnabled() {
     // Bit 2 of TAC specifies whether timer is enabled(1) or disabled(0)
     return this->isBitSet(this->readMem(TAC), 2);
 }
+
+/*
+********************************************************************************
+JOYPAD
+********************************************************************************
+*/
+
+/*
+
+There are 8 buttons on the Gameboy, so the joypad state can be neatly represented in a BYTE.
+However, the joypad register uses only 6 bits, which complicates things a little.
+
+JOYPAD REGISTER
+                    7
+                    6
+      |-------------5
+      |        |----4
+Start | Down   |    3
+Select| Up     |    2
+B     | Left   |    1
+A     | Right  |    0
+
+Bits 4 and 5 are used to represent which buttons (directional or normal buttons), while 0-3 are the buttons themselves.
+For the joypad, it's default state is 1 (not pressed), and turns to 0 when it is pressed.
+
+When we readMem the joypad register,
+
+SDLK_a : key = 4 (A)
+SDLK_s : key = 5 (B)
+SDLK_RETURN : key = 7 (Start)
+SDLK_SPACE : key = 6 (Select)
+SDLK_RIGHT : key = 0 
+SDLK_LEFT : key = 1 
+SDLK_UP : key = 2 
+SDLK_DOWN : key = 3 
+
+In handling key presses and releases, directly modifying the register is difficult 
+due to the convoluted representation. Instead, we can keep a BYTE joypadState which
+represents the state of all the buttons neatly.
+
+Start   Select  A   B   Down    Up  Left    Right   Keys
+7       6       5   4   3       2   1       0       Bits
+
+When the game reads the joypad register, we can return it by deriving it from
+joypadState and the keys the game is requesting (depending on 0xFF00 bit 4 and 5).
+
+When a button is pressed (from 1 to 0), an interrupt will be flagged.
+
+ */
+
+// Called when handling input, modifying joypadState instead of joypad register
+void Emulator::buttonPressed(int key) {
+    
+    bool previouslyUnpressed = false; // Keeps track if the button was previously unpressed
+    bool flagIntrpt = false; // Keeps track if interrupt should be flagged
+
+    if (isBitSet(this->joypadState, key)) { // If the key was set at 1 (unpressed)
+        previouslyUnpressed = true;
+    }
+
+    this->joypadState = bitReset(this->joypadState, key); // Set the key to 0 (pressed)
+
+    // Now, determine if the key is directional or normal button
+
+    bool directionalButton = key < 4;
+
+    // flagIntrpt is true if previouslyUnpressed AND bit 4 and 5 of joypad register
+    // corresponds to the directionalButton bool.
+    //  => Bit 4 (dxn) of joypad register is 0 (on) and directionalButton is true
+    //  => Bit 5 (normal) of joypad register is 0, and directionalButton is false
+
+    BYTE joypadReg = internalMem[0xFF00];
+
+    if ((!this->isBitSet(joypadReg, 4) && directionalButton) | 
+            (!this->isBitSet(joypadReg, 5) && !directionalButton)) {
+                if (previouslyUnpressed) {
+                    flagIntrpt = true;
+                }
+            }
+    
+    if (flagIntrpt) {
+        flagInterrupt(4);
+    }
+}
+
+void Emulator::buttonReleased(int key) {
+    this->joypadState = this->bitSet(this->joypadState, key);
+}
+
+BYTE Emulator::getJoypadState() {
+    BYTE joypadReg = this->internalMem[0xFF00];
+    joypadReg &= 0xF0; // Sets bits 0-3 to 0;
+
+    // If program requests for directional buttons
+    if (!this->isBitSet(joypadReg, 4)) {
+        BYTE directionals = this->joypadState & 0x0F; // Sets bits 4-7 to 0
+        joypadReg |= directionals;
+    }
+
+    // If program requests for normal buttons
+    else if (!this->isBitSet(joypadReg, 5)) {
+            BYTE normalButtons = this->joypadState >> 4;
+            joypadReg |= normalButtons;
+    }
+
+    return joypadReg;
+}
+
 
 /*
 ********************************************************************************
