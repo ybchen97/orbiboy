@@ -119,6 +119,9 @@ void Emulator::resetCPU() {
     // Interrupts
     this->InterruptMasterEnabled = false;
 
+    // Joypad
+    this->joypadState = 0xFF;
+
     // Graphics
     this->scanlineCycleCount = 456;
 
