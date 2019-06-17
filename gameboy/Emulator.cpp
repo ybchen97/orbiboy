@@ -82,15 +82,15 @@ void Emulator::resetCPU() {
     this->internalMem[0xFF24] = 0x77; 
     this->internalMem[0xFF25] = 0xF3;
     this->internalMem[0xFF26] = 0xF1; 
-    this->internalMem[0xFF40] = 0x91; 
-    this->internalMem[0xFF42] = 0x00; 
-    this->internalMem[0xFF43] = 0x00; 
-    this->internalMem[0xFF45] = 0x00; // LYC
-    this->internalMem[0xFF47] = 0xFC; 
-    this->internalMem[0xFF48] = 0xFF; 
-    this->internalMem[0xFF49] = 0xFF; 
-    this->internalMem[0xFF4A] = 0x00; 
-    this->internalMem[0xFF4B] = 0x00; 
+    this->internalMem[0xFF40] = 0x91; // LCDC - LCD control register
+    this->internalMem[0xFF42] = 0x00; // SCY - scroll Y
+    this->internalMem[0xFF43] = 0x00; // SCX - scroll X
+    this->internalMem[0xFF45] = 0x00; // LYC - LY Compare
+    this->internalMem[0xFF47] = 0xFC; // BGP - background colour palette
+    this->internalMem[0xFF48] = 0xFF; // OBP0 - Object Palette 0 (Sprites)
+    this->internalMem[0xFF49] = 0xFF; // OBP1 - Object Palette 1 (Sprites)
+    this->internalMem[0xFF4A] = 0x00; // WX
+    this->internalMem[0xFF4B] = 0x00; // WY
     this->internalMem[0xFFFF] = 0x00; // IE
 
     this->MBC1 = false;
