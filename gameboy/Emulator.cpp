@@ -89,9 +89,9 @@ void Emulator::resetCPU() {
     this->internalMem[0xFF47] = 0xFC; // BGP - background colour palette
     this->internalMem[0xFF48] = 0xFF; // OBP0 - Object Palette 0 (Sprites)
     this->internalMem[0xFF49] = 0xFF; // OBP1 - Object Palette 1 (Sprites)
-    this->internalMem[0xFF4A] = 0x00; // WX
-    this->internalMem[0xFF4B] = 0x00; // WY
-    this->internalMem[0xFFFF] = 0x00; // IE
+    this->internalMem[0xFF4A] = 0x00; // WX - window X
+    this->internalMem[0xFF4B] = 0x00; // WY - window Y
+    this->internalMem[0xFFFF] = 0x00; // IE - Interrupt enable
 
     this->MBC1 = false;
     this->MBC2 = false;
@@ -169,6 +169,20 @@ void Emulator::update() { // MAIN UPDATE LOOP
         this->handleInterrupts(); //wishful thinking
     }
     this->RenderScreen(); //wishful thinking
+}
+
+int Emulator::executeNextOpcode() {
+    int clockCycles;
+
+    BYTE opcode = this->readMem(this->programCounter.regstr);
+    clockCycles = this->executeOpcode(opcode);
+    this->programCounter.regstr++;
+
+    return clockCycles;
+}
+
+int Emulator::executeOpcode(BYTE opcode) {
+
 }
 
 /*

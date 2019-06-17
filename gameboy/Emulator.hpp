@@ -46,6 +46,7 @@ class Emulator {
         bool loadGame(string);
         void writeMem(WORD, BYTE);
         BYTE readMem(WORD) const;
+        void update();
 
         // Utility
         bool isBitSet(BYTE, int) const;
@@ -95,7 +96,8 @@ class Emulator {
         int scanlineCycleCount;
 
         // FUNCTIONS
-        void update();
+        int executeNextOpcode();
+        int executeOpcode(BYTE);
 
         // Memory
         void handleBanking(WORD, BYTE);
