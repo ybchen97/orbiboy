@@ -619,7 +619,7 @@ void Emulator::buttonPressed(int key) {
     bool previouslyUnpressed = false; // Keeps track if the button was previously unpressed
     bool flagIntrpt = false; // Keeps track if interrupt should be flagged
 
-    if (isBitSet(this->joypadState, key)) { // If the key was set at 1 (unpressed)
+    if (this->isBitSet(this->joypadState, key)) { // If the key was set at 1 (unpressed)
         previouslyUnpressed = true;
     }
 
@@ -636,7 +636,7 @@ void Emulator::buttonPressed(int key) {
 
     BYTE joypadReg = internalMem[0xFF00];
 
-    if ((!this->isBitSet(joypadReg, 4) && directionalButton) | 
+    if ((!this->isBitSet(joypadReg, 4) && directionalButton) || 
             (!this->isBitSet(joypadReg, 5) && !directionalButton)) {
                 if (previouslyUnpressed) {
                     flagIntrpt = true;
@@ -1236,12 +1236,12 @@ bool Emulator::isBitSet(BYTE data, int position) const {
 
 BYTE Emulator::bitSet(BYTE data, int position) const {
     int mask = 1 << position;
-    return data |= mask;
+    return data | mask;
 }
 
 BYTE Emulator::bitReset(BYTE data, int position) const {
     int mask = ~(1 << position);
-    return data &= mask;
+    return data & mask;
 }
 
 /*
@@ -1267,24 +1267,23 @@ BYTE Emulator::bitReset(BYTE data, int position) const {
 int Emulator::ADD_HL_rr(WORD rr) {
 
     WORD before = this->regHL.regstr;
-    this->regHL.regstr += rr;
+    
+    // Add contents and store result in HL
+    WORD result = before + rr;
+    this->regHL.regstr = result;
 
     // Reset subtract flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
 
     // Update half carry flag
-    if (((before & 0x0FFF) + (rr & 0x0FFF)) > 0x0FFF) {
-        this->bitSet(this->regAF.low, FLAG_HALFCARRY);
-    } else {
-        this->bitReset(this->regAF.low, FLAG_HALFCARRY);
-    }
+    this->regAF.low = ((result ^ before ^ rr) & 0x1000)
+        ? this->bitSet(this->regAF.low, FLAG_HALFCARRY)
+        : this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update carry flag
-    if ((before + rr) > 0xFFFF) {
-        this->bitSet(this->regAF.low, FLAG_CARRY);
-    } else {
-        this->bitReset(this->regAF.low, FLAG_CARRY);
-    }
+    this->regAF.low = (result < before) 
+        ? this->bitSet(this->regAF.low, FLAG_CARRY)
+        : this->bitReset(this->regAF.low, FLAG_CARRY);
 
     return 8;
 
@@ -1346,26 +1345,23 @@ int Emulator::ADD_SP_dd() {
     SIGNED_BYTE dd = static_cast<SIGNED_BYTE>(this->readMem(this->programCounter.regstr));
     this->programCounter.regstr++;
 
-    // Adding dd to SP
-    this->stackPointer.regstr += dd;
+    // Adding dd to SP and storing result in SP
+    WORD result = before + dd;
+    this->stackPointer.regstr = result;
 
     // Reset zero and subtract flag
-    this->bitReset(this->regAF.low, FLAG_ZERO);
-    this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
 
     // Update half carry flag
-    if (((before & 0x0F) + (dd & 0x0F)) > 0x0F) {
-        this->bitSet(this->regAF.low, FLAG_HALFCARRY);
-    } else {
-        this->bitReset(this->regAF.low, FLAG_HALFCARRY);
-    }
+    this->regAF.low = ((result & 0x0F) < (before & 0x0F))
+        ? this->bitSet(this->regAF.low, FLAG_HALFCARRY)
+        : this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update carry flag
-    if (((before & 0xFF) + dd) > 0xFF) {
-        this->bitSet(this->regAF.low, FLAG_CARRY);
-    } else {
-        this->bitReset(this->regAF.low, FLAG_CARRY);
-    }
+    this->regAF.low = ((result & 0xFF) < (before & 0xFF)) 
+        ? this->bitSet(this->regAF.low, FLAG_CARRY)
+        : this->bitReset(this->regAF.low, FLAG_CARRY);
 
     return 16;
 
@@ -1392,25 +1388,22 @@ int Emulator::LD_HL_SPdd() {
     this->programCounter.regstr++;
 
     // Adding dd to SP, and load result into HL
-    this->regHL.regstr = this->stackPointer.regstr + dd;
+    WORD result = this->stackPointer.regstr + dd;
+    this->regHL.regstr = result;
 
     // Reset zero and subtract flag
-    this->bitReset(this->regAF.low, FLAG_ZERO);
-    this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
 
     // Update half carry flag
-    if (((before & 0x0F) + (dd & 0x0F)) > 0x0F) {
-        this->bitSet(this->regAF.low, FLAG_HALFCARRY);
-    } else {
-        this->bitReset(this->regAF.low, FLAG_HALFCARRY);
-    }
+    this->regAF.low = ((result & 0x0F) < (before & 0x0F))
+        ? this->bitSet(this->regAF.low, FLAG_HALFCARRY)
+        : this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update carry flag
-    if (((before & 0xFF) + dd) > 0xFF) {
-        this->bitSet(this->regAF.low, FLAG_CARRY);
-    } else {
-        this->bitReset(this->regAF.low, FLAG_CARRY);
-    }
+    this->regAF.low = ((result & 0xFF) < (before & 0xFF)) 
+        ? this->bitSet(this->regAF.low, FLAG_CARRY)
+        : this->bitReset(this->regAF.low, FLAG_CARRY);
 
     return 12;
 
@@ -1450,12 +1443,12 @@ int Emulator::RLCA() {
     this->regAF.high = data;
 
     // Reset zero, subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_ZERO);
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Copy bit 7 into carry flag
-    this->isBitSet(bit7, 0) 
+    this->regAF.low = this->isBitSet(bit7, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -1491,12 +1484,12 @@ int Emulator::RLA() {
     this->regAF.high = data;
 
     // Reset zero, subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_ZERO);
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Copy bit 7 into carry flag
-    this->isBitSet(bit7, 0) 
+    this->regAF.low = this->isBitSet(bit7, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -1531,12 +1524,12 @@ int Emulator::RRCA() {
     this->regAF.high = data;
 
     // Reset zero, subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_ZERO);
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Copy bit 0 into carry flag
-    this->isBitSet(bit0, 0) 
+    this->regAF.low = this->isBitSet(bit0, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -1571,12 +1564,12 @@ int Emulator::RRA() {
     this->regAF.high = data;
 
     // Reset zero, subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_ZERO);
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Copy bit 0 into carry flag
-    this->isBitSet(bit0, 0) 
+    this->regAF.low = this->isBitSet(bit0, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -1612,16 +1605,16 @@ int Emulator::RLC_r(BYTE& r) {
     r = data;
 
     // Reset subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
     // Copy bit 7 into carry flag
-    this->isBitSet(bit7, 0) 
+    this->regAF.low = this->isBitSet(bit7, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -1656,16 +1649,16 @@ int Emulator::RLC_HL() {
     this->writeMem(this->regHL.regstr, data);
 
     // Reset subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
     // Copy bit 7 into carry flag
-    this->isBitSet(bit7, 0) 
+    this->regAF.low = this->isBitSet(bit7, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -1702,16 +1695,16 @@ int Emulator::RL_r(BYTE& r) {
     r = data;
 
     // Reset subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
     // Copy bit 7 into carry flag
-    this->isBitSet(bit7, 0) 
+    this->regAF.low = this->isBitSet(bit7, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -1748,16 +1741,16 @@ int Emulator::RL_HL() {
     this->writeMem(this->regHL.regstr, data);
 
     // Reset subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
     // Copy bit 7 into carry flag
-    this->isBitSet(bit7, 0) 
+    this->regAF.low = this->isBitSet(bit7, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -1793,16 +1786,16 @@ int Emulator::RRC_r(BYTE& r) {
     r = data;
 
     // Reset subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->isBitSet(bit0, 0) 
+    this->regAF.low = this->isBitSet(bit0, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -1837,16 +1830,16 @@ int Emulator::RRC_HL() {
     this->writeMem(this->regHL.regstr, data);
 
     // Reset subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->isBitSet(bit0, 0) 
+    this->regAF.low = this->isBitSet(bit0, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -1883,16 +1876,16 @@ int Emulator::RR_r(BYTE& r) {
     r = data;
 
     // Reset subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->isBitSet(bit0, 0) 
+    this->regAF.low = this->isBitSet(bit0, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -1929,16 +1922,16 @@ int Emulator::RR_HL() {
     this->writeMem(this->regHL.regstr, data);
 
     // Reset subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->isBitSet(bit0, 0) 
+    this->regAF.low = this->isBitSet(bit0, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -1971,16 +1964,16 @@ int Emulator::SLA_r(BYTE& r) {
     r = data;
 
     // Reset subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
     // Copy bit 7 into carry flag
-    this->isBitSet(bit7, 0) 
+    this->regAF.low = this->isBitSet(bit7, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -2012,16 +2005,16 @@ int Emulator::SLA_HL() {
     this->writeMem(this->regHL.regstr, data);
 
     // Reset subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
     // Copy bit 7 into carry flag
-    this->isBitSet(bit7, 0) 
+    this->regAF.low = this->isBitSet(bit7, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -2054,12 +2047,12 @@ int Emulator::SWAP_r(BYTE& r) {
     r = data;
 
     // Reset subtract, halfcarry and carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
-    this->bitReset(this->regAF.low, FLAG_CARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_CARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
@@ -2091,12 +2084,12 @@ int Emulator::SWAP_HL() {
     this->writeMem(this->regHL.regstr, data);
 
     // Reset subtract, halfcarry and carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
-    this->bitReset(this->regAF.low, FLAG_CARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_CARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
@@ -2130,16 +2123,16 @@ int Emulator::SRA_r(BYTE& r) {
     r = data;
 
     // Reset subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->isBitSet(bit0, 0) 
+    this->regAF.low = this->isBitSet(bit0, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -2172,16 +2165,16 @@ int Emulator::SRA_HL() {
     this->writeMem(this->regHL.regstr, data);
 
     // Reset subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->isBitSet(bit0, 0) 
+    this->regAF.low = this->isBitSet(bit0, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -2212,22 +2205,22 @@ int Emulator::SRL_r(BYTE& r) {
 
     // Shift data right, reset bit 7
     data >>= 1;
-    this->bitReset(data, 7);
+    data = this->bitReset(data, 7);
 
     // Store result back into r
     r = data;
 
     // Reset subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->isBitSet(bit0, 0) 
+    this->regAF.low = this->isBitSet(bit0, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -2257,22 +2250,22 @@ int Emulator::SRL_HL() {
 
     // Shift data right, reset bit 7
     data >>= 1;
-    this->bitReset(data, 7);
+    data = this->bitReset(data, 7);
 
     // Store result back into memory
     this->writeMem(this->regHL.regstr, data);
 
     // Reset subtract and half carry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    (data == 0x0) 
+    this->regAF.low = (data == 0x0) 
         ? this->bitSet(this->regAF.low, FLAG_ZERO) 
         : this->bitReset(this->regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->isBitSet(bit0, 0) 
+    this->regAF.low = this->isBitSet(bit0, 0) 
         ? this->bitSet(this->regAF.low, FLAG_CARRY)
         : this->bitReset(this->regAF.low, FLAG_CARRY);
 
@@ -2302,13 +2295,13 @@ Single Bit Operation Commands
 int Emulator::BIT_n_r(BYTE& r, BYTE n) {
 
     // Update zero flag
-    this->isBitSet(r, n) 
+    this->regAF.low = this->isBitSet(r, n) 
         ? this->bitReset(this->regAF.low, FLAG_ZERO)
         : this->bitSet(this->regAF.low, FLAG_ZERO);
     
     // Reset subtract flag, set halfcarry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
 
     return 8;
 
@@ -2331,13 +2324,13 @@ int Emulator::BIT_n_r(BYTE& r, BYTE n) {
 int Emulator::BIT_n_HL(BYTE n) {
 
     // Update zero flag
-    this->isBitSet(this->readMem(this->regHL.regstr), n) 
+    this->regAF.low = this->isBitSet(this->readMem(this->regHL.regstr), n) 
         ? this->bitReset(this->regAF.low, FLAG_ZERO)
         : this->bitSet(this->regAF.low, FLAG_ZERO);
     
     // Reset subtract flag, set halfcarry flag
-    this->bitReset(this->regAF.low, FLAG_SUB);
-    this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
 
     return 12;
 
@@ -2355,7 +2348,7 @@ int Emulator::BIT_n_HL(BYTE n) {
 */
 int Emulator::SET_n_r(BYTE& r, BYTE n) {
 
-    this->bitSet(r, n);
+    r = this->bitSet(r, n);
 
     return 8;
 
@@ -2392,7 +2385,7 @@ int Emulator::SET_n_HL(BYTE n) {
 */
 int Emulator::RES_n_r(BYTE& r, BYTE n) {
 
-    this->bitReset(r, n);
+    r = this->bitReset(r, n);
 
     return 8;
 
@@ -2423,7 +2416,66 @@ CPU Control Commands
 ********************************************************************************
 */
 
+/*
+    CCF  (0x3F)
 
+    Complement carry flag. If carry is set, reset it, vice versa.
+
+    4 cycles
+
+    Flags affected: 
+    - z: -
+    - n: 0
+    - h: 0
+    - c: Set if reset, reset if set.
+*/
+int Emulator::CCF() {
+
+
+
+}
+
+/*
+    
+*/
+int Emulator::SCF() {
+
+}
+
+/*
+    
+*/
+int Emulator::NOP() {
+
+}
+
+/*
+    
+*/
+int Emulator::HALT() {
+
+}
+
+/*
+    
+*/
+int Emulator::STOP() {
+
+}
+
+/*
+    
+*/
+int Emulator::DI() {
+
+}
+
+/*
+    
+*/
+int Emulator::EI() {
+
+}
 
 /*
 ********************************************************************************
