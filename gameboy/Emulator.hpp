@@ -177,15 +177,15 @@ class Emulator {
         // Jump Commands
         int JP_nn();
         int JP_HL();
-        int JP_f_nn();
+        int JP_f_nn(BYTE);
         int JR_PCdd();
-        int JR_f_PCdd();
+        int JR_f_PCdd(BYTE);
         int CALL_nn();
-        int CALL_f_nn();
+        int CALL_f_nn(BYTE);
         int RET();
-        int RET_f();
+        int RET_f(BYTE);
         int RETI();
-        int RST_n();
+        int RST_n(BYTE);
 
         ////////// end of opcodes //////////
 

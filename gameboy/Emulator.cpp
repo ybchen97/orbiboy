@@ -2431,49 +2431,123 @@ CPU Control Commands
 */
 int Emulator::CCF() {
 
+    // Reset subtract and halfcarry flag
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
 
+    // Toggling carry flag
+    this->regAF.low = this->isBitSet(this->regAF.low, FLAG_CARRY)
+        ? this->bitReset(this->regAF.low, FLAG_CARRY)
+        : this->bitSet(this->regAF.low, FLAG_CARRY);
+
+    return 4;
 
 }
 
 /*
-    
+    SCF  (0x37)
+
+    Set carry flag.
+
+    4 cycles
+
+    Flags affected:
+    - z: -
+    - n: 0
+    - h: 0
+    - c: 1
 */
 int Emulator::SCF() {
+    
+    // Reset subtract and halfcarry flag
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+
+    // Set carry flag
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+
+    return 4;
 
 }
 
 /*
-    
+    NOP  (0x00)
+
+    No operation.
+
+    4 cycles
+
+    Flags affected (znhc): ----
 */
 int Emulator::NOP() {
 
+    // No flags affected
+    return 4;
+
 }
 
 /*
-    
+    HALT  (0x76)
+
+    4 cycles
+
+    Flags affect (znhc): ----
 */
 int Emulator::HALT() {
 
+    this->isHalted = true;
+
+    // Different docs say different things, we follow the gameboy manual.
+    return 4;
+
 }
 
 /*
-    
+    STOP  (0x10 00)
+
+    Functionally similar to HALT.
+
+    4 cycles
+
+    Flags affected (znhc): ----
 */
 int Emulator::STOP() {
+    
+    return this->HALT();
 
 }
 
 /*
-    
+    DI  (0xF3)
+
+    Disable interrupts, IME = 0.
+
+    4 cycles
+
+    Flags affected (znhc): ----
 */
 int Emulator::DI() {
+    
+    this->InterruptMasterEnabled = false;
+
+    return 4;
 
 }
 
 /*
-    
+    EI  (0xFB)
+
+    Enable interrupts, IME = 1.
+
+    4 cycles
+
+    Flags affected (znhc): ----
 */
 int Emulator::EI() {
+
+    this->InterruptMasterEnabled = true;
+
+    return 4;
 
 }
 
@@ -2482,3 +2556,380 @@ int Emulator::EI() {
 Jump Commands
 ********************************************************************************
 */
+
+/*
+    JP nn  (0xC3)
+
+    Jump to nn, PC = nn. (LS byte first)
+
+    16 cycles
+
+    Flags affected (znhc): ----
+*/
+int Emulator::JP_nn() {
+
+    WORD lowByte = this->readMem(this->programCounter.regstr);
+    WORD highByte = this->readMem(this->programCounter.regstr + 1);
+
+    this->programCounter.regstr = (highByte << 8) | lowByte;
+
+    return 16;
+
+}
+
+/*
+    JP nn  (0xE9)
+
+    Jump to HL, PC = HL.
+
+    4 cycles
+
+    Flags affected (znhc): ----
+*/
+int Emulator::JP_HL() {
+
+    this->programCounter.regstr = this->regHL.regstr;
+
+    return 4;
+
+}
+
+/*
+    JP f, nn (0xXX)
+
+    Jump to address nn if following condition is true:
+    f = NZ, Jump if Z flag is reset.
+    f = Z, Jump if Z flag is set.
+    f = NC, Jump if C flag is reset.
+    f = C, Jump if C flag is set.
+
+    16 cycles if taken
+    12 cycles if not taken
+
+    Flags affected (znhc): ----
+
+*/
+int Emulator::JP_f_nn(BYTE opcode) {
+
+    // Get nn
+    WORD lowByte = this->readMem(this->programCounter.regstr);
+    WORD highByte = this->readMem(this->programCounter.regstr + 1);
+    WORD nn = (highByte << 8) | lowByte;
+
+    bool jump = false;
+    switch ((opcode >> 3) & 0x03) {
+        case 0x00: // NZ
+            jump = !(this->isBitSet(this->regAF.low, FLAG_ZERO));
+            break;
+        case 0x01: // Z
+            jump = this->isBitSet(this->regAF.low, FLAG_ZERO);
+            break;
+        case 0x02: // NC
+            jump = !(this->isBitSet(this->regAF.low, FLAG_CARRY));
+            break;
+        case 0x03: // C
+            jump = this->isBitSet(this->regAF.low, FLAG_CARRY);
+            break;
+    }
+
+    if (jump) {
+        this->programCounter.regstr = nn;
+        return 16;
+    } else {
+        this->programCounter.regstr += 2;
+        return 12;
+    }
+
+}
+
+/*
+    JR PC+dd  (0x18)
+
+    Jump relative to the offset dd.
+    dd is an 8 bit signed number. Read from memory at PC.
+
+    12 cycles
+
+    Flags affected (znhc): ----
+*/
+int Emulator::JR_PCdd() {
+
+    SIGNED_BYTE dd = static_cast<SIGNED_BYTE>(this->readMem(this->programCounter.regstr));
+    this->programCounter.regstr++;
+
+    this->programCounter.regstr += dd;
+
+    return 12;
+
+}
+
+/*
+    JR f, PC+dd  (0xXX)
+
+    Jump relative to the offset dd if following condition is true:
+    f = NZ, Jump if Z flag is reset.
+    f = Z, Jump if Z flag is set.
+    f = NC, Jump if C flag is reset.
+    f = C, Jump if C flag is set.    
+    dd is an 8 bit signed number. Read from memory at PC.
+
+    12 cycles if taken
+    8 cycles if not taken
+
+*/
+int Emulator::JR_f_PCdd(BYTE opcode) {
+
+    SIGNED_BYTE dd = static_cast<SIGNED_BYTE>(this->readMem(this->programCounter.regstr));
+    this->programCounter.regstr++;
+
+    bool jump = false;
+    switch ((opcode >> 3) & 0x03) {
+        case 0x00: // NZ
+            jump = !(this->isBitSet(this->regAF.low, FLAG_ZERO));
+            break;
+        case 0x01: // Z
+            jump = this->isBitSet(this->regAF.low, FLAG_ZERO);
+            break;
+        case 0x02: // NC
+            jump = !(this->isBitSet(this->regAF.low, FLAG_CARRY));
+            break;
+        case 0x03: // C
+            jump = this->isBitSet(this->regAF.low, FLAG_CARRY);
+            break;
+    }
+
+    if (jump) {
+        this->programCounter.regstr += dd;
+        return 12;
+    } else {
+        return 8;
+    }
+
+}
+
+/*
+    CALL nn  (0xCD)
+
+    Pushes the PC to SP, then sets PC to target address nn.
+
+    24 cycles
+
+    Flags affected (znhc): ----
+*/
+int Emulator::CALL_nn() {
+
+    // Get nn
+    WORD lowByte = this->readMem(this->programCounter.regstr);
+    WORD highByte = this->readMem(this->programCounter.regstr + 1);
+    this->programCounter.regstr += 2;
+    WORD nn = (highByte << 8) | lowByte;
+
+    // Push PC onto stack
+    this->stackPointer.regstr--;
+    this->writeMem(this->stackPointer.regstr, this->programCounter.high);
+    this->stackPointer.regstr--;
+    this->writeMem(this->stackPointer.regstr, this->programCounter.low);    
+
+    // Set PC to nn
+    this->programCounter.regstr = nn;
+
+    return 24;
+
+}
+
+/*
+    CALL f, nn  (0xXX)
+
+    CALL_nn if following condition is true:
+    f = NZ, Jump if Z flag is reset.
+    f = Z, Jump if Z flag is set.
+    f = NC, Jump if C flag is reset.
+    f = C, Jump if C flag is set.    
+
+    24 cycles if taken
+    12 cycles if not taken
+
+    Flags affected (znhc): ----
+*/
+int Emulator::CALL_f_nn(BYTE opcode) {
+
+    // Get nn
+    WORD lowByte = this->readMem(this->programCounter.regstr);
+    WORD highByte = this->readMem(this->programCounter.regstr + 1);
+    this->programCounter.regstr += 2;
+    WORD nn = (highByte << 8) | lowByte;
+
+    bool call = false;
+    switch ((opcode >> 3) & 0x03) {
+        case 0x00: // NZ
+            call = !(this->isBitSet(this->regAF.low, FLAG_ZERO));
+            break;
+        case 0x01: // Z
+            call = this->isBitSet(this->regAF.low, FLAG_ZERO);
+            break;
+        case 0x02: // NC
+            call = !(this->isBitSet(this->regAF.low, FLAG_CARRY));
+            break;
+        case 0x03: // C
+            call = this->isBitSet(this->regAF.low, FLAG_CARRY);
+            break;
+    }
+
+    if (call) {
+
+        // Push PC onto stack
+        this->stackPointer.regstr--;
+        this->writeMem(this->stackPointer.regstr, this->programCounter.high); 
+        this->stackPointer.regstr--;
+        this->writeMem(this->stackPointer.regstr, this->programCounter.low);    
+
+        // Set PC to nn
+        this->programCounter.regstr = nn;
+
+        return 24;
+
+    } else {
+        return 12;
+    }
+
+}
+
+/*
+    RET  (0xC9)
+
+    Return from subroutine.
+    Pop two bytes from the stack and jump to that address.
+
+    16 cycles
+
+    Flags affected (znhc): ----
+*/
+int Emulator::RET() {
+
+    // Pop address from stack
+    WORD lowByte = this->readMem(this->stackPointer.regstr);
+    this->stackPointer.regstr++;
+    WORD highByte = this->readMem(this->stackPointer.regstr);
+    this->stackPointer.regstr++;
+
+    // Set PC to address
+    this->programCounter.regstr = (highByte << 8) | lowByte;
+
+    return 16;
+
+}
+
+/*
+    RET f  (0xXX)
+
+    Conditional return from subroutine.
+    RET if following condition is true:
+    f = NZ, Jump if Z flag is reset.
+    f = Z, Jump if Z flag is set.
+    f = NC, Jump if C flag is reset.
+    f = C, Jump if C flag is set.    
+
+    20 cycles if taken
+    8 cycles if not taken
+
+    Flags affected (znhc): ----
+*/
+int Emulator::RET_f(BYTE opcode) {
+
+    bool doRET = false;
+    switch ((opcode >> 3) & 0x03) {
+        case 0x00: // NZ
+            doRET = !(this->isBitSet(this->regAF.low, FLAG_ZERO));
+            break;
+        case 0x01: // Z
+            doRET = this->isBitSet(this->regAF.low, FLAG_ZERO);
+            break;
+        case 0x02: // NC
+            doRET = !(this->isBitSet(this->regAF.low, FLAG_CARRY));
+            break;
+        case 0x03: // C
+            doRET = this->isBitSet(this->regAF.low, FLAG_CARRY);
+            break;
+    }
+
+    if (doRET) {
+
+        // Pop address from stack
+        WORD lowByte = this->readMem(this->stackPointer.regstr);
+        this->stackPointer.regstr++;
+        WORD highByte = this->readMem(this->stackPointer.regstr);
+        this->stackPointer.regstr++;
+
+        // Set PC to address
+        this->programCounter.regstr = (highByte << 8) | lowByte;
+
+        return 20;
+
+    } else {
+        return 8;
+    }
+
+}
+
+/*
+    RETI  (0xD9)
+
+    Return and enable interrupts.
+
+    16 cycles
+
+    Flags affected (znhc): ----
+*/
+int Emulator::RETI() {
+
+    // Pop address from stack
+    WORD lowByte = this->readMem(this->stackPointer.regstr);
+    this->stackPointer.regstr++;
+    WORD highByte = this->readMem(this->stackPointer.regstr);
+    this->stackPointer.regstr++;
+
+    // Set PC to address
+    this->programCounter.regstr = (highByte << 8) | lowByte;
+
+    // Enable interrupts
+    this->InterruptMasterEnabled = true;
+
+    return 16;
+
+}
+
+/*
+    RST n  (0xXX)
+
+    Push present address onto stack, jump to address 0x0000 + n.
+    Opcode:
+    11ttt111
+
+    000 0x00
+    001 0x08
+    010 0x10
+    011 0x18
+    100 0x20
+    101 0x28
+    110 0x30
+    111 0x38
+
+    16 cycles
+
+    Flags affected (znhc): ----
+*/
+int Emulator::RST_n(BYTE opcode) {
+
+    // Push PC onto stack
+    this->stackPointer.regstr--;
+    this->writeMem(this->stackPointer.regstr, this->programCounter.high);
+    this->stackPointer.regstr--;
+    this->writeMem(this->stackPointer.regstr, this->programCounter.low);    
+
+    // Set PC to n
+    BYTE t = ((opcode >> 3) & 0x07);
+    this->programCounter.regstr = (WORD)(t * 0x08);
+
+    return 16;
+    
+}
