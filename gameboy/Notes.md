@@ -43,3 +43,13 @@ https://www.reddit.com/r/EmuDev/comments/a1pt87/need_help_with_gameboy_emulator_
 https://github.com/Gekkio/mooneye-gb/blob/master/docs/accuracy.markdown
 
 getJoypadState() using my own understanding, when debugging check again
+
+POP_rr might have scoping issues when checking if the reg is AF
+    Use pointer address?? 
+
+Check INC scoping &.
+
+SBC ABC half carry flag not sure if correct. ABC should be correct, but SBC not confident. 
+Gameboy manual should be wrong on the instructions based on Gamelad and a few other sources.
+
+DAA chotto seh

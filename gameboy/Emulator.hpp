@@ -133,4 +133,63 @@ class Emulator {
 
         void doDMATransfer(BYTE);
 
+        // 8 bit Load Commands
+        int LD_r_R(BYTE&, BYTE);
+        int LD_r_n(BYTE&);
+        int LD_r_HL(BYTE&);
+        int LD_HL_r(BYTE);
+        int LD_HL_n();
+        int LD_A_BC();
+        int LD_A_DE();
+        int LD_A_nn();
+        int LD_BC_A();
+        int LD_DE_A();
+        int LD_nn_A();
+        int LD_A_FF00n();
+        int LD_FF00n_A();
+        int LD_A_FF00C();
+        int LD_FF00C_A();
+        int LDI_HL_A();
+        int LDI_A_HL();
+        int LDD_HL_A();
+        int LDD_A_HL();
+        
+        // 16 bit Load Commands
+        int LD_rr_nn(Register&);
+        int LD_SP_HL();
+        int PUSH_rr(Register);
+        int POP_rr(Register&);
+
+        // 8 bit Arithmetic/Logical Commands
+        int ADD_A_r(BYTE);
+        int ADD_A_n();
+        int ADD_A_HL();
+        int ADC_A_r(BYTE);
+        int ADC_A_n();
+        int ADC_A_HL();
+        int SUB_r(BYTE);
+        int SUB_n();
+        int SUB_HL();
+        int SBC_A_r(BYTE);
+        int SBC_A_n();
+        int SBC_A_HL();
+        int AND_r(BYTE);
+        int AND_n();
+        int AND_HL();
+        int XOR_r(BYTE);
+        int XOR_n();
+        int XOR_HL();
+        int OR_r(BYTE);
+        int OR_n();
+        int OR_HL();
+        int CP_r(BYTE);
+        int CP_n();
+        int CP_HL();
+        int INC_r(BYTE&);
+        int INC_HL();
+        int DEC_r(BYTE&);
+        int DEC_HL();
+        int DAA();
+        int CPL();
+
 };

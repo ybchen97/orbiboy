@@ -422,7 +422,7 @@ While handling interrupts, for any flagged interrupts, they will be triggered.
 
 void Emulator::flagInterrupt(int interruptID) { 
     BYTE requestReg = this->readMem(0xFF0F);
-    bitSet(requestReg, interruptID); // Set the corresponding bit in the interrupt req register 0xFF0F
+    requestReg = this->bitSet(requestReg, interruptID); // Set the corresponding bit in the interrupt req register 0xFF0F
     this->writeMem(0xFF0F, requestReg); // Update the request register;
 }
 
@@ -441,8 +441,8 @@ void Emulator::handleInterrupts() {
             // Saves current PC to SP, SP is now pointing at bottom of PC. Need to increment SP by 2 when returning
 
             for (int i = 0; i < 5; i++) { // Go through the bits and service the flagged interrupts
-                bool isFlagged = isBitSet(requestReg, i);
-                bool isEnabled = isBitSet(enabledReg, i);
+                bool isFlagged = this->isBitSet(requestReg, i);
+                bool isEnabled = this->isBitSet(enabledReg, i);
                 if (isFlagged && isEnabled) { // If n-th bit is flagged and enabled, trigger the corresponding interrupt
                     triggerInterrupt(i);
                 }
@@ -453,7 +453,7 @@ void Emulator::handleInterrupts() {
 
 void Emulator::triggerInterrupt(int interruptID) {
     BYTE requestReg = readMem(0xFF0F);
-    bitReset(requestReg, interruptID); // Resetting the n-th bit
+    requestReg = this->bitReset(requestReg, interruptID); // Resetting the n-th bit
     this->writeMem(0xFF0F, requestReg); 
     switch (interruptID) {
         case 0 : // V-Blank
@@ -617,11 +617,11 @@ void Emulator::buttonPressed(int key) {
     bool previouslyUnpressed = false; // Keeps track if the button was previously unpressed
     bool flagIntrpt = false; // Keeps track if interrupt should be flagged
 
-    if (isBitSet(this->joypadState, key)) { // If the key was set at 1 (unpressed)
+    if (this->isBitSet(this->joypadState, key)) { // If the key was set at 1 (unpressed)
         previouslyUnpressed = true;
     }
 
-    this->joypadState = bitReset(this->joypadState, key); // Set the key to 0 (pressed)
+    this->joypadState = this->bitReset(this->joypadState, key); // Set the key to 0 (pressed)
 
     // Now, determine if the key is directional or normal button
 
@@ -647,7 +647,7 @@ void Emulator::buttonPressed(int key) {
 }
 
 void Emulator::buttonReleased(int key) {
-    this->joypadState = this->bitSet(this->joypadState, key);
+    this->joypadSta(this->joypadState, key);
 }
 
 BYTE Emulator::getJoypadState() const {
@@ -814,7 +814,7 @@ void Emulator::setLCDStatus() {
         this->scanlineCycleCount = 456;
         this->internalMem[0xFF44] = 0;
         // set last 2 bits of status to 01
-        status = this->bitSet(status, 0);
+        stat(status, 0);
         status = this->bitReset(status, 1);
 
         this->writeMem(0xFF41, status);
@@ -831,7 +831,7 @@ void Emulator::setLCDStatus() {
     if (currentLine >= 144) {
         newMode = 1;
         // set last 2 bits of status to 01
-        status = this->bitSet(status, 0);
+        stat(status, 0);
         status = this->bitReset(status, 1);
         // check if vblank interrupt (bit 4) is enabled
         needInterrupt = this->isBitSet(status, 4);
@@ -852,7 +852,7 @@ void Emulator::setLCDStatus() {
             newMode = 2;
             // set last 2 bits of status to 10
             status = this->bitReset(status, 0);
-            status = this->bitSet(status, 1);
+            stat(status, 1);
             // check if OAM interrupt (bit 5) is enabled
             needInterrupt = this->isBitSet(status, 5);
         }
@@ -861,8 +861,8 @@ void Emulator::setLCDStatus() {
         else if (this->scanlineCycleCount > 204) {
             newMode = 3;
             // set last 2 bits of status to 11
-            status = this->bitSet(status, 0);
-            status = this->bitSet(status, 1);
+            stat(status, 0);
+            stat(status, 1);
         }
 
         // mode 0
@@ -884,7 +884,7 @@ void Emulator::setLCDStatus() {
     // check for the coincidence flag
     if (currentLine == this->readMem(0xFF45)) {
         // set coincidence flag (bit 2) to 1
-        status = this->bitSet(status, 2);
+        stat(status, 2);
         // check if coincidence flag interrupt (bit 6) is enabled
         if (this->isBitSet(status, 6)) {
             this->flagInterrupt(1);
@@ -1219,8 +1219,1581 @@ void Emulator::doDMATransfer(BYTE data) {
     WORD address = data << 8; 
     for (int i = 0x00; i < 0xA0; i++) {
         this->writeMem(0xFE00 + i, this->readMem(address + i));
+        this->LD_r_R(0xFF, 0xFE)
     }
 }
+
+/*
+********************************************************************************
+8 bit Load Commands
+********************************************************************************
+*/
+
+/*  
+    LD r, R 
+
+    Loads the contents of R register to r register.
+    r/R can be A, B, C, D, E, H, L
+
+    4 cycles
+
+    Flags affected(znhc): ----
+*/
+int Emulator::LD_r_R(BYTE& loadTo, BYTE loadFrom) { 
+    loadTo = loadFrom; // to is regXX.high/low, from is regXX.high/low
+    return 4; 
+}
+
+/*
+    LD r, n  (0x06, 0x16, 0x26   0x0E, 0x1E, 0x2E, 0x3E)
+
+    Loads immediate 8 bit data into r register.
+    r/R can be A, B, C, D, E, F, H, L
+
+    8 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_r_n(BYTE& reg) {
+    BYTE n = this->readMem(this->programCounter.regstr);
+    this->programCounter.regstr++;
+    reg = n;
+    return 8;
+}
+
+/*
+    LD r, HL  (0x46, 0x56, 0x66   0x4E, 0x5E, 0x6E, 0x7E))
+    
+    Loads content of memory location specified by HL into r register.
+    r can be A, B, C, D, E, F, H, L
+
+    8 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_r_HL(BYTE& reg) {
+    reg = this->readMem(this->regHL.regstr);
+
+    return 8;
+}
+
+/*
+    LD HL, r  (0x70 - 0x77 except 0x76)
+
+    Loads content of r register into memory location specified by HL.
+
+    8 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_HL_r(BYTE reg) {
+    this->writeMem(this->regHL.regstr, reg);
+
+    return 8;
+}
+
+/*
+    LD HL, n  (0x36)
+
+    Loads immediate 8 bit data into memory location specified by HL.
+
+    12 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_HL_n() {
+    this->writeMem(this->regHL.regstr, this->readMem(this->programCounter.regstr));
+    this->programCounter.regstr++;
+
+    return 12;
+}
+
+/*
+    LD A, BC  (0x0A)
+
+    Loads content of memory location specified by BC into register A.
+
+    8 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_A_BC() {
+    this->regAF.high = this->readMem(this->regBC.regstr);
+
+    return 8;
+}
+
+/*
+    LD A, DE  (0x1A)
+
+    Loads content of memory location specified by DE into register A.
+
+    8 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_A_DE() {
+    this->regAF.high = this->readMem(this->regDE.regstr);
+
+    return 8;
+}
+
+/*
+    LD A, nn  (0xFA)
+
+    Loads content of memory location specified by immediate 16 bit address into register A.
+
+    16 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_A_nn() {
+    WORD nn = this->readMem(this->programCounter.regstr + 1) << 8;
+    nn |= this->readMem(this->programCounter.regstr);
+    this->programCounter.regstr += 2;
+    this->regAF.high = nn;
+
+    return 16;
+}
+
+/*
+    LD BC, A  (0x02)
+
+    Loads content of register A into memory location specified by BC.
+
+    8 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_BC_A() {
+    this->writeMem(this->regBC.regstr, this->regAF.high);
+
+    return 8;
+}
+
+/*
+    LD DE, A  (0x12)
+
+    Loads content of register A into memory location specified by DE.
+
+    8 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_DE_A() {
+    this->writeMem(this->regDE.regstr, this->regAF.high);
+
+    return 8;
+}
+
+/*
+    LD nn, A  (0xEA)
+
+    Loads content of register A into memory location specified by immediate 16 bit address.
+
+    16 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_nn_A() {
+    WORD nn = this->readMem(this->programCounter.regstr + 1) << 8;
+    nn |= this->readMem(this->programCounter.regstr);
+    this->programCounter.regstr += 2;
+    this->writeMem(nn, this->regAF.high);
+
+    return 16;
+}
+
+/*
+    LD A, FF00+n  (0xF0)
+
+    Loads content of memory location specified by FF00+n into register A,
+    where n is the immediate 8 bit data
+
+    12 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_A_FF00n() {
+    BYTE n = this->readMem(this->programCounter.regstr);
+    this->programCounter.regstr++;
+    this->regAF.high = this->readMem(0xFF00 + n);
+
+    return 12;
+}
+
+/*
+    LD FF00+n, A  (0xE0)
+
+    Loads content of register A into memory location specified by FF00+n,
+    where n is the immediate 8 bit data.
+
+    12 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_FF00n_A() {
+    BYTE n = this->readMem(this->programCounter.regstr);
+    this->programCounter.regstr++;
+    this->writeMem(0xFF00 + n, this->regAF.high);
+
+    return 12;
+}
+
+/*
+    LD A, FF00+C  (0xF2)
+
+    Loads content of memory location specified by FF00+C into register A,
+    where C is the content of register C
+
+    8 cycles 
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_A_FF00C() {
+    this->regAF.high = this->readMem(0xFF00 + this->regBC.low);
+
+    return 8;
+}
+
+/*
+    LD FF00+C, A  (0xE2)
+
+    Loads content of register A into memory location specified by FF00+C,
+    where C is the content of register C
+
+    8 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_FF00C_A() {
+    this->writeMem(0xFF00 + this->regBC.low, this->regAF.high);
+
+    return 8;
+}
+
+/*
+    LDI HL, A  (0x22)
+
+    Loads content of register A into memory location specified by HL, then increment HL.
+
+    8 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LDI_HL_A() {
+    this->writeMem(this->regHL.regstr, this->regAF.high);
+    this->regHL.regstr++;
+
+    return 8;
+}
+
+/*
+    LDI A, HL  (0x2A)
+
+    Loads content of memory location specified by HL into register A, then increment HL.
+
+    8 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LDI_A_HL() {
+    this->regAF.high = this->readMem(this->regHL.regstr);
+    this->regHL.regstr++;
+
+    return 8;
+}
+
+/*
+    LDD HL, A  (0x32)
+
+    Loads content of register A into memory location specified by HL, then decrement HL.
+
+    8 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LDD_HL_A() {
+    this->writeMem(this->regHL.regstr, this->regAF.high);
+    this->regHL.regstr--;
+
+    return 8;
+}
+
+/*
+    LDD A, HL  (0x3A)
+
+    Loads content of memory location specified by HL into register A, then decrement HL.
+
+    8 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LDD_A_HL() {
+    this->regAF.high = this->readMem(this->regHL.regstr);
+    this->regHL.regstr--;
+
+    return 8;
+}
+
+/*
+********************************************************************************
+16 bit Load Commands
+********************************************************************************
+*/
+
+/*
+    LD rr, nn  (0x01 - 0x31)
+
+    Loads immediate 16 bit data into register rr
+    rr can be (BC, DE, HL, SP)
+
+    12 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_rr_nn(Register& reg) {
+    WORD nn = this->readMem(this->programCounter.regstr + 1) << 8;
+    nn |= this->readMem(this->programCounter.regstr);
+    this->programCounter += 2;
+    reg.regstr = nn;
+
+    return 12;
+}
+
+/*
+    LD SP, HL  (0xF9)
+
+    Loads content of HL into SP.
+
+    8 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_SP_HL() {
+    this->stackPointer.regstr = this->regHL.regstr;
+
+    return 8;
+}
+
+/*
+    PUSH_rr  (0xC5 - 0xF5)
+
+    Push content of rr into SP.
+    rr can be (AF, BC, DE, HL)
+
+    16 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::PUSH_rr(Register reg) {
+    this->stackPointer.regstr--;
+    this->writeMem(this->stackPointer.regstr, reg.high);
+    this->stackPointer.regstr--;
+    this->writeMem(this->stackPointer.regstr, reg.low);
+
+    return 16;
+}
+
+/*
+    POP_rr  (0xC1 - 0xF1)
+
+    Pop the top 16 bit data into register rr.
+    rr can be (AF, BC, DE, HL)
+
+    12 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::POP_rr(Register& reg) {
+    reg.low = this->readMem(this->stackPointer.regstr);
+    this->stackPointer.regstr++;
+    reg.high = this->readMem(this->stackPointer.regstr);
+    this->stackPointer.regstr++;
+
+    if (reg.regstr == this->regAF.regstr) {
+        this->regAF.regstr &= 0xFFF0;
+    }
+
+    return 12;
+}
+
+/*
+********************************************************************************
+8 bit Arithmetic/Logical Commands
+********************************************************************************
+*/
+
+/*
+    ADD A, r  (0x80 - 0x84)
+
+    Adds content of register r to register A.
+    r can be (B, C, D, E, H, L)
+
+    4 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 0
+    - h: Set if carry from bit 3
+    - c: Set if carry from bit 7
+ */
+int Emulator::ADD_A_r(BYTE regR) {
+    BYTE result = this->regAF.high + regR;
+    
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Half carry flag 
+    if (((regR ^ this->regAF.high ^ result) & 0x10) == 0x10) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    // Carry flag
+    if (result < this->regAF.high) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+
+    this->regAF.high = result;
+
+    return 4;
+}
+
+/*
+    ADD A, n  (0xC6)
+
+    Adds immediate 8 bit data into content of register A.
+
+    8 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 0
+    - h: Set if carry from bit 3
+    - c: Set if carry from bit 7
+ */
+int Emulator::ADD_A_n() {
+    BYTE n = this->readMem(this->programCounter.regstr);
+    this->programCounter.regstr++;
+    BYTE result = this->regAF.high + n;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Half carry flag 
+    if (((n ^ this->regAF.high ^ result) & 0x10) == 0x10) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    // Carry flag
+    if (result < this->regAF.high) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+
+    this->regAF.high = result;
+
+    return 8;
+}
+
+/*
+    ADD A, HL  (0x86)
+
+    Adds the content of the memory location specified by HL into register A.
+
+    8 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 0
+    - h: Set if carry from bit 3
+    - c: Set if carry from bit 7
+ */
+int Emulator::ADD_A_HL() {
+    BYTE toAdd = this->readMem(this->regHL.regstr);
+    BYTE result = this->regAF.high + toAdd;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Half carry flag 
+    if (((toAdd ^ this->regAF.high ^ result) & 0x10) == 0x10) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    // Carry flag
+    if (result < this->regAF.high) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+
+    this->regAF.high = result;
+
+    return 8;
+}
+
+/*
+    ADC A, r  (0x88 to 0x8F except for 0x8E)
+
+    Adds content of register r, and carry flag into register A
+    r can be (A, B, C, D, E, H, L)
+
+    4 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 0
+    - h: Set if carry from bit 3
+    - c: Set if carry from bit 7
+ */
+int Emulator::ADC_A_r(BYTE reg) {
+    BYTE carry = this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0x01 : 0x00;
+    BYTE toAdd = carry + reg;
+    BYTE result = this->regAF.high + carry + toAdd;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Half carry flag 
+    if (((toAdd ^ this->regAF.high ^ result) & 0x10) == 0x10) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    // Carry flag
+    if (result < this->regAF.high) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+
+    this->regAF.high = result;
+
+    return 4;
+}
+
+/*
+    ADC, A, n  (0xCE)
+
+    Adds immediate 8 bit data, and carry flag into contents of register A.
+
+    8 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 0
+    - h: Set if carry from bit 3
+    - c: Set if carry from bit 7
+ */
+int Emulator::ADC_A_n() {
+    BYTE carry = this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0x01 : 0x00;
+    BYTE toAdd = carry + this->readMem(this->programCounter.regstr);
+    BYTE result = this->regAF.high + carry + toAdd;
+    this->programCounter.regstr++;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Half carry flag 
+    if (((toAdd ^ this->regAF.high ^ result) & 0x10) == 0x10) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    // Carry flag
+    if (result < this->regAF.high) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+
+    this->regAF.high = result;
+
+    return 8;
+}
+
+/*
+    ADC A, HL  (0x8E)
+
+    Adds content of memory location specified by HL, and carry flag into contents of register A.
+
+    8 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 0
+    - h: Set if carry from bit 3
+    - c: Set if carry from bit 7
+ */
+int Emulator::ADC_A_HL() {
+    BYTE carry = this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0x01 : 0x00;
+    BYTE toAdd = carry + this->readMem(this->regHL.regstr);
+    BYTE result = this->regAF.high + carry + toAdd;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Half carry flag 
+    if (((toAdd ^ this->regAF.high ^ result) & 0x10) == 0x10) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    // Carry flag
+    if (result < this->regAF.high) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+
+    this->regAF.high = result;
+
+    return 8;
+}
+
+/*
+    SUB r  (0x90 - 0x97 except of 0x96)
+
+    Subtracts content of register r from register A.
+    r can be (A, B, C, D, E, H, L)
+
+    4 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 1
+    - h: Set if A lower nibble less than r lower nibble)
+    - c: Set if A less than r
+ */
+int Emulator::SUB_r(BYTE reg) {
+    BYTE result = this->regAF.high - reg;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Subtract flag
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+
+    // Half carry flag 
+    // If lower nibble of A is less than lower nibble of r, set HCF
+    if ((this->regAF.high & 0x0F) < (reg & 0x0F)) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    // Carry flag
+    if (this->regAF.high < reg) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+
+    this->regAF.high = result;
+
+    return 4;
+}
+
+/*
+    SUB n  (0xD6)
+
+    Subtracts immediate 8 bit data from contents of register A.
+
+    8 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 1
+    - h: Set if A lower nibble less than n lower nibble)
+    - c: Set if A less than n
+ */
+int Emulator::SUB_n() {
+    BYTE n = this->readMem(this->programCounter.regstr);
+    this->programCounter.regstr++;
+
+    BYTE result = this->regAF.high - n;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Subtract flag
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+
+    // Half carry flag 
+    // If lower nibble of A is less than lower nibble of n, set HCF
+    if ((this->regAF.high & 0x0F) < (n & 0x0F)) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    // Carry flag
+    if (this->regAF.high < n) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+
+    this->regAF.high = result;
+
+    return 8;
+}
+
+/*
+    SUB HL  (0x96)
+
+    Subtracts contents of memory location specified by HL from contents of register A
+
+    8 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 1
+    - h: Set if A lower nibble less than (HL) lower nibble)
+    - c: Set if A less than (HL)
+ */
+int Emulator::SUB_HL() {
+    BYTE toSub = this->readMem(this->regHL.regstr);
+    BYTE result = this->regAF.high - toSub;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Subtract flag
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+
+    // Half carry flag 
+    // If lower nibble of A is less than lower nibble of toSub, set HCF
+    if ((this->regAF.high & 0x0F) < (toSub & 0x0F)) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    // Carry flag
+    if (this->regAF.high < toSub) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+
+    this->regAF.high = result;
+
+    return 8;
+}
+
+/*
+    SBC A, r  (0x98 - 0x9F except for 0x9E)
+
+    Subtracts content of register r, and carry flag from content of register A.
+    r can be (A, B, C, D, E, H, L)
+
+    4 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 1
+    - h: Set if A lower nibble less than toSub lower nibble)
+    - c: Set if A less than toSub
+ */
+int Emulator::SBC_A_r(BYTE reg) {
+    BYTE carry = this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0x1 : 0x0;
+    BYTE toSub = carry + reg;
+    BYTE result = this->regAF.high - toSub;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Subtract flag
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+
+    // Half carry flag 
+    // If lower nibble of A is less than lower nibble of toSub, set HCF
+    if ((this->regAF.high & 0x0F) < (toSub & 0x0F)) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    // Carry flag
+    if (this->regAF.high < toSub) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+
+    this->regAF.high = result;
+
+    return 4;
+}
+
+/*
+    SBC A, n  (0xDE)
+
+    Subtracts immediate 8 bit data, and carry flag from content of register A.
+
+    8 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 1
+    - h: Set if A lower nibble less than toSub lower nibble)
+    - c: Set if A less than toSub
+ */
+int Emulator::SBC_A_n() {
+    BYTE carry = this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0x1 : 0x0;
+    BYTE toSub = carry + this->readMem(this->programCounter.regstr);
+    this->programCounter.regstr++;
+
+    BYTE result = this->regAF.high - toSub;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Subtract flag
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+
+    // Half carry flag 
+    // If lower nibble of A is less than lower nibble of toSub, set HCF
+    if ((this->regAF.high & 0x0F) < (toSub & 0x0F)) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    // Carry flag
+    if (this->regAF.high < toSub) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+
+    this->regAF.high = result;
+
+    return 8;
+}
+
+/*
+    SBC A, HL  (0x9E)
+
+    Subtracts content of memory location specified by HL, and carry flag from content of register A.
+
+    8 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 1
+    - h: Set if A lower nibble less than toSub lower nibble)
+    - c: Set if A less than toSub
+ */
+int Emulator::SBC_A_HL() {
+    BYTE carry = this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0x1 : 0x0;
+    BYTE toSub = carry + this->readMem(this->regHL.regstr);
+    BYTE result = this->regAF.high - toSub;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Subtract flag
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+
+    // Half carry flag 
+    // If lower nibble of A is less than lower nibble of toSub, set HCF
+    if ((this->regAF.high & 0x0F) < (toSub & 0x0F)) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    // Carry flag
+    if (this->regAF.high < toSub) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+
+    this->regAF.high = result;
+
+    return 8;
+}
+
+/*
+    AND r  (0xA0 - 0xA7 except for 0xA6)
+
+    Set register A to bitwise AND register A and register r.
+    r can be (A, B, C, D, E, H, L)
+
+    4 cycles
+
+    Flags affected:
+    - z: Set if result is zero
+    - n: 0
+    - h: 1
+    - c: 0
+ */
+int Emulator::AND_r(BYTE reg) {
+    BYTE result = this->regAF.high & reg;
+    
+    / Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Half carry flag 
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+
+    this->regAF.high = result;
+
+    return 4;
+}
+
+/*
+    AND n  (0xE6)
+
+    Set register A to bitwise AND register A and immediate 8 bit data.
+
+    8 cycles
+
+    Flags affected:
+    - z: Set if result is zero
+    - n: 0
+    - h: 1
+    - c: 0
+ */
+int Emulator::AND_n() {
+    BYTE result = this->regAF.high & this->readMem(this->programCounter.regstr);
+    this->programCounter.regstr++;
+    
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Half carry flag 
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+
+    this->regAF.high = result;
+
+    return 8;
+}
+
+/*
+    AND HL  (0xA6)
+
+    Set register A to bitwise AND register A and content of memory location specified by HL.
+
+    8 cycles
+
+    Flags affected:
+    - z: Set if result is zero
+    - n: 0
+    - h: 1
+    - c: 0
+ */
+int Emulator::AND_HL() {
+    BYTE result = this->regAF.high & this->readMem(this->regHL.regstr);
+    
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Half carry flag 
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+
+    this->regAF.high = result;
+
+    return 8;
+}
+
+/*
+    XOR r  (0xA8 - 0xAF except for 0xAE)
+
+    Set register A to bitwise XOR register A and register r.
+
+    4 cycles
+
+    Flags affected:
+    - z: Set if result is zero
+    - n: 0
+    - h: 0
+    - c: 0
+ */
+int Emulator::XOR_r(BYTE reg) {
+    BYTE result = this->regAF.high ^ reg;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    this->regAF.high = result;
+
+    return 4;
+}
+
+/*
+    XOR n  (0xEE)
+
+    Set register A to bitwise XOR register A and immediate 8 bit data.
+
+    8 cycles
+
+    Flags affected:
+    - z: Set if result is zero
+    - n: 0
+    - h: 0
+    - c: 0
+ */
+int Emulator::XOR_n() {
+    BYTE result = this->regAF.high ^ this->readMem(this->programCounter.regstr);
+    this->programCounter.regstr++;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    this->regAF.high = result;
+
+    return 8;
+}
+
+/*
+    XOR HL  (0xAE)
+
+    Set register A to bitwise XOR register A and content of memory location specified by HL.
+
+    8 cycles
+
+    Flags affected:
+    - z: Set if result is zero
+    - n: 0
+    - h: 0
+    - c: 0
+ */
+int Emulator::XOR_HL() {
+    BYTE result = this->regAF.high ^ this->readMem(this->regHL.regstr);
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    this->regAF.high = result;
+
+    return 8;
+}
+
+/*
+    OR r  (0xB0 - 0xB7 except for 0xB6)
+
+    Sets register A to bitwise OR register A and register r.
+    r can be (A, B, C, D, E, H, L)
+
+    4 cycles
+
+    Flags affected:
+    - z: Set if result is zero
+    - n: 0
+    - h: 0
+    - c: 0
+ */
+int Emulator::OR_r(BYTE reg) {
+    BYTE result = this->regAF.high | reg;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    this->regAF.high = result;
+
+    return 4;
+}
+
+/*
+    OR n  (0xF6)
+
+    Set register A to bitwise OR register A and immediate 8 bit data.
+
+    8 cycles
+
+    Flags affected:
+    - z: Set if result is zero
+    - n: 0
+    - h: 0
+    - c: 0
+ */
+int Emulator::OR_n() {
+    BYTE result = this->regAF.high | this->readMem(this->programCounter.regstr);
+    this->programCounter.regstr++;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    this->regAF.high = result;
+
+    return 8;
+}
+
+/*
+    OR HL  (0xBE)
+
+    Set register A to bitwise OR register A and content of memory location specified by HL.
+
+    8 cycles
+
+    Flags affected:
+    - z: Set if result is zero
+    - n: 0
+    - h: 0
+    - c: 0
+ */
+int Emulator::OR_HL() {
+    BYTE result = this->regAF.high | this->readMem(this->regHL.regstr);
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    this->regAF.high = result;
+
+    return 8;
+}
+
+/*
+    CP r  (0xB8 - 0xBF except for 0xBE)
+
+    Compares content of register A and register r.
+    Basically a SUB r without storing the result in register A.
+    r can be (A, B, C, D, E, H, L)
+
+    4 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 1
+    - h: Set if A lower nibble less than r lower nibble)
+    - c: Set if A less than r
+ */
+int Emulator::CP_r(BYTE reg) {
+    BYTE result = this->regAF.high - reg;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Subtract flag
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+
+    // Half carry flag 
+    // If lower nibble of A is less than lower nibble of r, set HCF
+    if ((this->regAF.high & 0x0F) < (reg & 0x0F)) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    // Carry flag
+    if (this->regAF.high < reg) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+
+    return 4;
+}
+
+/*
+    CP n  (0xFE)
+
+    Compares content of register A and immediate 8 bit data.
+    Basically a SUB n without storing the result in register A.
+
+    8 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 1
+    - h: Set if A lower nibble less than n lower nibble)
+    - c: Set if A less than n
+ */
+int Emulator::CP_n() {
+    BYTE n = this->readMem(this->programCounter.regstr);
+    this->programCounter.regstr++;
+
+    BYTE result = this->regAF.high - n;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Subtract flag
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+
+    // Half carry flag 
+    // If lower nibble of A is less than lower nibble of n, set HCF
+    if ((this->regAF.high & 0x0F) < (n & 0x0F)) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    // Carry flag
+    if (this->regAF.high < n) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+
+    return 8;
+}
+
+/*
+    SUB HL  (0xBE)
+
+    Compares content of register A and content of memory location specified by HL.
+    Basically a SUB HL without storing the result in register A.
+    
+    8 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 1
+    - h: Set if A lower nibble less than (HL) lower nibble)
+    - c: Set if A less than (HL)
+ */
+int Emulator::CP_HL() {
+    BYTE toSub = this->readMem(this->regHL.regstr);
+    BYTE result = this->regAF.high - toSub;
+
+    // Reset the flags
+    this->regAF.regstr &= 0xFFF0;
+
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Subtract flag
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+
+    // Half carry flag 
+    // If lower nibble of A is less than lower nibble of toSub, set HCF
+    if ((this->regAF.high & 0x0F) < (toSub & 0x0F)) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    // Carry flag
+    if (this->regAF.high < toSub) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+
+    return 8;
+}
+
+/*
+    INC r (0x02 0x12 0x22  0x0C 0x1C 0x2C)
+
+    Increments register r by 1 
+    r can be (A, B, C, D, E, H, L)
+
+    4 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 0
+    - h: Set if bit 3 was set before the increment, then not set after the increment
+    - c: Not affected
+ */
+int Emulator::INC_r(BYTE& reg) {
+    bool wasBit3Set = this->isBitSet(reg, 3);
+    reg++;
+    bool afterBit3Set = this->isBitSet(reg, 3);
+    
+    // Zero flag
+    if (reg == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Subtract flag
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+
+    // Half carry flag 
+    // Set if bit 3 was set before the increment, then not set after the increment
+    if (wasBit3Set && !afterBit3Set) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    } 
+    else {
+        this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    return 4;
+}
+
+/*
+    INC HL (0x34)
+
+    Increments register HL by 1.
+
+    12 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 0
+    - h: Set if bit 3 was set before the increment, then not set after the increment
+    - c: Not affected
+ */
+int Emulator::INC_HL() {
+    BYTE reg = this->readMem(this->regHL.regstr);
+    bool wasBit3Set = this->isBitSet(reg, 3);
+    reg++;
+    bool afterBit3Set = this->isBitSet(reg, 3);
+    
+    // Zero flag
+    if (reg == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Subtract flag
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+
+    // Half carry flag 
+    // Set if bit 3 was set before the increment, then not set after the increment
+    if (wasBit3Set && !afterBit3Set) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    } 
+    else {
+        this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    this->writeMem(this->regHL.regstr, reg);
+
+    return 12;
+}
+
+/*
+    DEC r (0x02 0x12 0x22  0x0C 0x1C 0x2C)
+
+    Derements register r by 1 
+    r can be (A, B, C, D, E, H, L)
+
+    4 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 1
+    - h: Set if XOR between r, result, and 1 is 0x10
+    - c: Not affected
+ */
+int Emulator::DEC_r(BYTE& reg) {
+    BYTE result = reg - 1;
+    
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Subtract flag
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+
+    // Half carry flag 
+    if (((result ^ reg ^ 0x1)) & 0x10 == 0x10) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    } 
+    else {
+        this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    reg = result;
+
+    return 4;
+}
+
+/*
+    DEC HL 
+
+    Derements content of memory location specified by HL by 1.
+
+    12 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: 1
+    - h: Set if XOR between (HL), result, and 1 is 0x10
+    - c: Not affected
+ */
+int Emulator::DEC_HL() {
+    BYTE initial = this->readMem(this->regHL.regstr);
+    BYTE result =  initial - 1;
+    
+    // Zero flag
+    if (result == 0x0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+
+    // Subtract flag
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+
+    // Half carry flag 
+    if (((result ^ initial ^ 0x1)) & 0x10 == 0x10) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    } 
+    else {
+        this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    }
+
+    this->writeMem(this->regHL.regstr, result);
+
+    return 12;
+}
+
+/*
+    DAA  (0x27)
+
+    Decimal adjust register A to Binary Coded Decimal.
+
+    4 cycles
+
+    Flags affected(znhc): 
+    - z: Set if result is zero
+    - n: Not affected
+    - h: 0
+    - c: x
+ */
+int Emulator::DAA() {
+    int result = this->regAF.high;
+
+    // After an addition
+    if (!this->isBitSet(this->regAF.low, FLAG_SUB)) {
+        if (this->isBitSet(this->regAF.low, FLAG_HALFCARRY) || (result & 0xF) > 9) {
+            result += 0x06;
+        }
+
+        if (this->isBitSet(this->regAF.low, FLAG_CARRY) || (result > 0x9F)) {
+            result += 0x60;
+        }
+    }
+    // After a subtraction
+    else
+    {
+        if (this->isBitSet(this->regAF.low, FLAG_HALFCARRY)) {
+            result = (result - 0x06) & 0xFF;
+        }
+
+        if (this->isBitSet(this->regAF.low, FLAG_CARRY)) {
+            result -= 0x60;
+        }
+    }
+
+    // Half carry flag
+    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+
+    // Carry flag
+    // If it overflowed
+    if ((result & 0x100) == 0x100) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    }
+    
+    result &= 0xFF;
+
+    // Zero flag
+    if (result == 0) {
+        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    }
+    else
+    {
+        this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
+    }
+
+    this->regAF.high = (BYTE) result;
+
+    return 4;
+}
+
+/*
+    CPL  (0x2F)
+
+    Sets register A to its complement
+
+    4 cycles
+
+    Flags affected(znhc): 
+    - z: Not affected
+    - n: 1
+    - h: 1
+    - c: Not affected
+ */
+int Emulator::CPL() {
+    BYTE result = this->regAF.high ^ 0xFF;
+
+    // Half carry flag
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+
+    // Carry flag
+    this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+
+    this->regAF.high = result;
+
+    return 4;
+}
+
 
 /*
 ********************************************************************************
