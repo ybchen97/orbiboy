@@ -816,7 +816,7 @@ void Emulator::setLCDStatus() {
         this->scanlineCycleCount = 456;
         this->internalMem[0xFF44] = 0;
         // set last 2 bits of status to 01
-        stat(status, 0);
+        status = this->bitSet(status, 0);
         status = this->bitReset(status, 1);
 
         this->writeMem(0xFF41, status);
@@ -833,7 +833,7 @@ void Emulator::setLCDStatus() {
     if (currentLine >= 144) {
         newMode = 1;
         // set last 2 bits of status to 01
-        stat(status, 0);
+        status = this->bitSet(status, 0);
         status = this->bitReset(status, 1);
         // check if vblank interrupt (bit 4) is enabled
         needInterrupt = this->isBitSet(status, 4);
@@ -854,7 +854,7 @@ void Emulator::setLCDStatus() {
             newMode = 2;
             // set last 2 bits of status to 10
             status = this->bitReset(status, 0);
-            stat(status, 1);
+            status = this->bitSet(status, 1);
             // check if OAM interrupt (bit 5) is enabled
             needInterrupt = this->isBitSet(status, 5);
         }
@@ -863,8 +863,8 @@ void Emulator::setLCDStatus() {
         else if (this->scanlineCycleCount > 204) {
             newMode = 3;
             // set last 2 bits of status to 11
-            stat(status, 0);
-            stat(status, 1);
+            status = this->bitSet(status, 0);
+            status = this->bitSet(status, 1);
         }
 
         // mode 0
@@ -886,7 +886,7 @@ void Emulator::setLCDStatus() {
     // check for the coincidence flag
     if (currentLine == this->readMem(0xFF45)) {
         // set coincidence flag (bit 2) to 1
-        stat(status, 2);
+        status = this->bitSet(status, 2);
         // check if coincidence flag interrupt (bit 6) is enabled
         if (this->isBitSet(status, 6)) {
             this->flagInterrupt(1);
@@ -1557,7 +1557,7 @@ int Emulator::LDD_A_HL() {
 int Emulator::LD_rr_nn(Register& reg) {
     WORD nn = this->readMem(this->programCounter.regstr + 1) << 8;
     nn |= this->readMem(this->programCounter.regstr);
-    this->programCounter += 2;
+    this->programCounter.regstr += 2;
     reg.regstr = nn;
 
     return 12;
@@ -2161,7 +2161,7 @@ int Emulator::SBC_A_HL() {
 int Emulator::AND_r(BYTE reg) {
     BYTE result = this->regAF.high & reg;
     
-    / Reset the flags
+    // Reset the flags
     this->regAF.regstr &= 0xFFF0;
 
     // Zero flag
