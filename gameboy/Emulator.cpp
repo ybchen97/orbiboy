@@ -1221,12 +1221,34 @@ void Emulator::doDMATransfer(BYTE data) {
     WORD address = data << 8; 
     for (int i = 0x00; i < 0xA0; i++) {
         this->writeMem(0xFE00 + i, this->readMem(address + i));
-        this->LD_r_R(0xFF, 0xFE)
     }
 }
 
 /*
 ********************************************************************************
+Utility Functions
+********************************************************************************
+*/
+
+bool Emulator::isBitSet(BYTE data, int position) const {
+    return ((data >> position) & 0x1) == 0x1;
+}
+
+BYTE Emulator::bitSet(BYTE data, int position) const {
+    int mask = 1 << position;
+    return data | mask;
+}
+
+BYTE Emulator::bitReset(BYTE data, int position) const {
+    int mask = ~(1 << position);
+    return data & mask;
+}
+
+/*
+********************************************************************************
+
+START OF OPCODES
+
 8 bit Load Commands
 ********************************************************************************
 */
@@ -2794,27 +2816,6 @@ int Emulator::CPL() {
     this->regAF.high = result;
 
     return 4;
-}
-
-
-/*
-********************************************************************************
-Utility Functions
-********************************************************************************
-*/
-
-bool Emulator::isBitSet(BYTE data, int position) const {
-    return ((data >> position) & 0x1) == 0x1;
-}
-
-BYTE Emulator::bitSet(BYTE data, int position) const {
-    int mask = 1 << position;
-    return data | mask;
-}
-
-BYTE Emulator::bitReset(BYTE data, int position) const {
-    int mask = ~(1 << position);
-    return data & mask;
 }
 
 /*

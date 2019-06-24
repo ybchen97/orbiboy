@@ -126,69 +126,6 @@ class Emulator {
         void setLCDStatus();
         bool LCDEnabled();
 
-        ////////// Start of opcodes //////////
-        // 16 bit Arithmetic/Logical Commands
-
-        int ADD_HL_rr(WORD);
-        int INC_rr(WORD&);
-        int DEC_rr(WORD&);
-        int ADD_SP_dd();
-        int LD_HL_SPdd();
-
-        // Rotate and Shift Commands
-        int RLCA();
-        int RLA();
-        int RRCA();
-        int RRA();
-        int RLC_r(BYTE&);
-        int RLC_HL();
-        int RL_r(BYTE&);
-        int RL_HL();
-        int RRC_r(BYTE&);
-        int RRC_HL();
-        int RR_r(BYTE&);
-        int RR_HL();
-        int SLA_r(BYTE&);
-        int SLA_HL();
-        int SWAP_r(BYTE&);
-        int SWAP_HL();
-        int SRA_r(BYTE&);
-        int SRA_HL();
-        int SRL_r(BYTE&);
-        int SRL_HL();
-
-        // Single Bit Operation Commands
-        int BIT_n_r(BYTE&, BYTE);
-        int BIT_n_HL(BYTE);
-        int SET_n_r(BYTE&, BYTE);
-        int SET_n_HL(BYTE);
-        int RES_n_r(BYTE&, BYTE);
-        int RES_n_HL(BYTE);
-
-        // CPU Control Commands
-        int CCF();
-        int SCF();
-        int NOP();
-        int HALT();
-        int STOP();
-        int DI();
-        int EI();
-
-        // Jump Commands
-        int JP_nn();
-        int JP_HL();
-        int JP_f_nn(BYTE);
-        int JR_PCdd();
-        int JR_f_PCdd(BYTE);
-        int CALL_nn();
-        int CALL_f_nn(BYTE);
-        int RET();
-        int RET_f(BYTE);
-        int RETI();
-        int RST_n(BYTE);
-
-        ////////// end of opcodes //////////
-
         void drawScanLine();
         void renderTiles(BYTE);
         void renderSprites(BYTE);
@@ -196,6 +133,7 @@ class Emulator {
 
         void doDMATransfer(BYTE);
 
+        ////////// Start of opcodes //////////
         // 8 bit Load Commands
         int LD_r_R(BYTE&, BYTE);
         int LD_r_n(BYTE&);
@@ -254,5 +192,65 @@ class Emulator {
         int DEC_HL();
         int DAA();
         int CPL();
+
+        // 16 bit Arithmetic/Logical Commands
+        int ADD_HL_rr(WORD);
+        int INC_rr(WORD&);
+        int DEC_rr(WORD&);
+        int ADD_SP_dd();
+        int LD_HL_SPdd();
+
+        // Rotate and Shift Commands
+        int RLCA();
+        int RLA();
+        int RRCA();
+        int RRA();
+        int RLC_r(BYTE&);
+        int RLC_HL();
+        int RL_r(BYTE&);
+        int RL_HL();
+        int RRC_r(BYTE&);
+        int RRC_HL();
+        int RR_r(BYTE&);
+        int RR_HL();
+        int SLA_r(BYTE&);
+        int SLA_HL();
+        int SWAP_r(BYTE&);
+        int SWAP_HL();
+        int SRA_r(BYTE&);
+        int SRA_HL();
+        int SRL_r(BYTE&);
+        int SRL_HL();
+
+        // Single Bit Operation Commands
+        int BIT_n_r(BYTE&, BYTE);
+        int BIT_n_HL(BYTE);
+        int SET_n_r(BYTE&, BYTE);
+        int SET_n_HL(BYTE);
+        int RES_n_r(BYTE&, BYTE);
+        int RES_n_HL(BYTE);
+
+        // CPU Control Commands
+        int CCF();
+        int SCF();
+        int NOP();
+        int HALT();
+        int STOP();
+        int DI();
+        int EI();
+
+        // Jump Commands
+        int JP_nn();
+        int JP_HL();
+        int JP_f_nn(BYTE);
+        int JR_PCdd();
+        int JR_f_PCdd(BYTE);
+        int CALL_nn();
+        int CALL_f_nn(BYTE);
+        int RET();
+        int RET_f(BYTE);
+        int RETI();
+        int RST_n(BYTE);
+        ////////// end of opcodes //////////
 
 };
