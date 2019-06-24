@@ -53,5 +53,3 @@ SBC ABC half carry flag not sure if correct. ABC should be correct, but SBC not 
 Gameboy manual should be wrong on the instructions based on Gamelad and a few other sources.
 
 DAA chotto seh
-
-doDMATransfer error using LD_r_R. Check definition of LD_r_R then decide if that's what we should use.
