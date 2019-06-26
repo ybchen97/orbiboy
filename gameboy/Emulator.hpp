@@ -98,6 +98,7 @@ class Emulator {
         // FUNCTIONS
         int executeNextOpcode();
         int executeOpcode(BYTE);
+        int executeCBOpcode();
 
         // Memory
         void handleBanking(WORD, BYTE);
@@ -158,6 +159,7 @@ class Emulator {
         // 16 bit Load Commands
         int LD_rr_nn(Register&);
         int LD_SP_HL();
+        int LD_nn_SP();
         int PUSH_rr(Register);
         int POP_rr(Register&);
 

@@ -182,8 +182,762 @@ int Emulator::executeNextOpcode() {
 }
 
 int Emulator::executeOpcode(BYTE opcode) {
+    
+    switch (opcode) {
+
+        /* 
+        ********************************************************************************
+        8 bit Load Commands
+        ********************************************************************************
+        */
+        
+        // Load B, R/(HL)
+        case 0x40: this->LD_r_R(this->regBC.high, this->regBC.high); break;
+        case 0x41: this->LD_r_R(this->regBC.high, this->regBC.low); break;
+        case 0x42: this->LD_r_R(this->regBC.high, this->regDE.high); break;
+        case 0x43: this->LD_r_R(this->regBC.high, this->regDE.low); break;
+        case 0x44: this->LD_r_R(this->regBC.high, this->regHL.high); break;
+        case 0x45: this->LD_r_R(this->regBC.high, this->regHL.low); break;
+        case 0x46: this->LD_r_HL(this->regBC.high); break;
+        case 0x47: this->LD_r_R(this->regBC.high, this->regAF.high); break;
+
+        // Load C, R/(HL)
+        case 0x48: this->LD_r_R(this->regBC.low, this->regBC.high); break;
+        case 0x49: this->LD_r_R(this->regBC.low, this->regBC.low); break;
+        case 0x4A: this->LD_r_R(this->regBC.low, this->regDE.high); break;
+        case 0x4B: this->LD_r_R(this->regBC.low, this->regDE.low); break;
+        case 0x4C: this->LD_r_R(this->regBC.low, this->regHL.high); break;
+        case 0x4D: this->LD_r_R(this->regBC.low, this->regHL.low); break;
+        case 0x4E: this->LD_r_HL(this->regBC.low); break;
+        case 0x4F: this->LD_r_R(this->regBC.low, this->regAF.high); break;
+
+        // Load D, R/(HL)
+        case 0x50: this->LD_r_R(this->regDE.high, this->regBC.high); break;
+        case 0x51: this->LD_r_R(this->regDE.high, this->regBC.low); break;
+        case 0x52: this->LD_r_R(this->regDE.high, this->regDE.high); break;
+        case 0x53: this->LD_r_R(this->regDE.high, this->regDE.low); break;
+        case 0x54: this->LD_r_R(this->regDE.high, this->regHL.high); break;
+        case 0x55: this->LD_r_R(this->regDE.high, this->regHL.low); break;
+        case 0x56: this->LD_r_HL(this->regDE.high); break;
+        case 0x57: this->LD_r_R(this->regDE.high, this->regAF.high); break;
+
+        // Load E, R/(HL)
+        case 0x58: this->LD_r_R(this->regDE.low, this->regBC.high); break;
+        case 0x59: this->LD_r_R(this->regDE.low, this->regBC.low); break;
+        case 0x5A: this->LD_r_R(this->regDE.low, this->regDE.high); break;
+        case 0x5B: this->LD_r_R(this->regDE.low, this->regDE.low); break;
+        case 0x5C: this->LD_r_R(this->regDE.low, this->regHL.high); break;
+        case 0x5D: this->LD_r_R(this->regDE.low, this->regHL.low); break;
+        case 0x5E: this->LD_r_HL(this->regDE.low); break;
+        case 0x5F: this->LD_r_R(this->regDE.low, this->regAF.high); break;
+
+        // Load H, R/(HL)
+        case 0x60: this->LD_r_R(this->regHL.high, this->regBC.high); break;
+        case 0x61: this->LD_r_R(this->regHL.high, this->regBC.low); break;
+        case 0x62: this->LD_r_R(this->regHL.high, this->regDE.high); break;
+        case 0x63: this->LD_r_R(this->regHL.high, this->regDE.low); break;
+        case 0x64: this->LD_r_R(this->regHL.high, this->regHL.high); break;
+        case 0x65: this->LD_r_R(this->regHL.high, this->regHL.low); break;
+        case 0x66: this->LD_r_HL(this->regHL.high); break;
+        case 0x67: this->LD_r_R(this->regHL.high, this->regAF.high); break;
+
+        // Load L, R/(HL)
+        case 0x68: this->LD_r_R(this->regHL.low, this->regBC.high); break;
+        case 0x69: this->LD_r_R(this->regHL.low, this->regBC.low); break;
+        case 0x6A: this->LD_r_R(this->regHL.low, this->regDE.high); break;
+        case 0x6B: this->LD_r_R(this->regHL.low, this->regDE.low); break;
+        case 0x6C: this->LD_r_R(this->regHL.low, this->regHL.high); break;
+        case 0x6D: this->LD_r_R(this->regHL.low, this->regHL.low); break;
+        case 0x6E: this->LD_r_HL(this->regHL.low); break;
+        case 0x6F: this->LD_r_R(this->regHL.low, this->regAF.high); break;
+
+        // Load (HL), R
+        case 0x70: this->LD_HL_r(this->regBC.high); break;
+        case 0x71: this->LD_HL_r(this->regBC.low); break;
+        case 0x72: this->LD_HL_r(this->regDE.high); break;
+        case 0x73: this->LD_HL_r(this->regDE.low); break;
+        case 0x74: this->LD_HL_r(this->regHL.high); break;
+        case 0x75: this->LD_HL_r(this->regHL.low); break;
+        case 0x77: this->LD_HL_r(this->regAF.high); break;
+
+        // Load A, R/(HL)
+        case 0x78: this->LD_r_R(this->regAF.high, this->regBC.high); break;
+        case 0x79: this->LD_r_R(this->regAF.high, this->regBC.low); break;
+        case 0x7A: this->LD_r_R(this->regAF.high, this->regDE.high); break;
+        case 0x7B: this->LD_r_R(this->regAF.high, this->regDE.low); break;
+        case 0x7C: this->LD_r_R(this->regAF.high, this->regHL.high); break;
+        case 0x7D: this->LD_r_R(this->regAF.high, this->regHL.low); break;
+        case 0x7E: this->LD_r_HL(this->regAF.high); break;
+        case 0x7F: this->LD_r_R(this->regAF.high, this->regAF.high); break;
+
+        // Load R, n
+        case 0x06: this->LD_r_n(this->regBC.high); break;
+        case 0x0E: this->LD_r_n(this->regBC.low); break;
+        case 0x16: this->LD_r_n(this->regDE.high); break;
+        case 0x1E: this->LD_r_n(this->regDE.low); break;
+        case 0x26: this->LD_r_n(this->regHL.high); break;
+        case 0x2E: this->LD_r_n(this->regHL.low); break;
+        case 0x36: this->LD_HL_n(); break;
+        case 0x3E: this->LD_r_n(this->regAF.high); break;
+
+        // Load A, RR
+        case 0x0A: this->LD_A_BC(); break;
+        case 0x1A: this->LD_A_DE(); break;
+
+        // Load RR, A
+        case 0x02: this->LD_BC_A(); break;
+        case 0x12: this->LD_DE_A(); break;
+
+        // Load A, nn
+        case 0xFA: this->LD_A_nn(); break;
+
+        // Load nn, A
+        case 0xEA: this->LD_nn_A(); break;
+
+        // Load A, FF00+n, FF00+c, vice versa
+        case 0xF0: this->LD_A_FF00n(); break;
+        case 0xE0: this->LD_FF00n_A(); break;
+        case 0xF2: this->LD_A_FF00C(); break;
+        case 0xE2: this->LD_FF00C_A(); break;
+
+        // Load increment/decrement HL, A, vice versa
+        case 0x22: this->LDI_HL_A(); break;
+        case 0x2A: this->LDI_A_HL(); break;
+        case 0x32: this->LDD_HL_A(); break;
+        case 0x3A: this->LDD_A_HL(); break;
+
+        /* 
+        ********************************************************************************
+        16 bit Load Commands
+        ********************************************************************************
+        */
+
+        // Load rr, nn
+        case 0x01: this->LD_rr_nn(this->regBC); break;
+        case 0x11: this->LD_rr_nn(this->regDE); break;
+        case 0x21: this->LD_rr_nn(this->regHL); break;
+        case 0x31: this->LD_rr_nn(this->stackPointer); break;
+
+        // Load SP, HL
+        case 0xF9: this->LD_SP_HL(); break;
+
+        // Load nn, SP
+        case 0x08: this->LD_nn_SP(); break;
+
+        // Push rr
+        case 0xC5: this->PUSH_rr(this->regBC); break;
+        case 0xD5: this->PUSH_rr(this->regDE); break;
+        case 0xE5: this->PUSH_rr(this->regHL); break;
+        case 0xF5: this->PUSH_rr(this->regAF); break;
+
+        // Pop rr
+        case 0xC1: this->POP_rr(this->regBC); break;
+        case 0xD1: this->POP_rr(this->regDE); break;
+        case 0xE1: this->POP_rr(this->regHL); break;
+        case 0xF1: this->POP_rr(this->regAF); break;
+
+        /* 
+        ********************************************************************************
+        8 bit Arithmetic/Logical commands
+        ********************************************************************************
+        */
+
+        // Add A, r
+        case 0x80: this->ADD_A_r(this->regBC.high); break;
+        case 0x81: this->ADD_A_r(this->regBC.low); break;
+        case 0x82: this->ADD_A_r(this->regDE.high); break;
+        case 0x83: this->ADD_A_r(this->regDE.low); break;
+        case 0x84: this->ADD_A_r(this->regHL.high); break;
+        case 0x85: this->ADD_A_r(this->regHL.low); break;
+        case 0x86: this->ADD_A_HL(); break;
+        case 0x87: this->ADD_A_r(this->regAF.high); break;
+
+        // Add A, n
+        case 0xC6: this->ADD_A_n(); break;
+
+        // ADC A, r
+        case 0x88: this->ADC_A_r(this->regBC.high); break;
+        case 0x89: this->ADC_A_r(this->regBC.low); break;
+        case 0x8A: this->ADC_A_r(this->regDE.high); break;
+        case 0x8B: this->ADC_A_r(this->regDE.low); break;
+        case 0x8C: this->ADC_A_r(this->regHL.high); break;
+        case 0x8D: this->ADC_A_r(this->regHL.low); break;
+        case 0x8E: this->ADC_A_HL(); break;
+        case 0x8F: this->ADC_A_r(this->regAF.high); break;
+
+        // ADC A, n
+        case 0xCE: this->ADC_A_n(); break;
+
+        // Sub r
+        case 0x90: this->SUB_r(this->regBC.high); break;
+        case 0x91: this->SUB_r(this->regBC.low); break;
+        case 0x92: this->SUB_r(this->regDE.high); break;
+        case 0x93: this->SUB_r(this->regDE.low); break;
+        case 0x94: this->SUB_r(this->regHL.high); break;
+        case 0x95: this->SUB_r(this->regHL.low); break;
+        case 0x96: this->SUB_HL(); break;
+        case 0x97: this->SUB_r(this->regAF.high); break;
+
+        // Sub n
+        case 0xD6: this->SUB_n(); break;
+
+        // SBC A, r
+        case 0x98: this->SBC_A_r(this->regBC.high); break;
+        case 0x99: this->SBC_A_r(this->regBC.low); break;
+        case 0x9A: this->SBC_A_r(this->regDE.high); break;
+        case 0x9B: this->SBC_A_r(this->regDE.low); break;
+        case 0x9C: this->SBC_A_r(this->regHL.high); break;
+        case 0x9D: this->SBC_A_r(this->regHL.low); break;
+        case 0x9E: this->SBC_A_HL(); break;
+        case 0x9F: this->SBC_A_r(this->regAF.high); break;  
+
+        // SBC A, n
+        case 0xDE: this->SBC_A_n(); break;
+
+        // AND r
+        case 0xA0: this->AND_r(this->regBC.high); break;
+        case 0xA1: this->AND_r(this->regBC.low); break;
+        case 0xA2: this->AND_r(this->regDE.high); break;
+        case 0xA3: this->AND_r(this->regDE.low); break;
+        case 0xA4: this->AND_r(this->regHL.high); break;
+        case 0xA5: this->AND_r(this->regHL.low); break;
+        case 0xA6: this->AND_HL();
+        case 0xA7: this->AND_r(this->regBC.high); break;
+
+        // AND n 
+        case 0xE6: this->AND_n(); break;
+
+        // XOR r
+        case 0xA8: this->XOR_r(this->regBC.high); break;
+        case 0xA9: this->XOR_r(this->regBC.low); break;
+        case 0xAA: this->XOR_r(this->regDE.high); break;
+        case 0xAB: this->XOR_r(this->regDE.low); break;
+        case 0xAC: this->XOR_r(this->regHL.high); break;
+        case 0xAD: this->XOR_r(this->regHL.low); break;
+        case 0xAE: this->XOR_HL();
+        case 0xAF: this->XOR_r(this->regBC.high); break;
+
+        // XOR n
+        case 0xEE: this->XOR_n(); break;
+
+        // OR r
+        case 0xB0: this->OR_r(this->regBC.high); break;
+        case 0xB1: this->OR_r(this->regBC.low); break;
+        case 0xB2: this->OR_r(this->regDE.high); break;
+        case 0xB3: this->OR_r(this->regDE.low); break;
+        case 0xB4: this->OR_r(this->regHL.high); break;
+        case 0xB5: this->OR_r(this->regHL.low); break;
+        case 0xB6: this->OR_HL();
+        case 0xB7: this->OR_r(this->regBC.high); break;
+
+        // OR n 
+        case 0xF6: this->OR_n(); break;
+
+        // CPr
+        case 0xB8: this->CP_r(this->regBC.high); break;
+        case 0xB9: this->CP_r(this->regBC.low); break;
+        case 0xBA: this->CP_r(this->regDE.high); break;
+        case 0xBB: this->CP_r(this->regDE.low); break;
+        case 0xBC: this->CP_r(this->regHL.high); break;
+        case 0xBD: this->CP_r(this->regHL.low); break;
+        case 0xBE: this->CP_HL();
+        case 0xBF: this->CP_r(this->regBC.high); break;
+
+        // CP n
+        case 0xFE: this->CP_n(); break;
+
+        // INC r
+        case 0x04: this->INC_r(this->regBC.high); break;
+        case 0x14: this->INC_r(this->regDE.high); break;
+        case 0x24: this->INC_r(this->regHL.high); break;
+        case 0x34: this->INC_HL(); break;
+        case 0x0C: this->INC_r(this->regBC.low); break; 
+        case 0x1C: this->INC_r(this->regDE.low); break;
+        case 0x2C: this->INC_r(this->regHL.low); break;
+        case 0x3C: this->INC_r(this->regAF.high); break;  
+
+        // DEC r
+        case 0x05: this->DEC_r(this->regBC.high); break;
+        case 0x15: this->DEC_r(this->regDE.high); break;
+        case 0x25: this->DEC_r(this->regHL.high); break;
+        case 0x35: this->DEC_HL(); break;
+        case 0x0D: this->DEC_r(this->regBC.low); break; 
+        case 0x1D: this->DEC_r(this->regDE.low); break;
+        case 0x2D: this->DEC_r(this->regHL.low); break;
+        case 0x3D: this->DEC_r(this->regAF.high); break;
+
+        // DAA
+        case 0x27: this->DAA(); break;
+
+        // CPL
+        case 0x2F: this->CPL(); break;
+
+        /* 
+        ********************************************************************************
+        16 bit Arithmetic/Logical commands
+        ********************************************************************************
+        */
+
+        // Add HL, rr
+        case 0x09: this->ADD_HL_rr(this->regBC.regstr); break;
+        case 0x19: this->ADD_HL_rr(this->regDE.regstr); break;
+        case 0x29: this->ADD_HL_rr(this->regHL.regstr); break;
+        case 0x39: this->ADD_HL_rr(this->stackPointer.regstr); break;
+
+        // INC rr
+        case 0x03: this->INC_rr(this->regBC.regstr); break;
+        case 0x13: this->INC_rr(this->regDE.regstr); break;
+        case 0x23: this->INC_rr(this->regHL.regstr); break;
+        case 0x33: this->INC_rr(this->stackPointer.regstr); break;
+
+        // DEC rr
+        case 0x0B: this->DEC_rr(this->regBC.regstr); break;
+        case 0x1B: this->DEC_rr(this->regDE.regstr); break;
+        case 0x2B: this->DEC_rr(this->regHL.regstr); break;
+        case 0x3B: this->DEC_rr(this->stackPointer.regstr); break;
+
+        // Add SP, dd
+        case 0xE8: this->ADD_SP_dd(); break;
+
+        // Load HL, SP + dd
+        case 0xF8: this->LD_HL_SPdd(); break;
+
+        /* 
+        ********************************************************************************
+        Rotate and Shift commands
+        ********************************************************************************
+        */
+
+        // Non CB-prefixed Rotate commands
+        case 0x07: this->RLCA(); break; // RLCA        
+        case 0x17: this->RLA(); break; // RLA
+        case 0x0F: this->RRCA(); break; // RRCA
+        case 0x1F: this->RRA(); break; // RRA
+
+        /* 
+        ********************************************************************************
+        CPU Control commands
+        ********************************************************************************
+        */
+
+        case 0x3F: this->CCF(); break; // CCF
+        case 0x37: this->SCF(); break; // SCF
+        case 0x00: this->NOP(); break; // NOP
+        case 0x76: this->HALT(); break; // HALT
+        case 0x10: this->STOP(); break; // STOP
+        case 0xF3: this->DI(); break; // DI
+        case 0xFB: this->EI(); break; // EI
+
+        /* 
+        ********************************************************************************
+        Jump commands
+        ********************************************************************************
+        */
+
+        // JP nn
+        case 0xC3: this->JP_nn(); break;
+
+        // JP HL
+        case 0xE9: this->JP_HL(); break;
+
+        // JP f, nn
+        case 0xC2: this->JP_f_nn(opcode); break;
+        case 0xCA: this->JP_f_nn(opcode); break;
+        case 0xD2: this->JP_f_nn(opcode); break;
+        case 0xDA: this->JP_f_nn(opcode); break;
+
+        // JR PC + dd
+        case 0x18: this->JR_PCdd(); break;
+
+        // JR f, PC + dd
+        case 0x20: this->JR_f_PCdd(opcode); break;
+        case 0x28: this->JR_f_PCdd(opcode); break;
+        case 0x30: this->JR_f_PCdd(opcode); break;
+        case 0x38: this->JR_f_PCdd(opcode); break;
+
+        // Call nn
+        case 0xCD: this->CALL_nn(); break;
+
+        // Call f, nn
+        case 0xC4: this->CALL_f_nn(opcode); break;
+        case 0xCC: this->CALL_f_nn(opcode); break;
+        case 0xD4: this->CALL_f_nn(opcode); break;
+        case 0xDC: this->CALL_f_nn(opcode); break;
+
+        // RET
+        case 0xC9: this->RET(); break;
+        
+        // RET f
+        case 0xC0: this->RET_f(opcode); break; 
+        case 0xC8: this->RET_f(opcode); break;
+        case 0xD0: this->RET_f(opcode); break;
+        case 0xD8: this->RET_f(opcode); break;
+
+        // RETI
+        case 0xD9: this->RETI(); break;
+
+        // RST n
+        case 0xC7: this->RST_n(opcode); break;
+        case 0xD7: this->RST_n(opcode); break;
+        case 0xE7: this->RST_n(opcode); break;
+        case 0xF7: this->RST_n(opcode); break;
+        case 0xCF: this->RST_n(opcode); break;
+        case 0xDF: this->RST_n(opcode); break;
+        case 0xEF: this->RST_n(opcode); break;
+        case 0xFF: this->RST_n(opcode); break;
+
+        /* 
+        ********************************************************************************
+        CB-prefix commands
+        ********************************************************************************
+        */ 
+
+        case 0xCB: executeCBOpcode(); break;
+    }
+}
+
+int Emulator::executeCBOpcode() {
+    
+    BYTE opcode = this->readMem(this->programCounter.regstr);
+    this->programCounter.regstr++;
+
+    switch (opcode) {
+
+        /* 
+        ********************************************************************************
+        Rotate and Shift commands
+        ********************************************************************************
+        */
+
+        // RLC r
+        case 0x00: this->RLC_r(this->regBC.high); break;
+        case 0x01: this->RLC_r(this->regBC.low); break;
+        case 0x02: this->RLC_r(this->regDE.high); break;
+        case 0x03: this->RLC_r(this->regDE.low); break;
+        case 0x04: this->RLC_r(this->regHL.high); break;
+        case 0x05: this->RLC_r(this->regHL.low); break;
+        case 0x06: this->RLC_HL(); break;
+        case 0x07: this->RLC_r(this->regAF.high); break;
+
+        // RRC r
+        case 0x08: this->RRC_r(this->regBC.high); break;
+        case 0x09: this->RRC_r(this->regBC.low); break;
+        case 0x0A: this->RRC_r(this->regDE.high); break;
+        case 0x0B: this->RRC_r(this->regDE.low); break;
+        case 0x0C: this->RRC_r(this->regHL.high); break;
+        case 0x0D: this->RRC_r(this->regHL.low); break;
+        case 0x0E: this->RRC_HL(); break;
+        case 0x0F: this->RRC_r(this->regAF.high); break;
+
+        // RL r
+        case 0x10: this->RL_r(this->regBC.high); break;
+        case 0x11: this->RL_r(this->regBC.low); break;
+        case 0x12: this->RL_r(this->regDE.high); break;
+        case 0x13: this->RL_r(this->regDE.low); break;
+        case 0x14: this->RL_r(this->regHL.high); break;
+        case 0x15: this->RL_r(this->regHL.low); break;
+        case 0x16: this->RL_HL(); break;
+        case 0x17: this->RL_r(this->regAF.high); break;
+
+        // RR r
+        case 0x18: this->RR_r(this->regBC.high); break;
+        case 0x19: this->RR_r(this->regBC.low); break;
+        case 0x1A: this->RR_r(this->regDE.high); break;
+        case 0x1B: this->RR_r(this->regDE.low); break;
+        case 0x1C: this->RR_r(this->regHL.high); break;
+        case 0x1D: this->RR_r(this->regHL.low); break;
+        case 0x1E: this->RR_HL(); break;
+        case 0x1F: this->RR_r(this->regAF.high); break;
+
+        // SLA r
+        case 0x20: this->SLA_r(this->regBC.high); break;
+        case 0x21: this->SLA_r(this->regBC.low); break;
+        case 0x22: this->SLA_r(this->regDE.high); break;
+        case 0x23: this->SLA_r(this->regDE.low); break;
+        case 0x24: this->SLA_r(this->regHL.high); break;
+        case 0x25: this->SLA_r(this->regHL.low); break;
+        case 0x26: this->SLA_HL(); break;
+        case 0x27: this->SLA_r(this->regAF.high); break;
+
+        // SRA r
+        case 0x28: this->SRA_r(this->regBC.high); break;
+        case 0x29: this->SRA_r(this->regBC.low); break;
+        case 0x2A: this->SRA_r(this->regDE.high); break;
+        case 0x2B: this->SRA_r(this->regDE.low); break;
+        case 0x2C: this->SRA_r(this->regHL.high); break;
+        case 0x2D: this->SRA_r(this->regHL.low); break;
+        case 0x2E: this->SRA_HL(); break;
+        case 0x2F: this->SRA_r(this->regAF.high); break;
+
+        // Swap r
+        case 0x30: this->SWAP_r(this->regBC.high); break;
+        case 0x31: this->SWAP_r(this->regBC.low); break;
+        case 0x32: this->SWAP_r(this->regDE.high); break;
+        case 0x33: this->SWAP_r(this->regDE.low); break;
+        case 0x34: this->SWAP_r(this->regHL.high); break;
+        case 0x35: this->SWAP_r(this->regHL.low); break;
+        case 0x36: this->SWAP_HL(); break;
+        case 0x37: this->SWAP_r(this->regAF.high); break;
+
+        // SRL r
+        case 0x38: this->SRL_r(this->regBC.high); break;
+        case 0x39: this->SRL_r(this->regBC.low); break;
+        case 0x3A: this->SRL_r(this->regDE.high); break;
+        case 0x3B: this->SRL_r(this->regDE.low); break;
+        case 0x3C: this->SRL_r(this->regHL.high); break;
+        case 0x3D: this->SRL_r(this->regHL.low); break;
+        case 0x3E: this->SRL_HL(); break;
+        case 0x3F: this->SRL_r(this->regAF.high); break;
+
+        /* 
+        ********************************************************************************
+        Single bit operation commands
+        ********************************************************************************
+        */   
+
+        // BIT 0, r
+        case 0x40: this->BIT_n_r(this->regBC.high, 0); break;
+        case 0x41: this->BIT_n_r(this->regBC.low, 0); break;
+        case 0x42: this->BIT_n_r(this->regDE.high, 0); break;
+        case 0x43: this->BIT_n_r(this->regDE.low, 0); break;
+        case 0x44: this->BIT_n_r(this->regHL.high, 0); break;
+        case 0x45: this->BIT_n_r(this->regHL.low, 0); break;
+        case 0x46: this->BIT_n_HL(0); break;
+        case 0x47: this->BIT_n_r(this->regAF.high, 0); break;
+
+        // BIT 1, r
+        case 0x48: this->BIT_n_r(this->regBC.high, 1); break;
+        case 0x49: this->BIT_n_r(this->regBC.low, 1); break;
+        case 0x4A: this->BIT_n_r(this->regDE.high, 1); break;
+        case 0x4B: this->BIT_n_r(this->regDE.low, 1); break;
+        case 0x4C: this->BIT_n_r(this->regHL.high, 1); break;
+        case 0x4D: this->BIT_n_r(this->regHL.low, 1); break;
+        case 0x4E: this->BIT_n_HL(1); break;
+        case 0x4F: this->BIT_n_r(this->regAF.high, 1); break;
+
+        // BIT 2, r
+        case 0x50: this->BIT_n_r(this->regBC.high, 2); break;
+        case 0x51: this->BIT_n_r(this->regBC.low, 2); break;
+        case 0x52: this->BIT_n_r(this->regDE.high, 2); break;
+        case 0x53: this->BIT_n_r(this->regDE.low, 2); break;
+        case 0x54: this->BIT_n_r(this->regHL.high, 2); break;
+        case 0x55: this->BIT_n_r(this->regHL.low, 2); break;
+        case 0x56: this->BIT_n_HL(2); break;
+        case 0x57: this->BIT_n_r(this->regAF.high, 2); break;
+
+        // BIT 3, r
+        case 0x58: this->BIT_n_r(this->regBC.high, 3); break;
+        case 0x59: this->BIT_n_r(this->regBC.low, 3); break;
+        case 0x5A: this->BIT_n_r(this->regDE.high, 3); break;
+        case 0x5B: this->BIT_n_r(this->regDE.low, 3); break;
+        case 0x5C: this->BIT_n_r(this->regHL.high, 3); break;
+        case 0x5D: this->BIT_n_r(this->regHL.low, 3); break;
+        case 0x5E: this->BIT_n_HL(3); break;
+        case 0x5F: this->BIT_n_r(this->regAF.high, 3); break;
+
+        // BIT 4, r
+        case 0x60: this->BIT_n_r(this->regBC.high, 4); break;
+        case 0x61: this->BIT_n_r(this->regBC.low, 4); break;
+        case 0x62: this->BIT_n_r(this->regDE.high, 4); break;
+        case 0x63: this->BIT_n_r(this->regDE.low, 4); break;
+        case 0x64: this->BIT_n_r(this->regHL.high, 4); break;
+        case 0x65: this->BIT_n_r(this->regHL.low, 4); break;
+        case 0x66: this->BIT_n_HL(4); break;
+        case 0x67: this->BIT_n_r(this->regAF.high, 4); break;
+
+        // BIT 5, r
+        case 0x68: this->BIT_n_r(this->regBC.high, 5); break;
+        case 0x69: this->BIT_n_r(this->regBC.low, 5); break;
+        case 0x6A: this->BIT_n_r(this->regDE.high, 5); break;
+        case 0x6B: this->BIT_n_r(this->regDE.low, 5); break;
+        case 0x6C: this->BIT_n_r(this->regHL.high, 5); break;
+        case 0x6D: this->BIT_n_r(this->regHL.low, 5); break;
+        case 0x6E: this->BIT_n_HL(5); break;
+        case 0x6F: this->BIT_n_r(this->regAF.high, 5); break;
+
+        // BIT 6, r
+        case 0x70: this->BIT_n_r(this->regBC.high, 6); break;
+        case 0x71: this->BIT_n_r(this->regBC.low, 6); break;
+        case 0x72: this->BIT_n_r(this->regDE.high, 6); break;
+        case 0x73: this->BIT_n_r(this->regDE.low, 6); break;
+        case 0x74: this->BIT_n_r(this->regHL.high, 6); break;
+        case 0x75: this->BIT_n_r(this->regHL.low, 6); break;
+        case 0x76: this->BIT_n_HL(6); break;
+        case 0x77: this->BIT_n_r(this->regAF.high, 4); break;
+
+        // BIT 7, r
+        case 0x78: this->BIT_n_r(this->regBC.high, 7); break;
+        case 0x79: this->BIT_n_r(this->regBC.low, 7); break;
+        case 0x7A: this->BIT_n_r(this->regDE.high, 7); break;
+        case 0x7B: this->BIT_n_r(this->regDE.low, 7); break;
+        case 0x7C: this->BIT_n_r(this->regHL.high, 7); break;
+        case 0x7D: this->BIT_n_r(this->regHL.low, 7); break;
+        case 0x7E: this->BIT_n_HL(6); break;
+        case 0x77F:this->BIT_n_r(this->regAF.high, 7); break;
+
+        // RES 0, r
+        case 0x80: this->RES_n_r(this->regBC.high, 0); break;
+        case 0x81: this->RES_n_r(this->regBC.low, 0); break;
+        case 0x82: this->RES_n_r(this->regDE.high, 0); break;
+        case 0x83: this->RES_n_r(this->regDE.low, 0); break;
+        case 0x84: this->RES_n_r(this->regHL.high, 0); break;
+        case 0x85: this->RES_n_r(this->regHL.low, 0); break;
+        case 0x86: this->RES_n_HL(0); break;
+        case 0x87: this->RES_n_r(this->regAF.high, 0); break;
+
+        // RES 1, r
+        case 0x88: this->RES_n_r(this->regBC.high, 1); break;
+        case 0x89: this->RES_n_r(this->regBC.low, 1); break;
+        case 0x8A: this->RES_n_r(this->regDE.high, 1); break;
+        case 0x8B: this->RES_n_r(this->regDE.low, 1); break;
+        case 0x8C: this->RES_n_r(this->regHL.high, 1); break;
+        case 0x8D: this->RES_n_r(this->regHL.low, 1); break;
+        case 0x8E: this->RES_n_HL(1); break;
+        case 0x8F: this->RES_n_r(this->regAF.high, 1); break;
+
+        // RES 2, r
+        case 0x90: this->RES_n_r(this->regBC.high, 2); break;
+        case 0x91: this->RES_n_r(this->regBC.low, 2); break;
+        case 0x92: this->RES_n_r(this->regDE.high, 2); break;
+        case 0x93: this->RES_n_r(this->regDE.low, 2); break;
+        case 0x94: this->RES_n_r(this->regHL.high, 2); break;
+        case 0x95: this->RES_n_r(this->regHL.low, 2); break;
+        case 0x96: this->RES_n_HL(2); break;
+        case 0x97: this->RES_n_r(this->regAF.high, 2); break;
+
+        // RES 3, r
+        case 0x98: this->RES_n_r(this->regBC.high, 3); break;
+        case 0x99: this->RES_n_r(this->regBC.low, 3); break;
+        case 0x9A: this->RES_n_r(this->regDE.high, 3); break;
+        case 0x9B: this->RES_n_r(this->regDE.low, 3); break;
+        case 0x9C: this->RES_n_r(this->regHL.high, 3); break;
+        case 0x9D: this->RES_n_r(this->regHL.low, 3); break;
+        case 0x9E: this->RES_n_HL(3); break;
+        case 0x9F: this->RES_n_r(this->regAF.high, 3); break;
+
+        // RES 4, r
+        case 0xA0: this->RES_n_r(this->regBC.high, 4); break;
+        case 0xA1: this->RES_n_r(this->regBC.low, 4); break;
+        case 0xA2: this->RES_n_r(this->regDE.high, 4); break;
+        case 0xA3: this->RES_n_r(this->regDE.low, 4); break;
+        case 0xA4: this->RES_n_r(this->regHL.high, 4); break;
+        case 0xA5: this->RES_n_r(this->regHL.low, 4); break;
+        case 0xA6: this->RES_n_HL(4); break;
+        case 0xA7: this->RES_n_r(this->regAF.high, 4); break;
+
+        // RES 5, r
+        case 0xA8: this->RES_n_r(this->regBC.high, 5); break;
+        case 0xA9: this->RES_n_r(this->regBC.low, 5); break;
+        case 0xAA: this->RES_n_r(this->regDE.high, 5); break;
+        case 0xAB: this->RES_n_r(this->regDE.low, 5); break;
+        case 0xAC: this->RES_n_r(this->regHL.high, 5); break;
+        case 0xAD: this->RES_n_r(this->regHL.low, 5); break;
+        case 0xAE: this->RES_n_HL(5); break;
+        case 0xAF: this->RES_n_r(this->regAF.high, 5); break;
+
+        // RES 6, r
+        case 0xB0: this->RES_n_r(this->regBC.high, 6); break;
+        case 0xB1: this->RES_n_r(this->regBC.low, 6); break;
+        case 0xB2: this->RES_n_r(this->regDE.high, 6); break;
+        case 0xB3: this->RES_n_r(this->regDE.low, 6); break;
+        case 0xB4: this->RES_n_r(this->regHL.high, 6); break;
+        case 0xB5: this->RES_n_r(this->regHL.low, 6); break;
+        case 0xB6: this->RES_n_HL(6); break;
+        case 0xB7: this->RES_n_r(this->regAF.high, 4); break;
+
+        // RES 7, r
+        case 0xB8: this->RES_n_r(this->regBC.high, 7); break;
+        case 0xB9: this->RES_n_r(this->regBC.low, 7); break;
+        case 0xBA: this->RES_n_r(this->regDE.high, 7); break;
+        case 0xBB: this->RES_n_r(this->regDE.low, 7); break;
+        case 0xBC: this->RES_n_r(this->regHL.high, 7); break;
+        case 0xBD: this->RES_n_r(this->regHL.low, 7); break;
+        case 0xBE: this->RES_n_HL(6); break;
+        case 0xB7F:this->RES_n_r(this->regAF.high, 7); break;
+
+        // SET 0, r
+        case 0xC0: this->SET_n_r(this->regBC.high, 0); break;
+        case 0xC1: this->SET_n_r(this->regBC.low, 0); break;
+        case 0xC2: this->SET_n_r(this->regDE.high, 0); break;
+        case 0xC3: this->SET_n_r(this->regDE.low, 0); break;
+        case 0xC4: this->SET_n_r(this->regHL.high, 0); break;
+        case 0xC5: this->SET_n_r(this->regHL.low, 0); break;
+        case 0xC6: this->SET_n_HL(0); break;
+        case 0xC7: this->SET_n_r(this->regAF.high, 0); break;
+
+        // SET 1, r
+        case 0xC8: this->SET_n_r(this->regBC.high, 1); break;
+        case 0xC9: this->SET_n_r(this->regBC.low, 1); break;
+        case 0xCA: this->SET_n_r(this->regDE.high, 1); break;
+        case 0xCB: this->SET_n_r(this->regDE.low, 1); break;
+        case 0xCC: this->SET_n_r(this->regHL.high, 1); break;
+        case 0xCD: this->SET_n_r(this->regHL.low, 1); break;
+        case 0xCE: this->SET_n_HL(1); break;
+        case 0xCF: this->SET_n_r(this->regAF.high, 1); break;
+
+        // SET 2, r
+        case 0xD0: this->SET_n_r(this->regBC.high, 2); break;
+        case 0xD1: this->SET_n_r(this->regBC.low, 2); break;
+        case 0xD2: this->SET_n_r(this->regDE.high, 2); break;
+        case 0xD3: this->SET_n_r(this->regDE.low, 2); break;
+        case 0xD4: this->SET_n_r(this->regHL.high, 2); break;
+        case 0xD5: this->SET_n_r(this->regHL.low, 2); break;
+        case 0xD6: this->SET_n_HL(2); break;
+        case 0xD7: this->SET_n_r(this->regAF.high, 2); break;
+
+        // SET 3, r
+        case 0xD8: this->SET_n_r(this->regBC.high, 3); break;
+        case 0xD9: this->SET_n_r(this->regBC.low, 3); break;
+        case 0xDA: this->SET_n_r(this->regDE.high, 3); break;
+        case 0xDB: this->SET_n_r(this->regDE.low, 3); break;
+        case 0xDC: this->SET_n_r(this->regHL.high, 3); break;
+        case 0xDD: this->SET_n_r(this->regHL.low, 3); break;
+        case 0xDE: this->SET_n_HL(3); break;
+        case 0xDF: this->SET_n_r(this->regAF.high, 3); break;
+
+        // SET 4, r
+        case 0xE0: this->SET_n_r(this->regBC.high, 4); break;
+        case 0xE1: this->SET_n_r(this->regBC.low, 4); break;
+        case 0xE2: this->SET_n_r(this->regDE.high, 4); break;
+        case 0xE3: this->SET_n_r(this->regDE.low, 4); break;
+        case 0xE4: this->SET_n_r(this->regHL.high, 4); break;
+        case 0xE5: this->SET_n_r(this->regHL.low, 4); break;
+        case 0xE6: this->SET_n_HL(4); break;
+        case 0xE7: this->SET_n_r(this->regAF.high, 4); break;
+
+        // SET 5, r
+        case 0xE8: this->SET_n_r(this->regBC.high, 5); break;
+        case 0xE9: this->SET_n_r(this->regBC.low, 5); break;
+        case 0xEA: this->SET_n_r(this->regDE.high, 5); break;
+        case 0xEB: this->SET_n_r(this->regDE.low, 5); break;
+        case 0xEC: this->SET_n_r(this->regHL.high, 5); break;
+        case 0xED: this->SET_n_r(this->regHL.low, 5); break;
+        case 0xEE: this->SET_n_HL(5); break;
+        case 0xEF: this->SET_n_r(this->regAF.high, 5); break;
+
+        // SET 6, r
+        case 0xF0: this->SET_n_r(this->regBC.high, 6); break;
+        case 0xF1: this->SET_n_r(this->regBC.low, 6); break;
+        case 0xF2: this->SET_n_r(this->regDE.high, 6); break;
+        case 0xF3: this->SET_n_r(this->regDE.low, 6); break;
+        case 0xF4: this->SET_n_r(this->regHL.high, 6); break;
+        case 0xF5: this->SET_n_r(this->regHL.low, 6); break;
+        case 0xF6: this->SET_n_HL(6); break;
+        case 0xF7: this->SET_n_r(this->regAF.high, 4); break;
+
+        // SET 7, r
+        case 0xF8: this->SET_n_r(this->regBC.high, 7); break;
+        case 0xF9: this->SET_n_r(this->regBC.low, 7); break;
+        case 0xFA: this->SET_n_r(this->regDE.high, 7); break;
+        case 0xFB: this->SET_n_r(this->regDE.low, 7); break;
+        case 0xFC: this->SET_n_r(this->regHL.high, 7); break;
+        case 0xFD: this->SET_n_r(this->regHL.low, 7); break;
+        case 0xFE: this->SET_n_HL(6); break;
+        case 0xFF: this->SET_n_r(this->regAF.high, 7); break;
+    }
 
 }
+
 
 /*
 ********************************************************************************
@@ -1601,6 +2355,26 @@ int Emulator::LD_SP_HL() {
 }
 
 /*
+    LD nn, SP  (0x08)
+
+    Loads content of SP into memory location specified by nn
+
+    20 cycles
+
+    Flags affected(znhc): ----
+ */
+int Emulator::LD_nn_SP() {
+    WORD nn = this->readMem(this->programCounter.regstr + 1) << 8;
+    nn |= this->readMem(this->programCounter.regstr);
+    this->programCounter.regstr += 2;
+
+    this->writeMem(nn + 1, this->stackPointer.high);
+    this->writeMem(nn, this->stackPointer.low);
+
+    return 20;
+}
+
+/*
     PUSH_rr  (0xC5 - 0xF5)
 
     Push content of rr into SP.
@@ -1649,7 +2423,7 @@ int Emulator::POP_rr(Register& reg) {
 */
 
 /*
-    ADD A, r  (0x80 - 0x84)
+    ADD A, r  (0x80 - 0x87 except for 0x86)
 
     Adds content of register r to register A.
     r can be (B, C, D, E, H, L)
@@ -2413,7 +3187,7 @@ int Emulator::OR_n() {
 }
 
 /*
-    OR HL  (0xBE)
+    OR HL  (0xB6)
 
     Set register A to bitwise OR register A and content of memory location specified by HL.
 
@@ -2530,7 +3304,7 @@ int Emulator::CP_n() {
 }
 
 /*
-    SUB HL  (0xBE)
+    CP HL  (0xBE)
 
     Compares content of register A and content of memory location specified by HL.
     Basically a SUB HL without storing the result in register A.
@@ -2573,7 +3347,7 @@ int Emulator::CP_HL() {
 }
 
 /*
-    INC r (0x02 0x12 0x22  0x0C 0x1C 0x2C)
+    INC r (0x04 0x14 0x24  0x0C 0x1C 0x2C 0x3C)
 
     Increments register r by 1 
     r can be (A, B, C, D, E, H, L)
@@ -2653,7 +3427,7 @@ int Emulator::INC_HL() {
 }
 
 /*
-    DEC r (0x02 0x12 0x22  0x0C 0x1C 0x2C)
+    DEC r (0x05 0x15 0x25  0x0D 0x1D 0x2D 0x3D)
 
     Derements register r by 1 
     r can be (A, B, C, D, E, H, L)
@@ -2825,7 +3599,7 @@ int Emulator::CPL() {
 */
 
 /*
-    ADD HL, ss  (0xX9)
+    ADD HL, rr  (0xX9)
 
     Adds contents of rr to contents of HL and stores the result in HL.
     rr can be register pairs BC, DE, HL or SP.
@@ -3111,7 +3885,7 @@ int Emulator::RRCA() {
 }
 
 /*
-    RRA  (0x17)
+    RRA  (0x1F)
 
     The contents of the accumulator are rotated 1 bit right through carry.
     Bit 0 is copied to the carry flag and carry is copied to bit 7.
