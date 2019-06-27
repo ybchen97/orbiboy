@@ -44,9 +44,9 @@ class Emulator {
         // FUNCTIONS
         void resetCPU();
         bool loadGame(string);
-        void writeMem(WORD, BYTE);
-        BYTE readMem(WORD) const;
         void update();
+        void buttonPressed(int);
+        void buttonReleased(int);
 
         // Utility
         bool isBitSet(BYTE, int) const;
@@ -101,6 +101,8 @@ class Emulator {
         int executeCBOpcode();
 
         // Memory
+        void writeMem(WORD, BYTE);
+        BYTE readMem(WORD) const;
         void handleBanking(WORD, BYTE);
         void doRAMBankEnable(WORD, BYTE);
         void doChangeLoROMBank(BYTE);
@@ -119,8 +121,6 @@ class Emulator {
 
         // Joypad
         BYTE getJoypadState() const;
-        void buttonPressed(int);
-        void buttonReleased(int);
 
         // Graphics
         void updateGraphics(int);

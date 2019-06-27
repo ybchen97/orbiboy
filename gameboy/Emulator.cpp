@@ -59,6 +59,9 @@ void Emulator::resetCPU() {
     this->regDE.regstr = 0x00D8;
     this->regHL.regstr = 0x014D;
     this->stackPointer.regstr = 0xFFFE;
+
+    // After the 256 bytes of bootROM is executed, PC lands at 0x100 
+    // bootROM is not implemented for this emulator
     this->programCounter.regstr = 0x100; 
 
     this->internalMem[0xFF05] = 0x00; // TIMA
@@ -146,7 +149,7 @@ bool Emulator::loadGame(string file_path) {
     int fileSize = ftell(in);
     rewind(in);
     
-    // Read file into gameMemory
+    // Read file into catridgeMem
     fread(this->cartridgeMem, fileSize, 1, in);
     fclose(in);
 
@@ -157,16 +160,16 @@ void Emulator::update() { // MAIN UPDATE LOOP
 
     // update function called 60 times per second -> screen rendered @ 60fps
 
-    const int maxCycles = 69905;
+    const int maxCycles = 70224;
     int cyclesCount = 0;
 
     while (cyclesCount < maxCycles) {
         int cycles = this->executeNextOpcode(); //executeNextOpcode will return the number of cycles taken
         cyclesCount += cycles;
 
-        this->updateTimers(cycles); //wishful thinking
-        this->updateGraphics(cycles); //wishful thinking
-        this->handleInterrupts(); //wishful thinking
+        this->updateTimers(cycles);
+        this->updateGraphics(cycles);
+        this->handleInterrupts();
     }
     this->RenderScreen(); //wishful thinking
 }
@@ -1418,8 +1421,8 @@ BYTE Emulator::getJoypadState() const {
 
     // If program requests for normal buttons
     else if (!this->isBitSet(joypadReg, 5)) {
-            BYTE normalButtons = this->joypadState >> 4;
-            joypadReg |= normalButtons;
+        BYTE normalButtons = this->joypadState >> 4;
+        joypadReg |= normalButtons;
     }
 
     return joypadReg;
