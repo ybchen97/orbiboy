@@ -667,8 +667,8 @@ BYTE Emulator::getJoypadState() const {
 
     // If program requests for normal buttons
     else if (!this->isBitSet(joypadReg, 5)) {
-            BYTE normalButtons = this->joypadState >> 4;
-            joypadReg |= normalButtons;
+        BYTE normalButtons = this->joypadState >> 4;
+        joypadReg |= normalButtons;
     }
 
     return joypadReg;

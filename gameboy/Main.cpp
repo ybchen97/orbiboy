@@ -9,7 +9,7 @@
 const float millisPerFrame = 1000.0 / 59.7275;
 const chrono::duration<float, milli> timePerFrame(millisPerFrame);
 
-void processInput(SDL_Event& event) {
+void processInput(Emulator& emulator, SDL_Event& event) {
 
     if (event.type == SDL_KEYDOWN) {
         int key = -1;
@@ -24,7 +24,7 @@ void processInput(SDL_Event& event) {
             case SDLK_DOWN:     key = 3; break;
         }
         if (key != -1) {
-            SetKeyPressed(key);
+            emulator.buttonPressed(key);
         }
     } else if (event.type == SDL_KEYUP) {
         int key = -1;
@@ -39,7 +39,7 @@ void processInput(SDL_Event& event) {
             case SDLK_DOWN:     key = 3; break;
         }
         if (key != -1) {
-            SetKeyReleased(key);
+            emulator.buttonReleased(key);
         }
     }
 
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
     emulator.resetCPU();
 
     // Load game
-    string romPATH = "";
+    string romPATH = "ROM PATH FILES";
     if (!emulator.loadGame(romPATH)) {
         cout << "Something wrong occured while loading!" << endl;
         exit(4);
@@ -113,13 +113,11 @@ int main(int argc, char** argv) {
         
         // Process user input
         while (SDL_PollEvent(&event)) {
-            
             if (event.type == SDL_QUIT) {
                 gameRunning = false;
                 continue;
             }
-            processInput(event);
-
+            processInput(emulator, event);
         }
 
         emulator.update();
