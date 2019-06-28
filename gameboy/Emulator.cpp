@@ -121,12 +121,15 @@ void Emulator::resetCPU() {
 
     // Interrupts
     this->InterruptMasterEnabled = false;
+    this->isHalted = false;
 
     // Joypad
     this->joypadState = 0xFF;
 
     // Graphics
     this->scanlineCycleCount = 456;
+    this->doRenderPtr = nullptr;
+    memset(this->displayPixels, 0, sizeof(this->displayPixels));
 
 }
 
@@ -162,24 +165,36 @@ void Emulator::update() { // MAIN UPDATE LOOP
 
     const int maxCycles = 70224;
     int cyclesCount = 0;
+    int cycles;
 
     while (cyclesCount < maxCycles) {
+
         int cycles = this->executeNextOpcode(); //executeNextOpcode will return the number of cycles taken
         cyclesCount += cycles;
 
         this->updateTimers(cycles);
         this->updateGraphics(cycles);
         this->handleInterrupts();
+
     }
-    this->RenderScreen(); //wishful thinking
+
+}
+
+void Emulator::setRenderGraphics(void(*funcPtr)()) {
+    this->doRenderPtr = funcPtr;
 }
 
 int Emulator::executeNextOpcode() {
     int clockCycles;
 
     BYTE opcode = this->readMem(this->programCounter.regstr);
-    clockCycles = this->executeOpcode(opcode);
-    this->programCounter.regstr++;
+
+    if (this->isHalted) {
+        clockCycles = this->NOP();
+    } else {
+        clockCycles = this->executeOpcode(opcode);
+        this->programCounter.regstr++;
+    }
 
     return clockCycles;
 }
@@ -189,9 +204,9 @@ int Emulator::executeOpcode(BYTE opcode) {
     switch (opcode) {
 
         /* 
-        ********************************************************************************
+        ************************************************************************
         8 bit Load Commands
-        ********************************************************************************
+        ************************************************************************
         */
         
         // Load B, R/(HL)
@@ -310,9 +325,9 @@ int Emulator::executeOpcode(BYTE opcode) {
         case 0x3A: this->LDD_A_HL(); break;
 
         /* 
-        ********************************************************************************
+        ************************************************************************
         16 bit Load Commands
-        ********************************************************************************
+        ************************************************************************
         */
 
         // Load rr, nn
@@ -340,9 +355,9 @@ int Emulator::executeOpcode(BYTE opcode) {
         case 0xF1: this->POP_rr(this->regAF); break;
 
         /* 
-        ********************************************************************************
+        ************************************************************************
         8 bit Arithmetic/Logical commands
-        ********************************************************************************
+        ************************************************************************
         */
 
         // Add A, r
@@ -476,9 +491,9 @@ int Emulator::executeOpcode(BYTE opcode) {
         case 0x2F: this->CPL(); break;
 
         /* 
-        ********************************************************************************
+        ************************************************************************
         16 bit Arithmetic/Logical commands
-        ********************************************************************************
+        ************************************************************************
         */
 
         // Add HL, rr
@@ -506,9 +521,9 @@ int Emulator::executeOpcode(BYTE opcode) {
         case 0xF8: this->LD_HL_SPdd(); break;
 
         /* 
-        ********************************************************************************
+        ************************************************************************
         Rotate and Shift commands
-        ********************************************************************************
+        ************************************************************************
         */
 
         // Non CB-prefixed Rotate commands
@@ -518,9 +533,9 @@ int Emulator::executeOpcode(BYTE opcode) {
         case 0x1F: this->RRA(); break; // RRA
 
         /* 
-        ********************************************************************************
+        ************************************************************************
         CPU Control commands
-        ********************************************************************************
+        ************************************************************************
         */
 
         case 0x3F: this->CCF(); break; // CCF
@@ -532,9 +547,9 @@ int Emulator::executeOpcode(BYTE opcode) {
         case 0xFB: this->EI(); break; // EI
 
         /* 
-        ********************************************************************************
+        ************************************************************************
         Jump commands
-        ********************************************************************************
+        ************************************************************************
         */
 
         // JP nn
@@ -590,9 +605,9 @@ int Emulator::executeOpcode(BYTE opcode) {
         case 0xFF: this->RST_n(opcode); break;
 
         /* 
-        ********************************************************************************
+        ************************************************************************
         CB-prefix commands
-        ********************************************************************************
+        ************************************************************************
         */ 
 
         case 0xCB: executeCBOpcode(); break;
@@ -607,9 +622,9 @@ int Emulator::executeCBOpcode() {
     switch (opcode) {
 
         /* 
-        ********************************************************************************
+        ************************************************************************
         Rotate and Shift commands
-        ********************************************************************************
+        ************************************************************************
         */
 
         // RLC r
@@ -693,9 +708,9 @@ int Emulator::executeCBOpcode() {
         case 0x3F: this->SRL_r(this->regAF.high); break;
 
         /* 
-        ********************************************************************************
+        ************************************************************************
         Single bit operation commands
-        ********************************************************************************
+        ************************************************************************
         */   
 
         // BIT 0, r
@@ -1182,6 +1197,10 @@ While handling interrupts, for any flagged interrupts, they will be triggered.
 void Emulator::flagInterrupt(int interruptID) { 
     BYTE requestReg = this->readMem(0xFF0F);
     requestReg = this->bitSet(requestReg, interruptID); // Set the corresponding bit in the interrupt req register 0xFF0F
+
+    // If halted, wake up
+    this->isHalted = false;
+
     this->writeMem(0xFF0F, requestReg); // Update the request register;
 }
 
@@ -1518,7 +1537,8 @@ block 0 and tiles 128-255 from block 1, whereas "8800 addressing" takes tiles
 0-127 from block 2 and tiles 128-255 from block 1. (You can notice that block 1 
 is shared by both addressing methods)
 
-Sprites always use 8000 addressing, but the BG and Window can use either mode, controlled by LCDC bit 4.
+Sprites always use 8000 addressing, but the BG and Window can use either mode, 
+controlled by LCDC bit 4.
 
 Sprites are located in VRAM at address 0x8000-8FFF. Sprite attributes are 
 located in the Sprite Attribute Table (OAM - Object Attribute Memory) at 
@@ -1548,6 +1568,7 @@ void Emulator::updateGraphics(int cycles) {
 
         // encountered vblank period
         if (currentLine == 144) {
+            this->renderGraphics();
             this->flagInterrupt(0);
         }
 
@@ -1663,12 +1684,16 @@ bool Emulator::LCDEnabled() {
 
 void Emulator::drawScanLine() {
     BYTE lcdControl = this->readMem(0xFF40);
-    if (this->isBitSet(lcdControl, 0)) {
-        this->renderTiles(lcdControl);
-    }
 
-    if (this->isBitSet(lcdControl, 1)) {
-        this->renderSprites(lcdControl);
+    // Draw only if LCD is enabled
+    if (this->LCDEnabled()) {
+        if (this->isBitSet(lcdControl, 0)) {
+            this->renderTiles(lcdControl);
+        }
+
+        if (this->isBitSet(lcdControl, 1)) {
+            this->renderSprites(lcdControl);
+        }
     }
 }
 
@@ -1779,9 +1804,7 @@ void Emulator::renderTiles(BYTE lcdControl) {
         COLOUR colour = this->getColour(colourBit1 + colourBit0, 0xFF47);
         
         // Default colour is black where RGB = [0,0,0]
-        int red = 0; 
-        int green = 0;
-        int blue = 0;
+        int red, green, blue; 
 
         switch (colour) {
             case WHITE: 
@@ -1799,13 +1822,15 @@ void Emulator::renderTiles(BYTE lcdControl) {
                 green = 0x77;
                 blue = 0x77;
                 break;
+            default:
+                red = green = blue = 0;
+                break;
         }
 
         // Update Screen pixels
-        // BYTE currentLine = this->readMem(0xFF44);
-        // this->gameScreen[pixel][currentLine][0] = red;
-        // this->gameScreen[pixel][currentLine][1] = green;
-        // this->gameScreen[pixel][currentLine][2] = blue;
+        BYTE currentLine = this->readMem(0xFF44);
+        // Store in pixel format ARGB8888
+        this->displayPixels[pixel + (currentLine * 160)] = (0xFF << 24) | (red << 16) | (green << 8) | blue;
 
     }
 
@@ -1911,23 +1936,13 @@ void Emulator::renderSprites(BYTE lcdControl) {
                 WORD cAddress = this->isBitSet(attributes, 4) ? 0xFF49 : 0xFF48;
                 COLOUR colour = this->getColour(colourBit1+colourBit0,cAddress);
 
-                // white is transparent for sprites
-                if (colour == WHITE) {
-                    continue;
-                }
-
                 // Default colour is black where RGB = [0,0,0]
-                int red = 0;
-                int green = 0;
-                int blue = 0;
+                int red, green, blue;
 
                 switch (colour) {
-                    // IS THIS CASE REALLY NEEDED??
-                    case WHITE: 
-                        red = 255;
-                        green = 255;
-                        blue = 255;
-                        break;
+                    case WHITE:
+                        // White is transparent for sprites
+                        continue;
                     case LIGHT_GRAY:
                         red = 0xCC;
                         green = 0xCC;
@@ -1938,22 +1953,23 @@ void Emulator::renderSprites(BYTE lcdControl) {
                         green = 0x77;
                         blue = 0x77;
                         break;        
+                    default:
+                        red = green = blue = 0;
                 }
 
                 // Get the pixel to draw
-                int xPix = 0 - tilePixel;
-                xPix += 7;
-                int pixel = xPos + xPix;
+                int pixel = xPos + (0 - tilePixel + 7);
 
                 // check if pixel is hidden behind background
                 if (this->isBitSet(attributes, 7)) {
-                    if ((m_ScreenData[scanLine][pixel][0] != 255) || (m_ScreenData[scanLine][pixel][1] != 255) || (m_ScreenData[scanLine][pixel][2] != 255) )
+
+                    if (this->displayPixels[pixel + (scanLine * 160)] != 0xFFFFFFFF) {
                         continue ;
+                    }
+                    
                 }
                 // Update Screen pixels
-                // this->gameScreen[pixel][scanLine][0] = red;
-                // this->gameScreen[pixel][scanLine][1] = green;
-                // this->gameScreen[pixel][scanLine][2] = blue;
+                this->displayPixels[pixel + (scanLine * 160)] = (0xFF << 24) | (red << 16) | (green << 8) | blue;
 
             }
 
@@ -1978,6 +1994,12 @@ void Emulator::doDMATransfer(BYTE data) {
     WORD address = data << 8; 
     for (int i = 0x00; i < 0xA0; i++) {
         this->writeMem(0xFE00 + i, this->readMem(address + i));
+    }
+}
+
+void Emulator::renderGraphics() {
+    if (this->doRenderPtr != nullptr) {
+        this->doRenderPtr();
     }
 }
 
@@ -4643,7 +4665,7 @@ Single Bit Operation Commands
     - h: 1
     - c: -
 */
-int Emulator::BIT_n_r(BYTE& r, BYTE n) {
+int Emulator::BIT_n_r(BYTE& r, int n) {
 
     // Update zero flag
     this->regAF.low = this->isBitSet(r, n) 
@@ -4672,7 +4694,7 @@ int Emulator::BIT_n_r(BYTE& r, BYTE n) {
     - h: 1
     - c: -
 */
-int Emulator::BIT_n_HL(BYTE n) {
+int Emulator::BIT_n_HL(int n) {
 
     // Update zero flag
     this->regAF.low = this->isBitSet(this->readMem(this->regHL.regstr), n) 
@@ -4697,7 +4719,7 @@ int Emulator::BIT_n_HL(BYTE n) {
 
     Flags affected (znhc): ----
 */
-int Emulator::SET_n_r(BYTE& r, BYTE n) {
+int Emulator::SET_n_r(BYTE& r, int n) {
 
     r = this->bitSet(r, n);
 
@@ -4714,7 +4736,7 @@ int Emulator::SET_n_r(BYTE& r, BYTE n) {
 
     Flags affected (znhc): ----
 */
-int Emulator::SET_n_HL(BYTE n) {
+int Emulator::SET_n_HL(int n) {
 
     // this works for utility function!
     BYTE result = this->bitSet(this->readMem(this->regHL.low), n);
@@ -4734,7 +4756,7 @@ int Emulator::SET_n_HL(BYTE n) {
 
     Flags affected (znhc): ----
 */
-int Emulator::RES_n_r(BYTE& r, BYTE n) {
+int Emulator::RES_n_r(BYTE& r, int n) {
 
     r = this->bitReset(r, n);
 
@@ -4751,7 +4773,7 @@ int Emulator::RES_n_r(BYTE& r, BYTE n) {
 
     Flags affected (znhc): ----
 */
-int Emulator::RES_n_HL(BYTE n) {
+int Emulator::RES_n_HL(int n) {
 
     // this works for utility function!
     BYTE result = this->bitReset(this->readMem(this->regHL.low), n);

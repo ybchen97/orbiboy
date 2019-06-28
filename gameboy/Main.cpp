@@ -9,6 +9,26 @@
 const float millisPerFrame = 1000.0 / 59.7275;
 const chrono::duration<float, milli> timePerFrame(millisPerFrame);
 
+SDL_Renderer* sdlRenderer;
+SDL_Texture* sdlTexture;
+Emulator emulator;
+
+void render(SDL_Renderer* renderer, SDL_Texture* texture, Emulator& emu) {
+
+    SDL_UpdateTexture(texture, NULL, emu.displayPixels, 160 * sizeof(Uint32));
+    SDL_RenderClear(renderer);
+    const SDL_Rect dest = {.x = 0, .y = 0, .w = 160, .h = 144};
+    SDL_RenderCopy(renderer, texture, NULL, &dest);
+    SDL_RenderPresent(renderer);
+
+}
+
+void doRender() {
+    
+    render(sdlRenderer, sdlTexture, emulator);
+
+}
+
 void processInput(Emulator& emulator, SDL_Event& event) {
 
     if (event.type == SDL_KEYDOWN) {
@@ -75,27 +95,28 @@ int main(int argc, char** argv) {
     }
 
     // Create renderer
-    SDL_Renderer* renderer = SDL_CreateRenderer(
+    sdlRenderer = SDL_CreateRenderer(
         window, 
         -1, 
         SDL_RENDERER_ACCELERATED
     );
-    if (renderer = nullptr) {
+    if (sdlRenderer = nullptr) {
         printf("Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
         exit(3);
     }
 
     // Create texture
-    SDL_Texture* sdlTexture = SDL_CreateTexture(
-        renderer,
+    sdlTexture = SDL_CreateTexture(
+        sdlRenderer,
         SDL_PIXELFORMAT_ARGB8888,
         SDL_TEXTUREACCESS_STREAMING,
         160, 144
     );
 
     // Initialize emulator
-    Emulator emulator = Emulator();
+    emulator = Emulator();
     emulator.resetCPU();
+    emulator.setRenderGraphics(&doRender);
 
     // Load game
     string romPATH = "ROM PATH FILES";

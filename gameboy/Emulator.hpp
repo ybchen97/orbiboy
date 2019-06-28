@@ -40,6 +40,7 @@ class Emulator {
 
     public:
         // ATTRIBUTES
+        uint32_t displayPixels[160 * 144];
 
         // FUNCTIONS
         void resetCPU();
@@ -47,6 +48,7 @@ class Emulator {
         void update();
         void buttonPressed(int);
         void buttonReleased(int);
+        void setRenderGraphics(void(*funcPtr)());
 
         // Utility
         bool isBitSet(BYTE, int) const;
@@ -88,12 +90,14 @@ class Emulator {
 
         // Interrupt
         bool InterruptMasterEnabled; // Interrupt Master Enabledswitch
+        bool isHalted;
 
         // Joypad
         BYTE joypadState;
 
         // Graphics
         int scanlineCycleCount;
+        void(*doRenderPtr)();
 
         // FUNCTIONS
         int executeNextOpcode();
@@ -133,6 +137,8 @@ class Emulator {
         COLOUR getColour(BYTE, WORD) const;
 
         void doDMATransfer(BYTE);
+
+        void renderGraphics();
 
         ////////// Start of opcodes //////////
         // 8 bit Load Commands
@@ -225,12 +231,12 @@ class Emulator {
         int SRL_HL();
 
         // Single Bit Operation Commands
-        int BIT_n_r(BYTE&, BYTE);
-        int BIT_n_HL(BYTE);
-        int SET_n_r(BYTE&, BYTE);
-        int SET_n_HL(BYTE);
-        int RES_n_r(BYTE&, BYTE);
-        int RES_n_HL(BYTE);
+        int BIT_n_r(BYTE&, int);
+        int BIT_n_HL(int);
+        int SET_n_r(BYTE&, int);
+        int SET_n_HL(int);
+        int RES_n_r(BYTE&, int);
+        int RES_n_HL(int);
 
         // CPU Control Commands
         int CCF();
