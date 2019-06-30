@@ -6,6 +6,8 @@
 
 #include "Emulator.hpp"
 
+using namespace std;
+
 const float millisPerFrame = 1000.0 / 59.7275;
 const chrono::duration<float, milli> timePerFrame(millisPerFrame);
 
@@ -100,7 +102,7 @@ int main(int argc, char** argv) {
         -1, 
         SDL_RENDERER_ACCELERATED
     );
-    if (sdlRenderer = nullptr) {
+    if (sdlRenderer == nullptr) {
         printf("Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
         exit(3);
     }
@@ -119,8 +121,21 @@ int main(int argc, char** argv) {
     emulator.setRenderGraphics(&doRender);
 
     // Load game
-    string romPATH = "ROM PATH FILES";
-    if (!emulator.loadGame(romPATH)) {
+    string romPath = "Tetris.gb";
+    // string romPath = "../../gb-test-roms/cpu_instrs/individual/01-special.gb";
+    // string romPath = "../../gb-test-roms/cpu_instrs/individual/02-interrupts.gb";
+    // string romPath = "../../gb-test-roms/cpu_instrs/individual/03-op sp,hl.gb";
+    // string romPath = "../../gb-test-roms/cpu_instrs/individual/04-op r,imm.gb";
+    // string romPath = "../../gb-test-roms/cpu_instrs/individual/05-op rp.gb";
+    // string romPath = "../../gb-test-roms/cpu_instrs/individual/06-ld r,r.gb";
+    // string romPath = "../../gb-test-roms/cpu_instrs/individual/07-jr,jp,call,ret,rst.gb";
+    // string romPath = "../../gb-test-roms/cpu_instrs/individual/08-misc instrs.gb";
+    // string romPath = "../../gb-test-roms/cpu_instrs/individual/09-op r,r.gb";
+    // string romPath = "../../gb-test-roms/cpu_instrs/individual/10-bit ops.gb";
+    // string romPath = "../../gb-test-roms/cpu_instrs/individual/11-op a,(hl).gb";
+    // string romPath = "../../gb-test-roms/cpu_instrs/cpu_instrs.gb";
+
+    if (!emulator.loadGame(romPath)) {
         cout << "Something wrong occured while loading!" << endl;
         exit(4);
     }

@@ -131,6 +131,8 @@ void Emulator::resetCPU() {
     this->doRenderPtr = nullptr;
     memset(this->displayPixels, 0, sizeof(this->displayPixels));
 
+    cout << "CPU Resetted!" << endl;
+
 }
 
 bool Emulator::loadGame(string file_path) {
@@ -201,6 +203,8 @@ int Emulator::executeNextOpcode() {
 
 int Emulator::executeOpcode(BYTE opcode) {
     
+    int cycles;
+
     switch (opcode) {
 
         /* 
@@ -210,119 +214,119 @@ int Emulator::executeOpcode(BYTE opcode) {
         */
         
         // Load B, R/(HL)
-        case 0x40: this->LD_r_R(this->regBC.high, this->regBC.high); break;
-        case 0x41: this->LD_r_R(this->regBC.high, this->regBC.low); break;
-        case 0x42: this->LD_r_R(this->regBC.high, this->regDE.high); break;
-        case 0x43: this->LD_r_R(this->regBC.high, this->regDE.low); break;
-        case 0x44: this->LD_r_R(this->regBC.high, this->regHL.high); break;
-        case 0x45: this->LD_r_R(this->regBC.high, this->regHL.low); break;
-        case 0x46: this->LD_r_HL(this->regBC.high); break;
-        case 0x47: this->LD_r_R(this->regBC.high, this->regAF.high); break;
+        case 0x40: cycles = this->LD_r_R(this->regBC.high, this->regBC.high); break;
+        case 0x41: cycles = this->LD_r_R(this->regBC.high, this->regBC.low); break;
+        case 0x42: cycles = this->LD_r_R(this->regBC.high, this->regDE.high); break;
+        case 0x43: cycles = this->LD_r_R(this->regBC.high, this->regDE.low); break;
+        case 0x44: cycles = this->LD_r_R(this->regBC.high, this->regHL.high); break;
+        case 0x45: cycles = this->LD_r_R(this->regBC.high, this->regHL.low); break;
+        case 0x46: cycles = this->LD_r_HL(this->regBC.high); break;
+        case 0x47: cycles = this->LD_r_R(this->regBC.high, this->regAF.high); break;
 
         // Load C, R/(HL)
-        case 0x48: this->LD_r_R(this->regBC.low, this->regBC.high); break;
-        case 0x49: this->LD_r_R(this->regBC.low, this->regBC.low); break;
-        case 0x4A: this->LD_r_R(this->regBC.low, this->regDE.high); break;
-        case 0x4B: this->LD_r_R(this->regBC.low, this->regDE.low); break;
-        case 0x4C: this->LD_r_R(this->regBC.low, this->regHL.high); break;
-        case 0x4D: this->LD_r_R(this->regBC.low, this->regHL.low); break;
-        case 0x4E: this->LD_r_HL(this->regBC.low); break;
-        case 0x4F: this->LD_r_R(this->regBC.low, this->regAF.high); break;
+        case 0x48: cycles = this->LD_r_R(this->regBC.low, this->regBC.high); break;
+        case 0x49: cycles = this->LD_r_R(this->regBC.low, this->regBC.low); break;
+        case 0x4A: cycles = this->LD_r_R(this->regBC.low, this->regDE.high); break;
+        case 0x4B: cycles = this->LD_r_R(this->regBC.low, this->regDE.low); break;
+        case 0x4C: cycles = this->LD_r_R(this->regBC.low, this->regHL.high); break;
+        case 0x4D: cycles = this->LD_r_R(this->regBC.low, this->regHL.low); break;
+        case 0x4E: cycles = this->LD_r_HL(this->regBC.low); break;
+        case 0x4F: cycles = this->LD_r_R(this->regBC.low, this->regAF.high); break;
 
         // Load D, R/(HL)
-        case 0x50: this->LD_r_R(this->regDE.high, this->regBC.high); break;
-        case 0x51: this->LD_r_R(this->regDE.high, this->regBC.low); break;
-        case 0x52: this->LD_r_R(this->regDE.high, this->regDE.high); break;
-        case 0x53: this->LD_r_R(this->regDE.high, this->regDE.low); break;
-        case 0x54: this->LD_r_R(this->regDE.high, this->regHL.high); break;
-        case 0x55: this->LD_r_R(this->regDE.high, this->regHL.low); break;
-        case 0x56: this->LD_r_HL(this->regDE.high); break;
-        case 0x57: this->LD_r_R(this->regDE.high, this->regAF.high); break;
+        case 0x50: cycles = this->LD_r_R(this->regDE.high, this->regBC.high); break;
+        case 0x51: cycles = this->LD_r_R(this->regDE.high, this->regBC.low); break;
+        case 0x52: cycles = this->LD_r_R(this->regDE.high, this->regDE.high); break;
+        case 0x53: cycles = this->LD_r_R(this->regDE.high, this->regDE.low); break;
+        case 0x54: cycles = this->LD_r_R(this->regDE.high, this->regHL.high); break;
+        case 0x55: cycles = this->LD_r_R(this->regDE.high, this->regHL.low); break;
+        case 0x56: cycles = this->LD_r_HL(this->regDE.high); break;
+        case 0x57: cycles = this->LD_r_R(this->regDE.high, this->regAF.high); break;
 
         // Load E, R/(HL)
-        case 0x58: this->LD_r_R(this->regDE.low, this->regBC.high); break;
-        case 0x59: this->LD_r_R(this->regDE.low, this->regBC.low); break;
-        case 0x5A: this->LD_r_R(this->regDE.low, this->regDE.high); break;
-        case 0x5B: this->LD_r_R(this->regDE.low, this->regDE.low); break;
-        case 0x5C: this->LD_r_R(this->regDE.low, this->regHL.high); break;
-        case 0x5D: this->LD_r_R(this->regDE.low, this->regHL.low); break;
-        case 0x5E: this->LD_r_HL(this->regDE.low); break;
-        case 0x5F: this->LD_r_R(this->regDE.low, this->regAF.high); break;
+        case 0x58: cycles = this->LD_r_R(this->regDE.low, this->regBC.high); break;
+        case 0x59: cycles = this->LD_r_R(this->regDE.low, this->regBC.low); break;
+        case 0x5A: cycles = this->LD_r_R(this->regDE.low, this->regDE.high); break;
+        case 0x5B: cycles = this->LD_r_R(this->regDE.low, this->regDE.low); break;
+        case 0x5C: cycles = this->LD_r_R(this->regDE.low, this->regHL.high); break;
+        case 0x5D: cycles = this->LD_r_R(this->regDE.low, this->regHL.low); break;
+        case 0x5E: cycles = this->LD_r_HL(this->regDE.low); break;
+        case 0x5F: cycles = this->LD_r_R(this->regDE.low, this->regAF.high); break;
 
         // Load H, R/(HL)
-        case 0x60: this->LD_r_R(this->regHL.high, this->regBC.high); break;
-        case 0x61: this->LD_r_R(this->regHL.high, this->regBC.low); break;
-        case 0x62: this->LD_r_R(this->regHL.high, this->regDE.high); break;
-        case 0x63: this->LD_r_R(this->regHL.high, this->regDE.low); break;
-        case 0x64: this->LD_r_R(this->regHL.high, this->regHL.high); break;
-        case 0x65: this->LD_r_R(this->regHL.high, this->regHL.low); break;
-        case 0x66: this->LD_r_HL(this->regHL.high); break;
-        case 0x67: this->LD_r_R(this->regHL.high, this->regAF.high); break;
+        case 0x60: cycles = this->LD_r_R(this->regHL.high, this->regBC.high); break;
+        case 0x61: cycles = this->LD_r_R(this->regHL.high, this->regBC.low); break;
+        case 0x62: cycles = this->LD_r_R(this->regHL.high, this->regDE.high); break;
+        case 0x63: cycles = this->LD_r_R(this->regHL.high, this->regDE.low); break;
+        case 0x64: cycles = this->LD_r_R(this->regHL.high, this->regHL.high); break;
+        case 0x65: cycles = this->LD_r_R(this->regHL.high, this->regHL.low); break;
+        case 0x66: cycles = this->LD_r_HL(this->regHL.high); break;
+        case 0x67: cycles = this->LD_r_R(this->regHL.high, this->regAF.high); break;
 
         // Load L, R/(HL)
-        case 0x68: this->LD_r_R(this->regHL.low, this->regBC.high); break;
-        case 0x69: this->LD_r_R(this->regHL.low, this->regBC.low); break;
-        case 0x6A: this->LD_r_R(this->regHL.low, this->regDE.high); break;
-        case 0x6B: this->LD_r_R(this->regHL.low, this->regDE.low); break;
-        case 0x6C: this->LD_r_R(this->regHL.low, this->regHL.high); break;
-        case 0x6D: this->LD_r_R(this->regHL.low, this->regHL.low); break;
-        case 0x6E: this->LD_r_HL(this->regHL.low); break;
-        case 0x6F: this->LD_r_R(this->regHL.low, this->regAF.high); break;
+        case 0x68: cycles = this->LD_r_R(this->regHL.low, this->regBC.high); break;
+        case 0x69: cycles = this->LD_r_R(this->regHL.low, this->regBC.low); break;
+        case 0x6A: cycles = this->LD_r_R(this->regHL.low, this->regDE.high); break;
+        case 0x6B: cycles = this->LD_r_R(this->regHL.low, this->regDE.low); break;
+        case 0x6C: cycles = this->LD_r_R(this->regHL.low, this->regHL.high); break;
+        case 0x6D: cycles = this->LD_r_R(this->regHL.low, this->regHL.low); break;
+        case 0x6E: cycles = this->LD_r_HL(this->regHL.low); break;
+        case 0x6F: cycles = this->LD_r_R(this->regHL.low, this->regAF.high); break;
 
         // Load (HL), R
-        case 0x70: this->LD_HL_r(this->regBC.high); break;
-        case 0x71: this->LD_HL_r(this->regBC.low); break;
-        case 0x72: this->LD_HL_r(this->regDE.high); break;
-        case 0x73: this->LD_HL_r(this->regDE.low); break;
-        case 0x74: this->LD_HL_r(this->regHL.high); break;
-        case 0x75: this->LD_HL_r(this->regHL.low); break;
-        case 0x77: this->LD_HL_r(this->regAF.high); break;
+        case 0x70: cycles = this->LD_HL_r(this->regBC.high); break;
+        case 0x71: cycles = this->LD_HL_r(this->regBC.low); break;
+        case 0x72: cycles = this->LD_HL_r(this->regDE.high); break;
+        case 0x73: cycles = this->LD_HL_r(this->regDE.low); break;
+        case 0x74: cycles = this->LD_HL_r(this->regHL.high); break;
+        case 0x75: cycles = this->LD_HL_r(this->regHL.low); break;
+        case 0x77: cycles = this->LD_HL_r(this->regAF.high); break;
 
         // Load A, R/(HL)
-        case 0x78: this->LD_r_R(this->regAF.high, this->regBC.high); break;
-        case 0x79: this->LD_r_R(this->regAF.high, this->regBC.low); break;
-        case 0x7A: this->LD_r_R(this->regAF.high, this->regDE.high); break;
-        case 0x7B: this->LD_r_R(this->regAF.high, this->regDE.low); break;
-        case 0x7C: this->LD_r_R(this->regAF.high, this->regHL.high); break;
-        case 0x7D: this->LD_r_R(this->regAF.high, this->regHL.low); break;
-        case 0x7E: this->LD_r_HL(this->regAF.high); break;
-        case 0x7F: this->LD_r_R(this->regAF.high, this->regAF.high); break;
+        case 0x78: cycles = this->LD_r_R(this->regAF.high, this->regBC.high); break;
+        case 0x79: cycles = this->LD_r_R(this->regAF.high, this->regBC.low); break;
+        case 0x7A: cycles = this->LD_r_R(this->regAF.high, this->regDE.high); break;
+        case 0x7B: cycles = this->LD_r_R(this->regAF.high, this->regDE.low); break;
+        case 0x7C: cycles = this->LD_r_R(this->regAF.high, this->regHL.high); break;
+        case 0x7D: cycles = this->LD_r_R(this->regAF.high, this->regHL.low); break;
+        case 0x7E: cycles = this->LD_r_HL(this->regAF.high); break;
+        case 0x7F: cycles = this->LD_r_R(this->regAF.high, this->regAF.high); break;
 
         // Load R, n
-        case 0x06: this->LD_r_n(this->regBC.high); break;
-        case 0x0E: this->LD_r_n(this->regBC.low); break;
-        case 0x16: this->LD_r_n(this->regDE.high); break;
-        case 0x1E: this->LD_r_n(this->regDE.low); break;
-        case 0x26: this->LD_r_n(this->regHL.high); break;
-        case 0x2E: this->LD_r_n(this->regHL.low); break;
-        case 0x36: this->LD_HL_n(); break;
-        case 0x3E: this->LD_r_n(this->regAF.high); break;
+        case 0x06: cycles = this->LD_r_n(this->regBC.high); break;
+        case 0x0E: cycles = this->LD_r_n(this->regBC.low); break;
+        case 0x16: cycles = this->LD_r_n(this->regDE.high); break;
+        case 0x1E: cycles = this->LD_r_n(this->regDE.low); break;
+        case 0x26: cycles = this->LD_r_n(this->regHL.high); break;
+        case 0x2E: cycles = this->LD_r_n(this->regHL.low); break;
+        case 0x36: cycles = this->LD_HL_n(); break;
+        case 0x3E: cycles = this->LD_r_n(this->regAF.high); break;
 
         // Load A, RR
-        case 0x0A: this->LD_A_BC(); break;
-        case 0x1A: this->LD_A_DE(); break;
+        case 0x0A: cycles = this->LD_A_BC(); break;
+        case 0x1A: cycles = this->LD_A_DE(); break;
 
         // Load RR, A
-        case 0x02: this->LD_BC_A(); break;
-        case 0x12: this->LD_DE_A(); break;
+        case 0x02: cycles = this->LD_BC_A(); break;
+        case 0x12: cycles = this->LD_DE_A(); break;
 
         // Load A, nn
-        case 0xFA: this->LD_A_nn(); break;
+        case 0xFA: cycles = this->LD_A_nn(); break;
 
         // Load nn, A
-        case 0xEA: this->LD_nn_A(); break;
+        case 0xEA: cycles = this->LD_nn_A(); break;
 
         // Load A, FF00+n, FF00+c, vice versa
-        case 0xF0: this->LD_A_FF00n(); break;
-        case 0xE0: this->LD_FF00n_A(); break;
-        case 0xF2: this->LD_A_FF00C(); break;
-        case 0xE2: this->LD_FF00C_A(); break;
+        case 0xF0: cycles = this->LD_A_FF00n(); break;
+        case 0xE0: cycles = this->LD_FF00n_A(); break;
+        case 0xF2: cycles = this->LD_A_FF00C(); break;
+        case 0xE2: cycles = this->LD_FF00C_A(); break;
 
         // Load increment/decrement HL, A, vice versa
-        case 0x22: this->LDI_HL_A(); break;
-        case 0x2A: this->LDI_A_HL(); break;
-        case 0x32: this->LDD_HL_A(); break;
-        case 0x3A: this->LDD_A_HL(); break;
+        case 0x22: cycles = this->LDI_HL_A(); break;
+        case 0x2A: cycles = this->LDI_A_HL(); break;
+        case 0x32: cycles = this->LDD_HL_A(); break;
+        case 0x3A: cycles = this->LDD_A_HL(); break;
 
         /* 
         ************************************************************************
@@ -331,28 +335,28 @@ int Emulator::executeOpcode(BYTE opcode) {
         */
 
         // Load rr, nn
-        case 0x01: this->LD_rr_nn(this->regBC); break;
-        case 0x11: this->LD_rr_nn(this->regDE); break;
-        case 0x21: this->LD_rr_nn(this->regHL); break;
-        case 0x31: this->LD_rr_nn(this->stackPointer); break;
+        case 0x01: cycles = this->LD_rr_nn(this->regBC); break;
+        case 0x11: cycles = this->LD_rr_nn(this->regDE); break;
+        case 0x21: cycles = this->LD_rr_nn(this->regHL); break;
+        case 0x31: cycles = this->LD_rr_nn(this->stackPointer); break;
 
         // Load SP, HL
-        case 0xF9: this->LD_SP_HL(); break;
+        case 0xF9: cycles = this->LD_SP_HL(); break;
 
         // Load nn, SP
-        case 0x08: this->LD_nn_SP(); break;
+        case 0x08: cycles = this->LD_nn_SP(); break;
 
         // Push rr
-        case 0xC5: this->PUSH_rr(this->regBC); break;
-        case 0xD5: this->PUSH_rr(this->regDE); break;
-        case 0xE5: this->PUSH_rr(this->regHL); break;
-        case 0xF5: this->PUSH_rr(this->regAF); break;
+        case 0xC5: cycles = this->PUSH_rr(this->regBC); break;
+        case 0xD5: cycles = this->PUSH_rr(this->regDE); break;
+        case 0xE5: cycles = this->PUSH_rr(this->regHL); break;
+        case 0xF5: cycles = this->PUSH_rr(this->regAF); break;
 
         // Pop rr
-        case 0xC1: this->POP_rr(this->regBC); break;
-        case 0xD1: this->POP_rr(this->regDE); break;
-        case 0xE1: this->POP_rr(this->regHL); break;
-        case 0xF1: this->POP_rr(this->regAF); break;
+        case 0xC1: cycles = this->POP_rr(this->regBC); break;
+        case 0xD1: cycles = this->POP_rr(this->regDE); break;
+        case 0xE1: cycles = this->POP_rr(this->regHL); break;
+        case 0xF1: cycles = this->POP_rr(this->regAF); break;
 
         /* 
         ************************************************************************
@@ -361,134 +365,134 @@ int Emulator::executeOpcode(BYTE opcode) {
         */
 
         // Add A, r
-        case 0x80: this->ADD_A_r(this->regBC.high); break;
-        case 0x81: this->ADD_A_r(this->regBC.low); break;
-        case 0x82: this->ADD_A_r(this->regDE.high); break;
-        case 0x83: this->ADD_A_r(this->regDE.low); break;
-        case 0x84: this->ADD_A_r(this->regHL.high); break;
-        case 0x85: this->ADD_A_r(this->regHL.low); break;
-        case 0x86: this->ADD_A_HL(); break;
-        case 0x87: this->ADD_A_r(this->regAF.high); break;
+        case 0x80: cycles = this->ADD_A_r(this->regBC.high); break;
+        case 0x81: cycles = this->ADD_A_r(this->regBC.low); break;
+        case 0x82: cycles = this->ADD_A_r(this->regDE.high); break;
+        case 0x83: cycles = this->ADD_A_r(this->regDE.low); break;
+        case 0x84: cycles = this->ADD_A_r(this->regHL.high); break;
+        case 0x85: cycles = this->ADD_A_r(this->regHL.low); break;
+        case 0x86: cycles = this->ADD_A_HL(); break;
+        case 0x87: cycles = this->ADD_A_r(this->regAF.high); break;
 
         // Add A, n
-        case 0xC6: this->ADD_A_n(); break;
+        case 0xC6: cycles = this->ADD_A_n(); break;
 
         // ADC A, r
-        case 0x88: this->ADC_A_r(this->regBC.high); break;
-        case 0x89: this->ADC_A_r(this->regBC.low); break;
-        case 0x8A: this->ADC_A_r(this->regDE.high); break;
-        case 0x8B: this->ADC_A_r(this->regDE.low); break;
-        case 0x8C: this->ADC_A_r(this->regHL.high); break;
-        case 0x8D: this->ADC_A_r(this->regHL.low); break;
-        case 0x8E: this->ADC_A_HL(); break;
-        case 0x8F: this->ADC_A_r(this->regAF.high); break;
+        case 0x88: cycles = this->ADC_A_r(this->regBC.high); break;
+        case 0x89: cycles = this->ADC_A_r(this->regBC.low); break;
+        case 0x8A: cycles = this->ADC_A_r(this->regDE.high); break;
+        case 0x8B: cycles = this->ADC_A_r(this->regDE.low); break;
+        case 0x8C: cycles = this->ADC_A_r(this->regHL.high); break;
+        case 0x8D: cycles = this->ADC_A_r(this->regHL.low); break;
+        case 0x8E: cycles = this->ADC_A_HL(); break;
+        case 0x8F: cycles = this->ADC_A_r(this->regAF.high); break;
 
         // ADC A, n
-        case 0xCE: this->ADC_A_n(); break;
+        case 0xCE: cycles = this->ADC_A_n(); break;
 
         // Sub r
-        case 0x90: this->SUB_r(this->regBC.high); break;
-        case 0x91: this->SUB_r(this->regBC.low); break;
-        case 0x92: this->SUB_r(this->regDE.high); break;
-        case 0x93: this->SUB_r(this->regDE.low); break;
-        case 0x94: this->SUB_r(this->regHL.high); break;
-        case 0x95: this->SUB_r(this->regHL.low); break;
-        case 0x96: this->SUB_HL(); break;
-        case 0x97: this->SUB_r(this->regAF.high); break;
+        case 0x90: cycles = this->SUB_r(this->regBC.high); break;
+        case 0x91: cycles = this->SUB_r(this->regBC.low); break;
+        case 0x92: cycles = this->SUB_r(this->regDE.high); break;
+        case 0x93: cycles = this->SUB_r(this->regDE.low); break;
+        case 0x94: cycles = this->SUB_r(this->regHL.high); break;
+        case 0x95: cycles = this->SUB_r(this->regHL.low); break;
+        case 0x96: cycles = this->SUB_HL(); break;
+        case 0x97: cycles = this->SUB_r(this->regAF.high); break;
 
         // Sub n
-        case 0xD6: this->SUB_n(); break;
+        case 0xD6: cycles = this->SUB_n(); break;
 
         // SBC A, r
-        case 0x98: this->SBC_A_r(this->regBC.high); break;
-        case 0x99: this->SBC_A_r(this->regBC.low); break;
-        case 0x9A: this->SBC_A_r(this->regDE.high); break;
-        case 0x9B: this->SBC_A_r(this->regDE.low); break;
-        case 0x9C: this->SBC_A_r(this->regHL.high); break;
-        case 0x9D: this->SBC_A_r(this->regHL.low); break;
-        case 0x9E: this->SBC_A_HL(); break;
-        case 0x9F: this->SBC_A_r(this->regAF.high); break;  
+        case 0x98: cycles = this->SBC_A_r(this->regBC.high); break;
+        case 0x99: cycles = this->SBC_A_r(this->regBC.low); break;
+        case 0x9A: cycles = this->SBC_A_r(this->regDE.high); break;
+        case 0x9B: cycles = this->SBC_A_r(this->regDE.low); break;
+        case 0x9C: cycles = this->SBC_A_r(this->regHL.high); break;
+        case 0x9D: cycles = this->SBC_A_r(this->regHL.low); break;
+        case 0x9E: cycles = this->SBC_A_HL(); break;
+        case 0x9F: cycles = this->SBC_A_r(this->regAF.high); break;  
 
         // SBC A, n
-        case 0xDE: this->SBC_A_n(); break;
+        case 0xDE: cycles = this->SBC_A_n(); break;
 
         // AND r
-        case 0xA0: this->AND_r(this->regBC.high); break;
-        case 0xA1: this->AND_r(this->regBC.low); break;
-        case 0xA2: this->AND_r(this->regDE.high); break;
-        case 0xA3: this->AND_r(this->regDE.low); break;
-        case 0xA4: this->AND_r(this->regHL.high); break;
-        case 0xA5: this->AND_r(this->regHL.low); break;
-        case 0xA6: this->AND_HL();
-        case 0xA7: this->AND_r(this->regBC.high); break;
+        case 0xA0: cycles = this->AND_r(this->regBC.high); break;
+        case 0xA1: cycles = this->AND_r(this->regBC.low); break;
+        case 0xA2: cycles = this->AND_r(this->regDE.high); break;
+        case 0xA3: cycles = this->AND_r(this->regDE.low); break;
+        case 0xA4: cycles = this->AND_r(this->regHL.high); break;
+        case 0xA5: cycles = this->AND_r(this->regHL.low); break;
+        case 0xA6: cycles = this->AND_HL();
+        case 0xA7: cycles = this->AND_r(this->regBC.high); break;
 
         // AND n 
-        case 0xE6: this->AND_n(); break;
+        case 0xE6: cycles = this->AND_n(); break;
 
         // XOR r
-        case 0xA8: this->XOR_r(this->regBC.high); break;
-        case 0xA9: this->XOR_r(this->regBC.low); break;
-        case 0xAA: this->XOR_r(this->regDE.high); break;
-        case 0xAB: this->XOR_r(this->regDE.low); break;
-        case 0xAC: this->XOR_r(this->regHL.high); break;
-        case 0xAD: this->XOR_r(this->regHL.low); break;
-        case 0xAE: this->XOR_HL();
-        case 0xAF: this->XOR_r(this->regBC.high); break;
+        case 0xA8: cycles = this->XOR_r(this->regBC.high); break;
+        case 0xA9: cycles = this->XOR_r(this->regBC.low); break;
+        case 0xAA: cycles = this->XOR_r(this->regDE.high); break;
+        case 0xAB: cycles = this->XOR_r(this->regDE.low); break;
+        case 0xAC: cycles = this->XOR_r(this->regHL.high); break;
+        case 0xAD: cycles = this->XOR_r(this->regHL.low); break;
+        case 0xAE: cycles = this->XOR_HL();
+        case 0xAF: cycles = this->XOR_r(this->regBC.high); break;
 
         // XOR n
-        case 0xEE: this->XOR_n(); break;
+        case 0xEE: cycles = this->XOR_n(); break;
 
         // OR r
-        case 0xB0: this->OR_r(this->regBC.high); break;
-        case 0xB1: this->OR_r(this->regBC.low); break;
-        case 0xB2: this->OR_r(this->regDE.high); break;
-        case 0xB3: this->OR_r(this->regDE.low); break;
-        case 0xB4: this->OR_r(this->regHL.high); break;
-        case 0xB5: this->OR_r(this->regHL.low); break;
-        case 0xB6: this->OR_HL();
-        case 0xB7: this->OR_r(this->regBC.high); break;
+        case 0xB0: cycles = this->OR_r(this->regBC.high); break;
+        case 0xB1: cycles = this->OR_r(this->regBC.low); break;
+        case 0xB2: cycles = this->OR_r(this->regDE.high); break;
+        case 0xB3: cycles = this->OR_r(this->regDE.low); break;
+        case 0xB4: cycles = this->OR_r(this->regHL.high); break;
+        case 0xB5: cycles = this->OR_r(this->regHL.low); break;
+        case 0xB6: cycles = this->OR_HL();
+        case 0xB7: cycles = this->OR_r(this->regBC.high); break;
 
         // OR n 
-        case 0xF6: this->OR_n(); break;
+        case 0xF6: cycles = this->OR_n(); break;
 
         // CPr
-        case 0xB8: this->CP_r(this->regBC.high); break;
-        case 0xB9: this->CP_r(this->regBC.low); break;
-        case 0xBA: this->CP_r(this->regDE.high); break;
-        case 0xBB: this->CP_r(this->regDE.low); break;
-        case 0xBC: this->CP_r(this->regHL.high); break;
-        case 0xBD: this->CP_r(this->regHL.low); break;
-        case 0xBE: this->CP_HL();
-        case 0xBF: this->CP_r(this->regBC.high); break;
+        case 0xB8: cycles = this->CP_r(this->regBC.high); break;
+        case 0xB9: cycles = this->CP_r(this->regBC.low); break;
+        case 0xBA: cycles = this->CP_r(this->regDE.high); break;
+        case 0xBB: cycles = this->CP_r(this->regDE.low); break;
+        case 0xBC: cycles = this->CP_r(this->regHL.high); break;
+        case 0xBD: cycles = this->CP_r(this->regHL.low); break;
+        case 0xBE: cycles = this->CP_HL();
+        case 0xBF: cycles = this->CP_r(this->regBC.high); break;
 
         // CP n
-        case 0xFE: this->CP_n(); break;
+        case 0xFE: cycles = this->CP_n(); break;
 
         // INC r
-        case 0x04: this->INC_r(this->regBC.high); break;
-        case 0x14: this->INC_r(this->regDE.high); break;
-        case 0x24: this->INC_r(this->regHL.high); break;
-        case 0x34: this->INC_HL(); break;
-        case 0x0C: this->INC_r(this->regBC.low); break; 
-        case 0x1C: this->INC_r(this->regDE.low); break;
-        case 0x2C: this->INC_r(this->regHL.low); break;
-        case 0x3C: this->INC_r(this->regAF.high); break;  
+        case 0x04: cycles = this->INC_r(this->regBC.high); break;
+        case 0x14: cycles = this->INC_r(this->regDE.high); break;
+        case 0x24: cycles = this->INC_r(this->regHL.high); break;
+        case 0x34: cycles = this->INC_HL(); break;
+        case 0x0C: cycles = this->INC_r(this->regBC.low); break; 
+        case 0x1C: cycles = this->INC_r(this->regDE.low); break;
+        case 0x2C: cycles = this->INC_r(this->regHL.low); break;
+        case 0x3C: cycles = this->INC_r(this->regAF.high); break;  
 
         // DEC r
-        case 0x05: this->DEC_r(this->regBC.high); break;
-        case 0x15: this->DEC_r(this->regDE.high); break;
-        case 0x25: this->DEC_r(this->regHL.high); break;
-        case 0x35: this->DEC_HL(); break;
-        case 0x0D: this->DEC_r(this->regBC.low); break; 
-        case 0x1D: this->DEC_r(this->regDE.low); break;
-        case 0x2D: this->DEC_r(this->regHL.low); break;
-        case 0x3D: this->DEC_r(this->regAF.high); break;
+        case 0x05: cycles = this->DEC_r(this->regBC.high); break;
+        case 0x15: cycles = this->DEC_r(this->regDE.high); break;
+        case 0x25: cycles = this->DEC_r(this->regHL.high); break;
+        case 0x35: cycles = this->DEC_HL(); break;
+        case 0x0D: cycles = this->DEC_r(this->regBC.low); break; 
+        case 0x1D: cycles = this->DEC_r(this->regDE.low); break;
+        case 0x2D: cycles = this->DEC_r(this->regHL.low); break;
+        case 0x3D: cycles = this->DEC_r(this->regAF.high); break;
 
         // DAA
-        case 0x27: this->DAA(); break;
+        case 0x27: cycles = this->DAA(); break;
 
         // CPL
-        case 0x2F: this->CPL(); break;
+        case 0x2F: cycles = this->CPL(); break;
 
         /* 
         ************************************************************************
@@ -497,28 +501,28 @@ int Emulator::executeOpcode(BYTE opcode) {
         */
 
         // Add HL, rr
-        case 0x09: this->ADD_HL_rr(this->regBC.regstr); break;
-        case 0x19: this->ADD_HL_rr(this->regDE.regstr); break;
-        case 0x29: this->ADD_HL_rr(this->regHL.regstr); break;
-        case 0x39: this->ADD_HL_rr(this->stackPointer.regstr); break;
+        case 0x09: cycles = this->ADD_HL_rr(this->regBC.regstr); break;
+        case 0x19: cycles = this->ADD_HL_rr(this->regDE.regstr); break;
+        case 0x29: cycles = this->ADD_HL_rr(this->regHL.regstr); break;
+        case 0x39: cycles = this->ADD_HL_rr(this->stackPointer.regstr); break;
 
         // INC rr
-        case 0x03: this->INC_rr(this->regBC.regstr); break;
-        case 0x13: this->INC_rr(this->regDE.regstr); break;
-        case 0x23: this->INC_rr(this->regHL.regstr); break;
-        case 0x33: this->INC_rr(this->stackPointer.regstr); break;
+        case 0x03: cycles = this->INC_rr(this->regBC.regstr); break;
+        case 0x13: cycles = this->INC_rr(this->regDE.regstr); break;
+        case 0x23: cycles = this->INC_rr(this->regHL.regstr); break;
+        case 0x33: cycles = this->INC_rr(this->stackPointer.regstr); break;
 
         // DEC rr
-        case 0x0B: this->DEC_rr(this->regBC.regstr); break;
-        case 0x1B: this->DEC_rr(this->regDE.regstr); break;
-        case 0x2B: this->DEC_rr(this->regHL.regstr); break;
-        case 0x3B: this->DEC_rr(this->stackPointer.regstr); break;
+        case 0x0B: cycles = this->DEC_rr(this->regBC.regstr); break;
+        case 0x1B: cycles = this->DEC_rr(this->regDE.regstr); break;
+        case 0x2B: cycles = this->DEC_rr(this->regHL.regstr); break;
+        case 0x3B: cycles = this->DEC_rr(this->stackPointer.regstr); break;
 
         // Add SP, dd
-        case 0xE8: this->ADD_SP_dd(); break;
+        case 0xE8: cycles = this->ADD_SP_dd(); break;
 
         // Load HL, SP + dd
-        case 0xF8: this->LD_HL_SPdd(); break;
+        case 0xF8: cycles = this->LD_HL_SPdd(); break;
 
         /* 
         ************************************************************************
@@ -527,10 +531,10 @@ int Emulator::executeOpcode(BYTE opcode) {
         */
 
         // Non CB-prefixed Rotate commands
-        case 0x07: this->RLCA(); break; // RLCA        
-        case 0x17: this->RLA(); break; // RLA
-        case 0x0F: this->RRCA(); break; // RRCA
-        case 0x1F: this->RRA(); break; // RRA
+        case 0x07: cycles = this->RLCA(); break; // RLCA        
+        case 0x17: cycles = this->RLA(); break; // RLA
+        case 0x0F: cycles = this->RRCA(); break; // RRCA
+        case 0x1F: cycles = this->RRA(); break; // RRA
 
         /* 
         ************************************************************************
@@ -538,13 +542,13 @@ int Emulator::executeOpcode(BYTE opcode) {
         ************************************************************************
         */
 
-        case 0x3F: this->CCF(); break; // CCF
-        case 0x37: this->SCF(); break; // SCF
-        case 0x00: this->NOP(); break; // NOP
-        case 0x76: this->HALT(); break; // HALT
-        case 0x10: this->STOP(); break; // STOP
-        case 0xF3: this->DI(); break; // DI
-        case 0xFB: this->EI(); break; // EI
+        case 0x3F: cycles = this->CCF(); break; // CCF
+        case 0x37: cycles = this->SCF(); break; // SCF
+        case 0x00: cycles = this->NOP(); break; // NOP
+        case 0x76: cycles = this->HALT(); break; // HALT
+        case 0x10: cycles = this->STOP(); break; // STOP
+        case 0xF3: cycles = this->DI(); break; // DI
+        case 0xFB: cycles = this->EI(); break; // EI
 
         /* 
         ************************************************************************
@@ -553,56 +557,56 @@ int Emulator::executeOpcode(BYTE opcode) {
         */
 
         // JP nn
-        case 0xC3: this->JP_nn(); break;
+        case 0xC3: cycles = this->JP_nn(); break;
 
         // JP HL
-        case 0xE9: this->JP_HL(); break;
+        case 0xE9: cycles = this->JP_HL(); break;
 
         // JP f, nn
-        case 0xC2: this->JP_f_nn(opcode); break;
-        case 0xCA: this->JP_f_nn(opcode); break;
-        case 0xD2: this->JP_f_nn(opcode); break;
-        case 0xDA: this->JP_f_nn(opcode); break;
+        case 0xC2: cycles = this->JP_f_nn(opcode); break;
+        case 0xCA: cycles = this->JP_f_nn(opcode); break;
+        case 0xD2: cycles = this->JP_f_nn(opcode); break;
+        case 0xDA: cycles = this->JP_f_nn(opcode); break;
 
         // JR PC + dd
-        case 0x18: this->JR_PCdd(); break;
+        case 0x18: cycles = this->JR_PCdd(); break;
 
         // JR f, PC + dd
-        case 0x20: this->JR_f_PCdd(opcode); break;
-        case 0x28: this->JR_f_PCdd(opcode); break;
-        case 0x30: this->JR_f_PCdd(opcode); break;
-        case 0x38: this->JR_f_PCdd(opcode); break;
+        case 0x20: cycles = this->JR_f_PCdd(opcode); break;
+        case 0x28: cycles = this->JR_f_PCdd(opcode); break;
+        case 0x30: cycles = this->JR_f_PCdd(opcode); break;
+        case 0x38: cycles = this->JR_f_PCdd(opcode); break;
 
         // Call nn
-        case 0xCD: this->CALL_nn(); break;
+        case 0xCD: cycles = this->CALL_nn(); break;
 
         // Call f, nn
-        case 0xC4: this->CALL_f_nn(opcode); break;
-        case 0xCC: this->CALL_f_nn(opcode); break;
-        case 0xD4: this->CALL_f_nn(opcode); break;
-        case 0xDC: this->CALL_f_nn(opcode); break;
+        case 0xC4: cycles = this->CALL_f_nn(opcode); break;
+        case 0xCC: cycles = this->CALL_f_nn(opcode); break;
+        case 0xD4: cycles = this->CALL_f_nn(opcode); break;
+        case 0xDC: cycles = this->CALL_f_nn(opcode); break;
 
         // RET
-        case 0xC9: this->RET(); break;
+        case 0xC9: cycles = this->RET(); break;
         
         // RET f
-        case 0xC0: this->RET_f(opcode); break; 
-        case 0xC8: this->RET_f(opcode); break;
-        case 0xD0: this->RET_f(opcode); break;
-        case 0xD8: this->RET_f(opcode); break;
+        case 0xC0: cycles = this->RET_f(opcode); break; 
+        case 0xC8: cycles = this->RET_f(opcode); break;
+        case 0xD0: cycles = this->RET_f(opcode); break;
+        case 0xD8: cycles = this->RET_f(opcode); break;
 
         // RETI
-        case 0xD9: this->RETI(); break;
+        case 0xD9: cycles = this->RETI(); break;
 
         // RST n
-        case 0xC7: this->RST_n(opcode); break;
-        case 0xD7: this->RST_n(opcode); break;
-        case 0xE7: this->RST_n(opcode); break;
-        case 0xF7: this->RST_n(opcode); break;
-        case 0xCF: this->RST_n(opcode); break;
-        case 0xDF: this->RST_n(opcode); break;
-        case 0xEF: this->RST_n(opcode); break;
-        case 0xFF: this->RST_n(opcode); break;
+        case 0xC7: cycles = this->RST_n(opcode); break;
+        case 0xD7: cycles = this->RST_n(opcode); break;
+        case 0xE7: cycles = this->RST_n(opcode); break;
+        case 0xF7: cycles = this->RST_n(opcode); break;
+        case 0xCF: cycles = this->RST_n(opcode); break;
+        case 0xDF: cycles = this->RST_n(opcode); break;
+        case 0xEF: cycles = this->RST_n(opcode); break;
+        case 0xFF: cycles = this->RST_n(opcode); break;
 
         /* 
         ************************************************************************
@@ -610,14 +614,18 @@ int Emulator::executeOpcode(BYTE opcode) {
         ************************************************************************
         */ 
 
-        case 0xCB: executeCBOpcode(); break;
+        case 0xCB: cycles = executeCBOpcode(); break;
     }
+
+    return cycles;
+
 }
 
 int Emulator::executeCBOpcode() {
     
     BYTE opcode = this->readMem(this->programCounter.regstr);
     this->programCounter.regstr++;
+    int cycles;
 
     switch (opcode) {
 
@@ -628,84 +636,84 @@ int Emulator::executeCBOpcode() {
         */
 
         // RLC r
-        case 0x00: this->RLC_r(this->regBC.high); break;
-        case 0x01: this->RLC_r(this->regBC.low); break;
-        case 0x02: this->RLC_r(this->regDE.high); break;
-        case 0x03: this->RLC_r(this->regDE.low); break;
-        case 0x04: this->RLC_r(this->regHL.high); break;
-        case 0x05: this->RLC_r(this->regHL.low); break;
-        case 0x06: this->RLC_HL(); break;
-        case 0x07: this->RLC_r(this->regAF.high); break;
+        case 0x00: cycles = this->RLC_r(this->regBC.high); break;
+        case 0x01: cycles = this->RLC_r(this->regBC.low); break;
+        case 0x02: cycles = this->RLC_r(this->regDE.high); break;
+        case 0x03: cycles = this->RLC_r(this->regDE.low); break;
+        case 0x04: cycles = this->RLC_r(this->regHL.high); break;
+        case 0x05: cycles = this->RLC_r(this->regHL.low); break;
+        case 0x06: cycles = this->RLC_HL(); break;
+        case 0x07: cycles = this->RLC_r(this->regAF.high); break;
 
         // RRC r
-        case 0x08: this->RRC_r(this->regBC.high); break;
-        case 0x09: this->RRC_r(this->regBC.low); break;
-        case 0x0A: this->RRC_r(this->regDE.high); break;
-        case 0x0B: this->RRC_r(this->regDE.low); break;
-        case 0x0C: this->RRC_r(this->regHL.high); break;
-        case 0x0D: this->RRC_r(this->regHL.low); break;
-        case 0x0E: this->RRC_HL(); break;
-        case 0x0F: this->RRC_r(this->regAF.high); break;
+        case 0x08: cycles = this->RRC_r(this->regBC.high); break;
+        case 0x09: cycles = this->RRC_r(this->regBC.low); break;
+        case 0x0A: cycles = this->RRC_r(this->regDE.high); break;
+        case 0x0B: cycles = this->RRC_r(this->regDE.low); break;
+        case 0x0C: cycles = this->RRC_r(this->regHL.high); break;
+        case 0x0D: cycles = this->RRC_r(this->regHL.low); break;
+        case 0x0E: cycles = this->RRC_HL(); break;
+        case 0x0F: cycles = this->RRC_r(this->regAF.high); break;
 
         // RL r
-        case 0x10: this->RL_r(this->regBC.high); break;
-        case 0x11: this->RL_r(this->regBC.low); break;
-        case 0x12: this->RL_r(this->regDE.high); break;
-        case 0x13: this->RL_r(this->regDE.low); break;
-        case 0x14: this->RL_r(this->regHL.high); break;
-        case 0x15: this->RL_r(this->regHL.low); break;
-        case 0x16: this->RL_HL(); break;
-        case 0x17: this->RL_r(this->regAF.high); break;
+        case 0x10: cycles = this->RL_r(this->regBC.high); break;
+        case 0x11: cycles = this->RL_r(this->regBC.low); break;
+        case 0x12: cycles = this->RL_r(this->regDE.high); break;
+        case 0x13: cycles = this->RL_r(this->regDE.low); break;
+        case 0x14: cycles = this->RL_r(this->regHL.high); break;
+        case 0x15: cycles = this->RL_r(this->regHL.low); break;
+        case 0x16: cycles = this->RL_HL(); break;
+        case 0x17: cycles = this->RL_r(this->regAF.high); break;
 
         // RR r
-        case 0x18: this->RR_r(this->regBC.high); break;
-        case 0x19: this->RR_r(this->regBC.low); break;
-        case 0x1A: this->RR_r(this->regDE.high); break;
-        case 0x1B: this->RR_r(this->regDE.low); break;
-        case 0x1C: this->RR_r(this->regHL.high); break;
-        case 0x1D: this->RR_r(this->regHL.low); break;
-        case 0x1E: this->RR_HL(); break;
-        case 0x1F: this->RR_r(this->regAF.high); break;
+        case 0x18: cycles = this->RR_r(this->regBC.high); break;
+        case 0x19: cycles = this->RR_r(this->regBC.low); break;
+        case 0x1A: cycles = this->RR_r(this->regDE.high); break;
+        case 0x1B: cycles = this->RR_r(this->regDE.low); break;
+        case 0x1C: cycles = this->RR_r(this->regHL.high); break;
+        case 0x1D: cycles = this->RR_r(this->regHL.low); break;
+        case 0x1E: cycles = this->RR_HL(); break;
+        case 0x1F: cycles = this->RR_r(this->regAF.high); break;
 
         // SLA r
-        case 0x20: this->SLA_r(this->regBC.high); break;
-        case 0x21: this->SLA_r(this->regBC.low); break;
-        case 0x22: this->SLA_r(this->regDE.high); break;
-        case 0x23: this->SLA_r(this->regDE.low); break;
-        case 0x24: this->SLA_r(this->regHL.high); break;
-        case 0x25: this->SLA_r(this->regHL.low); break;
-        case 0x26: this->SLA_HL(); break;
-        case 0x27: this->SLA_r(this->regAF.high); break;
+        case 0x20: cycles = this->SLA_r(this->regBC.high); break;
+        case 0x21: cycles = this->SLA_r(this->regBC.low); break;
+        case 0x22: cycles = this->SLA_r(this->regDE.high); break;
+        case 0x23: cycles = this->SLA_r(this->regDE.low); break;
+        case 0x24: cycles = this->SLA_r(this->regHL.high); break;
+        case 0x25: cycles = this->SLA_r(this->regHL.low); break;
+        case 0x26: cycles = this->SLA_HL(); break;
+        case 0x27: cycles = this->SLA_r(this->regAF.high); break;
 
         // SRA r
-        case 0x28: this->SRA_r(this->regBC.high); break;
-        case 0x29: this->SRA_r(this->regBC.low); break;
-        case 0x2A: this->SRA_r(this->regDE.high); break;
-        case 0x2B: this->SRA_r(this->regDE.low); break;
-        case 0x2C: this->SRA_r(this->regHL.high); break;
-        case 0x2D: this->SRA_r(this->regHL.low); break;
-        case 0x2E: this->SRA_HL(); break;
-        case 0x2F: this->SRA_r(this->regAF.high); break;
+        case 0x28: cycles = this->SRA_r(this->regBC.high); break;
+        case 0x29: cycles = this->SRA_r(this->regBC.low); break;
+        case 0x2A: cycles = this->SRA_r(this->regDE.high); break;
+        case 0x2B: cycles = this->SRA_r(this->regDE.low); break;
+        case 0x2C: cycles = this->SRA_r(this->regHL.high); break;
+        case 0x2D: cycles = this->SRA_r(this->regHL.low); break;
+        case 0x2E: cycles = this->SRA_HL(); break;
+        case 0x2F: cycles = this->SRA_r(this->regAF.high); break;
 
         // Swap r
-        case 0x30: this->SWAP_r(this->regBC.high); break;
-        case 0x31: this->SWAP_r(this->regBC.low); break;
-        case 0x32: this->SWAP_r(this->regDE.high); break;
-        case 0x33: this->SWAP_r(this->regDE.low); break;
-        case 0x34: this->SWAP_r(this->regHL.high); break;
-        case 0x35: this->SWAP_r(this->regHL.low); break;
-        case 0x36: this->SWAP_HL(); break;
-        case 0x37: this->SWAP_r(this->regAF.high); break;
+        case 0x30: cycles = this->SWAP_r(this->regBC.high); break;
+        case 0x31: cycles = this->SWAP_r(this->regBC.low); break;
+        case 0x32: cycles = this->SWAP_r(this->regDE.high); break;
+        case 0x33: cycles = this->SWAP_r(this->regDE.low); break;
+        case 0x34: cycles = this->SWAP_r(this->regHL.high); break;
+        case 0x35: cycles = this->SWAP_r(this->regHL.low); break;
+        case 0x36: cycles = this->SWAP_HL(); break;
+        case 0x37: cycles = this->SWAP_r(this->regAF.high); break;
 
         // SRL r
-        case 0x38: this->SRL_r(this->regBC.high); break;
-        case 0x39: this->SRL_r(this->regBC.low); break;
-        case 0x3A: this->SRL_r(this->regDE.high); break;
-        case 0x3B: this->SRL_r(this->regDE.low); break;
-        case 0x3C: this->SRL_r(this->regHL.high); break;
-        case 0x3D: this->SRL_r(this->regHL.low); break;
-        case 0x3E: this->SRL_HL(); break;
-        case 0x3F: this->SRL_r(this->regAF.high); break;
+        case 0x38: cycles = this->SRL_r(this->regBC.high); break;
+        case 0x39: cycles = this->SRL_r(this->regBC.low); break;
+        case 0x3A: cycles = this->SRL_r(this->regDE.high); break;
+        case 0x3B: cycles = this->SRL_r(this->regDE.low); break;
+        case 0x3C: cycles = this->SRL_r(this->regHL.high); break;
+        case 0x3D: cycles = this->SRL_r(this->regHL.low); break;
+        case 0x3E: cycles = this->SRL_HL(); break;
+        case 0x3F: cycles = this->SRL_r(this->regAF.high); break;
 
         /* 
         ************************************************************************
@@ -714,245 +722,247 @@ int Emulator::executeCBOpcode() {
         */   
 
         // BIT 0, r
-        case 0x40: this->BIT_n_r(this->regBC.high, 0); break;
-        case 0x41: this->BIT_n_r(this->regBC.low, 0); break;
-        case 0x42: this->BIT_n_r(this->regDE.high, 0); break;
-        case 0x43: this->BIT_n_r(this->regDE.low, 0); break;
-        case 0x44: this->BIT_n_r(this->regHL.high, 0); break;
-        case 0x45: this->BIT_n_r(this->regHL.low, 0); break;
-        case 0x46: this->BIT_n_HL(0); break;
-        case 0x47: this->BIT_n_r(this->regAF.high, 0); break;
+        case 0x40: cycles = this->BIT_n_r(this->regBC.high, 0); break;
+        case 0x41: cycles = this->BIT_n_r(this->regBC.low, 0); break;
+        case 0x42: cycles = this->BIT_n_r(this->regDE.high, 0); break;
+        case 0x43: cycles = this->BIT_n_r(this->regDE.low, 0); break;
+        case 0x44: cycles = this->BIT_n_r(this->regHL.high, 0); break;
+        case 0x45: cycles = this->BIT_n_r(this->regHL.low, 0); break;
+        case 0x46: cycles = this->BIT_n_HL(0); break;
+        case 0x47: cycles = this->BIT_n_r(this->regAF.high, 0); break;
 
         // BIT 1, r
-        case 0x48: this->BIT_n_r(this->regBC.high, 1); break;
-        case 0x49: this->BIT_n_r(this->regBC.low, 1); break;
-        case 0x4A: this->BIT_n_r(this->regDE.high, 1); break;
-        case 0x4B: this->BIT_n_r(this->regDE.low, 1); break;
-        case 0x4C: this->BIT_n_r(this->regHL.high, 1); break;
-        case 0x4D: this->BIT_n_r(this->regHL.low, 1); break;
-        case 0x4E: this->BIT_n_HL(1); break;
-        case 0x4F: this->BIT_n_r(this->regAF.high, 1); break;
+        case 0x48: cycles = this->BIT_n_r(this->regBC.high, 1); break;
+        case 0x49: cycles = this->BIT_n_r(this->regBC.low, 1); break;
+        case 0x4A: cycles = this->BIT_n_r(this->regDE.high, 1); break;
+        case 0x4B: cycles = this->BIT_n_r(this->regDE.low, 1); break;
+        case 0x4C: cycles = this->BIT_n_r(this->regHL.high, 1); break;
+        case 0x4D: cycles = this->BIT_n_r(this->regHL.low, 1); break;
+        case 0x4E: cycles = this->BIT_n_HL(1); break;
+        case 0x4F: cycles = this->BIT_n_r(this->regAF.high, 1); break;
 
         // BIT 2, r
-        case 0x50: this->BIT_n_r(this->regBC.high, 2); break;
-        case 0x51: this->BIT_n_r(this->regBC.low, 2); break;
-        case 0x52: this->BIT_n_r(this->regDE.high, 2); break;
-        case 0x53: this->BIT_n_r(this->regDE.low, 2); break;
-        case 0x54: this->BIT_n_r(this->regHL.high, 2); break;
-        case 0x55: this->BIT_n_r(this->regHL.low, 2); break;
-        case 0x56: this->BIT_n_HL(2); break;
-        case 0x57: this->BIT_n_r(this->regAF.high, 2); break;
+        case 0x50: cycles = this->BIT_n_r(this->regBC.high, 2); break;
+        case 0x51: cycles = this->BIT_n_r(this->regBC.low, 2); break;
+        case 0x52: cycles = this->BIT_n_r(this->regDE.high, 2); break;
+        case 0x53: cycles = this->BIT_n_r(this->regDE.low, 2); break;
+        case 0x54: cycles = this->BIT_n_r(this->regHL.high, 2); break;
+        case 0x55: cycles = this->BIT_n_r(this->regHL.low, 2); break;
+        case 0x56: cycles = this->BIT_n_HL(2); break;
+        case 0x57: cycles = this->BIT_n_r(this->regAF.high, 2); break;
 
         // BIT 3, r
-        case 0x58: this->BIT_n_r(this->regBC.high, 3); break;
-        case 0x59: this->BIT_n_r(this->regBC.low, 3); break;
-        case 0x5A: this->BIT_n_r(this->regDE.high, 3); break;
-        case 0x5B: this->BIT_n_r(this->regDE.low, 3); break;
-        case 0x5C: this->BIT_n_r(this->regHL.high, 3); break;
-        case 0x5D: this->BIT_n_r(this->regHL.low, 3); break;
-        case 0x5E: this->BIT_n_HL(3); break;
-        case 0x5F: this->BIT_n_r(this->regAF.high, 3); break;
+        case 0x58: cycles = this->BIT_n_r(this->regBC.high, 3); break;
+        case 0x59: cycles = this->BIT_n_r(this->regBC.low, 3); break;
+        case 0x5A: cycles = this->BIT_n_r(this->regDE.high, 3); break;
+        case 0x5B: cycles = this->BIT_n_r(this->regDE.low, 3); break;
+        case 0x5C: cycles = this->BIT_n_r(this->regHL.high, 3); break;
+        case 0x5D: cycles = this->BIT_n_r(this->regHL.low, 3); break;
+        case 0x5E: cycles = this->BIT_n_HL(3); break;
+        case 0x5F: cycles = this->BIT_n_r(this->regAF.high, 3); break;
 
         // BIT 4, r
-        case 0x60: this->BIT_n_r(this->regBC.high, 4); break;
-        case 0x61: this->BIT_n_r(this->regBC.low, 4); break;
-        case 0x62: this->BIT_n_r(this->regDE.high, 4); break;
-        case 0x63: this->BIT_n_r(this->regDE.low, 4); break;
-        case 0x64: this->BIT_n_r(this->regHL.high, 4); break;
-        case 0x65: this->BIT_n_r(this->regHL.low, 4); break;
-        case 0x66: this->BIT_n_HL(4); break;
-        case 0x67: this->BIT_n_r(this->regAF.high, 4); break;
+        case 0x60: cycles = this->BIT_n_r(this->regBC.high, 4); break;
+        case 0x61: cycles = this->BIT_n_r(this->regBC.low, 4); break;
+        case 0x62: cycles = this->BIT_n_r(this->regDE.high, 4); break;
+        case 0x63: cycles = this->BIT_n_r(this->regDE.low, 4); break;
+        case 0x64: cycles = this->BIT_n_r(this->regHL.high, 4); break;
+        case 0x65: cycles = this->BIT_n_r(this->regHL.low, 4); break;
+        case 0x66: cycles = this->BIT_n_HL(4); break;
+        case 0x67: cycles = this->BIT_n_r(this->regAF.high, 4); break;
 
         // BIT 5, r
-        case 0x68: this->BIT_n_r(this->regBC.high, 5); break;
-        case 0x69: this->BIT_n_r(this->regBC.low, 5); break;
-        case 0x6A: this->BIT_n_r(this->regDE.high, 5); break;
-        case 0x6B: this->BIT_n_r(this->regDE.low, 5); break;
-        case 0x6C: this->BIT_n_r(this->regHL.high, 5); break;
-        case 0x6D: this->BIT_n_r(this->regHL.low, 5); break;
-        case 0x6E: this->BIT_n_HL(5); break;
-        case 0x6F: this->BIT_n_r(this->regAF.high, 5); break;
+        case 0x68: cycles = this->BIT_n_r(this->regBC.high, 5); break;
+        case 0x69: cycles = this->BIT_n_r(this->regBC.low, 5); break;
+        case 0x6A: cycles = this->BIT_n_r(this->regDE.high, 5); break;
+        case 0x6B: cycles = this->BIT_n_r(this->regDE.low, 5); break;
+        case 0x6C: cycles = this->BIT_n_r(this->regHL.high, 5); break;
+        case 0x6D: cycles = this->BIT_n_r(this->regHL.low, 5); break;
+        case 0x6E: cycles = this->BIT_n_HL(5); break;
+        case 0x6F: cycles = this->BIT_n_r(this->regAF.high, 5); break;
 
         // BIT 6, r
-        case 0x70: this->BIT_n_r(this->regBC.high, 6); break;
-        case 0x71: this->BIT_n_r(this->regBC.low, 6); break;
-        case 0x72: this->BIT_n_r(this->regDE.high, 6); break;
-        case 0x73: this->BIT_n_r(this->regDE.low, 6); break;
-        case 0x74: this->BIT_n_r(this->regHL.high, 6); break;
-        case 0x75: this->BIT_n_r(this->regHL.low, 6); break;
-        case 0x76: this->BIT_n_HL(6); break;
-        case 0x77: this->BIT_n_r(this->regAF.high, 4); break;
+        case 0x70: cycles = this->BIT_n_r(this->regBC.high, 6); break;
+        case 0x71: cycles = this->BIT_n_r(this->regBC.low, 6); break;
+        case 0x72: cycles = this->BIT_n_r(this->regDE.high, 6); break;
+        case 0x73: cycles = this->BIT_n_r(this->regDE.low, 6); break;
+        case 0x74: cycles = this->BIT_n_r(this->regHL.high, 6); break;
+        case 0x75: cycles = this->BIT_n_r(this->regHL.low, 6); break;
+        case 0x76: cycles = this->BIT_n_HL(6); break;
+        case 0x77: cycles = this->BIT_n_r(this->regAF.high, 4); break;
 
         // BIT 7, r
-        case 0x78: this->BIT_n_r(this->regBC.high, 7); break;
-        case 0x79: this->BIT_n_r(this->regBC.low, 7); break;
-        case 0x7A: this->BIT_n_r(this->regDE.high, 7); break;
-        case 0x7B: this->BIT_n_r(this->regDE.low, 7); break;
-        case 0x7C: this->BIT_n_r(this->regHL.high, 7); break;
-        case 0x7D: this->BIT_n_r(this->regHL.low, 7); break;
-        case 0x7E: this->BIT_n_HL(6); break;
+        case 0x78: cycles = this->BIT_n_r(this->regBC.high, 7); break;
+        case 0x79: cycles = this->BIT_n_r(this->regBC.low, 7); break;
+        case 0x7A: cycles = this->BIT_n_r(this->regDE.high, 7); break;
+        case 0x7B: cycles = this->BIT_n_r(this->regDE.low, 7); break;
+        case 0x7C: cycles = this->BIT_n_r(this->regHL.high, 7); break;
+        case 0x7D: cycles = this->BIT_n_r(this->regHL.low, 7); break;
+        case 0x7E: cycles = this->BIT_n_HL(6); break;
         case 0x77F:this->BIT_n_r(this->regAF.high, 7); break;
 
         // RES 0, r
-        case 0x80: this->RES_n_r(this->regBC.high, 0); break;
-        case 0x81: this->RES_n_r(this->regBC.low, 0); break;
-        case 0x82: this->RES_n_r(this->regDE.high, 0); break;
-        case 0x83: this->RES_n_r(this->regDE.low, 0); break;
-        case 0x84: this->RES_n_r(this->regHL.high, 0); break;
-        case 0x85: this->RES_n_r(this->regHL.low, 0); break;
-        case 0x86: this->RES_n_HL(0); break;
-        case 0x87: this->RES_n_r(this->regAF.high, 0); break;
+        case 0x80: cycles = this->RES_n_r(this->regBC.high, 0); break;
+        case 0x81: cycles = this->RES_n_r(this->regBC.low, 0); break;
+        case 0x82: cycles = this->RES_n_r(this->regDE.high, 0); break;
+        case 0x83: cycles = this->RES_n_r(this->regDE.low, 0); break;
+        case 0x84: cycles = this->RES_n_r(this->regHL.high, 0); break;
+        case 0x85: cycles = this->RES_n_r(this->regHL.low, 0); break;
+        case 0x86: cycles = this->RES_n_HL(0); break;
+        case 0x87: cycles = this->RES_n_r(this->regAF.high, 0); break;
 
         // RES 1, r
-        case 0x88: this->RES_n_r(this->regBC.high, 1); break;
-        case 0x89: this->RES_n_r(this->regBC.low, 1); break;
-        case 0x8A: this->RES_n_r(this->regDE.high, 1); break;
-        case 0x8B: this->RES_n_r(this->regDE.low, 1); break;
-        case 0x8C: this->RES_n_r(this->regHL.high, 1); break;
-        case 0x8D: this->RES_n_r(this->regHL.low, 1); break;
-        case 0x8E: this->RES_n_HL(1); break;
-        case 0x8F: this->RES_n_r(this->regAF.high, 1); break;
+        case 0x88: cycles = this->RES_n_r(this->regBC.high, 1); break;
+        case 0x89: cycles = this->RES_n_r(this->regBC.low, 1); break;
+        case 0x8A: cycles = this->RES_n_r(this->regDE.high, 1); break;
+        case 0x8B: cycles = this->RES_n_r(this->regDE.low, 1); break;
+        case 0x8C: cycles = this->RES_n_r(this->regHL.high, 1); break;
+        case 0x8D: cycles = this->RES_n_r(this->regHL.low, 1); break;
+        case 0x8E: cycles = this->RES_n_HL(1); break;
+        case 0x8F: cycles = this->RES_n_r(this->regAF.high, 1); break;
 
         // RES 2, r
-        case 0x90: this->RES_n_r(this->regBC.high, 2); break;
-        case 0x91: this->RES_n_r(this->regBC.low, 2); break;
-        case 0x92: this->RES_n_r(this->regDE.high, 2); break;
-        case 0x93: this->RES_n_r(this->regDE.low, 2); break;
-        case 0x94: this->RES_n_r(this->regHL.high, 2); break;
-        case 0x95: this->RES_n_r(this->regHL.low, 2); break;
-        case 0x96: this->RES_n_HL(2); break;
-        case 0x97: this->RES_n_r(this->regAF.high, 2); break;
+        case 0x90: cycles = this->RES_n_r(this->regBC.high, 2); break;
+        case 0x91: cycles = this->RES_n_r(this->regBC.low, 2); break;
+        case 0x92: cycles = this->RES_n_r(this->regDE.high, 2); break;
+        case 0x93: cycles = this->RES_n_r(this->regDE.low, 2); break;
+        case 0x94: cycles = this->RES_n_r(this->regHL.high, 2); break;
+        case 0x95: cycles = this->RES_n_r(this->regHL.low, 2); break;
+        case 0x96: cycles = this->RES_n_HL(2); break;
+        case 0x97: cycles = this->RES_n_r(this->regAF.high, 2); break;
 
         // RES 3, r
-        case 0x98: this->RES_n_r(this->regBC.high, 3); break;
-        case 0x99: this->RES_n_r(this->regBC.low, 3); break;
-        case 0x9A: this->RES_n_r(this->regDE.high, 3); break;
-        case 0x9B: this->RES_n_r(this->regDE.low, 3); break;
-        case 0x9C: this->RES_n_r(this->regHL.high, 3); break;
-        case 0x9D: this->RES_n_r(this->regHL.low, 3); break;
-        case 0x9E: this->RES_n_HL(3); break;
-        case 0x9F: this->RES_n_r(this->regAF.high, 3); break;
+        case 0x98: cycles = this->RES_n_r(this->regBC.high, 3); break;
+        case 0x99: cycles = this->RES_n_r(this->regBC.low, 3); break;
+        case 0x9A: cycles = this->RES_n_r(this->regDE.high, 3); break;
+        case 0x9B: cycles = this->RES_n_r(this->regDE.low, 3); break;
+        case 0x9C: cycles = this->RES_n_r(this->regHL.high, 3); break;
+        case 0x9D: cycles = this->RES_n_r(this->regHL.low, 3); break;
+        case 0x9E: cycles = this->RES_n_HL(3); break;
+        case 0x9F: cycles = this->RES_n_r(this->regAF.high, 3); break;
 
         // RES 4, r
-        case 0xA0: this->RES_n_r(this->regBC.high, 4); break;
-        case 0xA1: this->RES_n_r(this->regBC.low, 4); break;
-        case 0xA2: this->RES_n_r(this->regDE.high, 4); break;
-        case 0xA3: this->RES_n_r(this->regDE.low, 4); break;
-        case 0xA4: this->RES_n_r(this->regHL.high, 4); break;
-        case 0xA5: this->RES_n_r(this->regHL.low, 4); break;
-        case 0xA6: this->RES_n_HL(4); break;
-        case 0xA7: this->RES_n_r(this->regAF.high, 4); break;
+        case 0xA0: cycles = this->RES_n_r(this->regBC.high, 4); break;
+        case 0xA1: cycles = this->RES_n_r(this->regBC.low, 4); break;
+        case 0xA2: cycles = this->RES_n_r(this->regDE.high, 4); break;
+        case 0xA3: cycles = this->RES_n_r(this->regDE.low, 4); break;
+        case 0xA4: cycles = this->RES_n_r(this->regHL.high, 4); break;
+        case 0xA5: cycles = this->RES_n_r(this->regHL.low, 4); break;
+        case 0xA6: cycles = this->RES_n_HL(4); break;
+        case 0xA7: cycles = this->RES_n_r(this->regAF.high, 4); break;
 
         // RES 5, r
-        case 0xA8: this->RES_n_r(this->regBC.high, 5); break;
-        case 0xA9: this->RES_n_r(this->regBC.low, 5); break;
-        case 0xAA: this->RES_n_r(this->regDE.high, 5); break;
-        case 0xAB: this->RES_n_r(this->regDE.low, 5); break;
-        case 0xAC: this->RES_n_r(this->regHL.high, 5); break;
-        case 0xAD: this->RES_n_r(this->regHL.low, 5); break;
-        case 0xAE: this->RES_n_HL(5); break;
-        case 0xAF: this->RES_n_r(this->regAF.high, 5); break;
+        case 0xA8: cycles = this->RES_n_r(this->regBC.high, 5); break;
+        case 0xA9: cycles = this->RES_n_r(this->regBC.low, 5); break;
+        case 0xAA: cycles = this->RES_n_r(this->regDE.high, 5); break;
+        case 0xAB: cycles = this->RES_n_r(this->regDE.low, 5); break;
+        case 0xAC: cycles = this->RES_n_r(this->regHL.high, 5); break;
+        case 0xAD: cycles = this->RES_n_r(this->regHL.low, 5); break;
+        case 0xAE: cycles = this->RES_n_HL(5); break;
+        case 0xAF: cycles = this->RES_n_r(this->regAF.high, 5); break;
 
         // RES 6, r
-        case 0xB0: this->RES_n_r(this->regBC.high, 6); break;
-        case 0xB1: this->RES_n_r(this->regBC.low, 6); break;
-        case 0xB2: this->RES_n_r(this->regDE.high, 6); break;
-        case 0xB3: this->RES_n_r(this->regDE.low, 6); break;
-        case 0xB4: this->RES_n_r(this->regHL.high, 6); break;
-        case 0xB5: this->RES_n_r(this->regHL.low, 6); break;
-        case 0xB6: this->RES_n_HL(6); break;
-        case 0xB7: this->RES_n_r(this->regAF.high, 4); break;
+        case 0xB0: cycles = this->RES_n_r(this->regBC.high, 6); break;
+        case 0xB1: cycles = this->RES_n_r(this->regBC.low, 6); break;
+        case 0xB2: cycles = this->RES_n_r(this->regDE.high, 6); break;
+        case 0xB3: cycles = this->RES_n_r(this->regDE.low, 6); break;
+        case 0xB4: cycles = this->RES_n_r(this->regHL.high, 6); break;
+        case 0xB5: cycles = this->RES_n_r(this->regHL.low, 6); break;
+        case 0xB6: cycles = this->RES_n_HL(6); break;
+        case 0xB7: cycles = this->RES_n_r(this->regAF.high, 4); break;
 
         // RES 7, r
-        case 0xB8: this->RES_n_r(this->regBC.high, 7); break;
-        case 0xB9: this->RES_n_r(this->regBC.low, 7); break;
-        case 0xBA: this->RES_n_r(this->regDE.high, 7); break;
-        case 0xBB: this->RES_n_r(this->regDE.low, 7); break;
-        case 0xBC: this->RES_n_r(this->regHL.high, 7); break;
-        case 0xBD: this->RES_n_r(this->regHL.low, 7); break;
-        case 0xBE: this->RES_n_HL(6); break;
+        case 0xB8: cycles = this->RES_n_r(this->regBC.high, 7); break;
+        case 0xB9: cycles = this->RES_n_r(this->regBC.low, 7); break;
+        case 0xBA: cycles = this->RES_n_r(this->regDE.high, 7); break;
+        case 0xBB: cycles = this->RES_n_r(this->regDE.low, 7); break;
+        case 0xBC: cycles = this->RES_n_r(this->regHL.high, 7); break;
+        case 0xBD: cycles = this->RES_n_r(this->regHL.low, 7); break;
+        case 0xBE: cycles = this->RES_n_HL(6); break;
         case 0xB7F:this->RES_n_r(this->regAF.high, 7); break;
 
         // SET 0, r
-        case 0xC0: this->SET_n_r(this->regBC.high, 0); break;
-        case 0xC1: this->SET_n_r(this->regBC.low, 0); break;
-        case 0xC2: this->SET_n_r(this->regDE.high, 0); break;
-        case 0xC3: this->SET_n_r(this->regDE.low, 0); break;
-        case 0xC4: this->SET_n_r(this->regHL.high, 0); break;
-        case 0xC5: this->SET_n_r(this->regHL.low, 0); break;
-        case 0xC6: this->SET_n_HL(0); break;
-        case 0xC7: this->SET_n_r(this->regAF.high, 0); break;
+        case 0xC0: cycles = this->SET_n_r(this->regBC.high, 0); break;
+        case 0xC1: cycles = this->SET_n_r(this->regBC.low, 0); break;
+        case 0xC2: cycles = this->SET_n_r(this->regDE.high, 0); break;
+        case 0xC3: cycles = this->SET_n_r(this->regDE.low, 0); break;
+        case 0xC4: cycles = this->SET_n_r(this->regHL.high, 0); break;
+        case 0xC5: cycles = this->SET_n_r(this->regHL.low, 0); break;
+        case 0xC6: cycles = this->SET_n_HL(0); break;
+        case 0xC7: cycles = this->SET_n_r(this->regAF.high, 0); break;
 
         // SET 1, r
-        case 0xC8: this->SET_n_r(this->regBC.high, 1); break;
-        case 0xC9: this->SET_n_r(this->regBC.low, 1); break;
-        case 0xCA: this->SET_n_r(this->regDE.high, 1); break;
-        case 0xCB: this->SET_n_r(this->regDE.low, 1); break;
-        case 0xCC: this->SET_n_r(this->regHL.high, 1); break;
-        case 0xCD: this->SET_n_r(this->regHL.low, 1); break;
-        case 0xCE: this->SET_n_HL(1); break;
-        case 0xCF: this->SET_n_r(this->regAF.high, 1); break;
+        case 0xC8: cycles = this->SET_n_r(this->regBC.high, 1); break;
+        case 0xC9: cycles = this->SET_n_r(this->regBC.low, 1); break;
+        case 0xCA: cycles = this->SET_n_r(this->regDE.high, 1); break;
+        case 0xCB: cycles = this->SET_n_r(this->regDE.low, 1); break;
+        case 0xCC: cycles = this->SET_n_r(this->regHL.high, 1); break;
+        case 0xCD: cycles = this->SET_n_r(this->regHL.low, 1); break;
+        case 0xCE: cycles = this->SET_n_HL(1); break;
+        case 0xCF: cycles = this->SET_n_r(this->regAF.high, 1); break;
 
         // SET 2, r
-        case 0xD0: this->SET_n_r(this->regBC.high, 2); break;
-        case 0xD1: this->SET_n_r(this->regBC.low, 2); break;
-        case 0xD2: this->SET_n_r(this->regDE.high, 2); break;
-        case 0xD3: this->SET_n_r(this->regDE.low, 2); break;
-        case 0xD4: this->SET_n_r(this->regHL.high, 2); break;
-        case 0xD5: this->SET_n_r(this->regHL.low, 2); break;
-        case 0xD6: this->SET_n_HL(2); break;
-        case 0xD7: this->SET_n_r(this->regAF.high, 2); break;
+        case 0xD0: cycles = this->SET_n_r(this->regBC.high, 2); break;
+        case 0xD1: cycles = this->SET_n_r(this->regBC.low, 2); break;
+        case 0xD2: cycles = this->SET_n_r(this->regDE.high, 2); break;
+        case 0xD3: cycles = this->SET_n_r(this->regDE.low, 2); break;
+        case 0xD4: cycles = this->SET_n_r(this->regHL.high, 2); break;
+        case 0xD5: cycles = this->SET_n_r(this->regHL.low, 2); break;
+        case 0xD6: cycles = this->SET_n_HL(2); break;
+        case 0xD7: cycles = this->SET_n_r(this->regAF.high, 2); break;
 
         // SET 3, r
-        case 0xD8: this->SET_n_r(this->regBC.high, 3); break;
-        case 0xD9: this->SET_n_r(this->regBC.low, 3); break;
-        case 0xDA: this->SET_n_r(this->regDE.high, 3); break;
-        case 0xDB: this->SET_n_r(this->regDE.low, 3); break;
-        case 0xDC: this->SET_n_r(this->regHL.high, 3); break;
-        case 0xDD: this->SET_n_r(this->regHL.low, 3); break;
-        case 0xDE: this->SET_n_HL(3); break;
-        case 0xDF: this->SET_n_r(this->regAF.high, 3); break;
+        case 0xD8: cycles = this->SET_n_r(this->regBC.high, 3); break;
+        case 0xD9: cycles = this->SET_n_r(this->regBC.low, 3); break;
+        case 0xDA: cycles = this->SET_n_r(this->regDE.high, 3); break;
+        case 0xDB: cycles = this->SET_n_r(this->regDE.low, 3); break;
+        case 0xDC: cycles = this->SET_n_r(this->regHL.high, 3); break;
+        case 0xDD: cycles = this->SET_n_r(this->regHL.low, 3); break;
+        case 0xDE: cycles = this->SET_n_HL(3); break;
+        case 0xDF: cycles = this->SET_n_r(this->regAF.high, 3); break;
 
         // SET 4, r
-        case 0xE0: this->SET_n_r(this->regBC.high, 4); break;
-        case 0xE1: this->SET_n_r(this->regBC.low, 4); break;
-        case 0xE2: this->SET_n_r(this->regDE.high, 4); break;
-        case 0xE3: this->SET_n_r(this->regDE.low, 4); break;
-        case 0xE4: this->SET_n_r(this->regHL.high, 4); break;
-        case 0xE5: this->SET_n_r(this->regHL.low, 4); break;
-        case 0xE6: this->SET_n_HL(4); break;
-        case 0xE7: this->SET_n_r(this->regAF.high, 4); break;
+        case 0xE0: cycles = this->SET_n_r(this->regBC.high, 4); break;
+        case 0xE1: cycles = this->SET_n_r(this->regBC.low, 4); break;
+        case 0xE2: cycles = this->SET_n_r(this->regDE.high, 4); break;
+        case 0xE3: cycles = this->SET_n_r(this->regDE.low, 4); break;
+        case 0xE4: cycles = this->SET_n_r(this->regHL.high, 4); break;
+        case 0xE5: cycles = this->SET_n_r(this->regHL.low, 4); break;
+        case 0xE6: cycles = this->SET_n_HL(4); break;
+        case 0xE7: cycles = this->SET_n_r(this->regAF.high, 4); break;
 
         // SET 5, r
-        case 0xE8: this->SET_n_r(this->regBC.high, 5); break;
-        case 0xE9: this->SET_n_r(this->regBC.low, 5); break;
-        case 0xEA: this->SET_n_r(this->regDE.high, 5); break;
-        case 0xEB: this->SET_n_r(this->regDE.low, 5); break;
-        case 0xEC: this->SET_n_r(this->regHL.high, 5); break;
-        case 0xED: this->SET_n_r(this->regHL.low, 5); break;
-        case 0xEE: this->SET_n_HL(5); break;
-        case 0xEF: this->SET_n_r(this->regAF.high, 5); break;
+        case 0xE8: cycles = this->SET_n_r(this->regBC.high, 5); break;
+        case 0xE9: cycles = this->SET_n_r(this->regBC.low, 5); break;
+        case 0xEA: cycles = this->SET_n_r(this->regDE.high, 5); break;
+        case 0xEB: cycles = this->SET_n_r(this->regDE.low, 5); break;
+        case 0xEC: cycles = this->SET_n_r(this->regHL.high, 5); break;
+        case 0xED: cycles = this->SET_n_r(this->regHL.low, 5); break;
+        case 0xEE: cycles = this->SET_n_HL(5); break;
+        case 0xEF: cycles = this->SET_n_r(this->regAF.high, 5); break;
 
         // SET 6, r
-        case 0xF0: this->SET_n_r(this->regBC.high, 6); break;
-        case 0xF1: this->SET_n_r(this->regBC.low, 6); break;
-        case 0xF2: this->SET_n_r(this->regDE.high, 6); break;
-        case 0xF3: this->SET_n_r(this->regDE.low, 6); break;
-        case 0xF4: this->SET_n_r(this->regHL.high, 6); break;
-        case 0xF5: this->SET_n_r(this->regHL.low, 6); break;
-        case 0xF6: this->SET_n_HL(6); break;
-        case 0xF7: this->SET_n_r(this->regAF.high, 4); break;
+        case 0xF0: cycles = this->SET_n_r(this->regBC.high, 6); break;
+        case 0xF1: cycles = this->SET_n_r(this->regBC.low, 6); break;
+        case 0xF2: cycles = this->SET_n_r(this->regDE.high, 6); break;
+        case 0xF3: cycles = this->SET_n_r(this->regDE.low, 6); break;
+        case 0xF4: cycles = this->SET_n_r(this->regHL.high, 6); break;
+        case 0xF5: cycles = this->SET_n_r(this->regHL.low, 6); break;
+        case 0xF6: cycles = this->SET_n_HL(6); break;
+        case 0xF7: cycles = this->SET_n_r(this->regAF.high, 4); break;
 
         // SET 7, r
-        case 0xF8: this->SET_n_r(this->regBC.high, 7); break;
-        case 0xF9: this->SET_n_r(this->regBC.low, 7); break;
-        case 0xFA: this->SET_n_r(this->regDE.high, 7); break;
-        case 0xFB: this->SET_n_r(this->regDE.low, 7); break;
-        case 0xFC: this->SET_n_r(this->regHL.high, 7); break;
-        case 0xFD: this->SET_n_r(this->regHL.low, 7); break;
-        case 0xFE: this->SET_n_HL(6); break;
-        case 0xFF: this->SET_n_r(this->regAF.high, 7); break;
+        case 0xF8: cycles = this->SET_n_r(this->regBC.high, 7); break;
+        case 0xF9: cycles = this->SET_n_r(this->regBC.low, 7); break;
+        case 0xFA: cycles = this->SET_n_r(this->regDE.high, 7); break;
+        case 0xFB: cycles = this->SET_n_r(this->regDE.low, 7); break;
+        case 0xFC: cycles = this->SET_n_r(this->regHL.high, 7); break;
+        case 0xFD: cycles = this->SET_n_r(this->regHL.low, 7); break;
+        case 0xFE: cycles = this->SET_n_HL(6); break;
+        case 0xFF: cycles = this->SET_n_r(this->regAF.high, 7); break;
     }
+
+    return cycles;
 
 }
 
@@ -3477,7 +3487,7 @@ int Emulator::DEC_r(BYTE& reg) {
     this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
 
     // Half carry flag 
-    if (((result ^ reg ^ 0x1)) & 0x10 == 0x10) {
+    if ((((result ^ reg ^ 0x1)) & 0x10) == 0x10) {
         this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
     } 
     else {
@@ -3515,7 +3525,7 @@ int Emulator::DEC_HL() {
     this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
 
     // Half carry flag 
-    if (((result ^ initial ^ 0x1)) & 0x10 == 0x10) {
+    if ((((result ^ initial ^ 0x1)) & 0x10) == 0x10) {
         this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
     } 
     else {
@@ -4855,6 +4865,7 @@ int Emulator::SCF() {
 int Emulator::NOP() {
 
     // No flags affected
+    cout << "NOP" << endl;
     return 4;
 
 }
@@ -4946,6 +4957,7 @@ int Emulator::JP_nn() {
 
     this->programCounter.regstr = (highByte << 8) | lowByte;
 
+    cout << "JP_nn" << endl;
     return 16;
 
 }
