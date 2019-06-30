@@ -1,5 +1,5 @@
 /.vscode
 /*.code-workspace
-/chip8/runGame
-/chip8/runGame.dSYM
+/*/runGame
+/*/runGame.dSYM
 .DS_Store
