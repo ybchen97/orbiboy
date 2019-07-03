@@ -158,6 +158,9 @@ bool Emulator::loadGame(string file_path) {
     fread(this->cartridgeMem, fileSize, 1, in);
     fclose(in);
 
+    // Copy ROM Banks 0 & 1 to internal memory
+    memcpy(this->internalMem, this->cartridgeMem, 0x8000) ; // this is read only and never changes
+
     return true;
 }
 
@@ -191,11 +194,15 @@ int Emulator::executeNextOpcode() {
 
     BYTE opcode = this->readMem(this->programCounter.regstr);
 
+    if (opcode != 0) {
+        cout << "opcode: " << hex << (int) opcode << endl;
+    }
+
     if (this->isHalted) {
         clockCycles = this->NOP();
     } else {
-        clockCycles = this->executeOpcode(opcode);
         this->programCounter.regstr++;
+        clockCycles = this->executeOpcode(opcode);
     }
 
     return clockCycles;
@@ -984,7 +991,7 @@ BYTE Emulator::readMem(WORD address) const {
     // If reading from the switchable RAM banking area
     else if ((address >= 0xA000) && (address <= 0xBFFF)) {
         WORD newAddress = (this->currentRAMBank * 0x2000) + (address - 0xA000);
-        return this->cartridgeMem[newAddress];
+        return this->RAMBanks[newAddress];
     }
     // Joypad Register
     else if (address == 0xFF00) { 
@@ -992,7 +999,7 @@ BYTE Emulator::readMem(WORD address) const {
     }
 
     // else return what's in the memory
-    return this->cartridgeMem[address];
+    return this->internalMem[address];
 
 }
 
@@ -1805,6 +1812,8 @@ void Emulator::renderTiles(BYTE lcdControl) {
         BYTE b1 = this->readMem(tileDataAddress);
         BYTE b2 = this->readMem(tileDataAddress + 1);
 
+        cout << "b1: " << (int) b1 << " | b2: " << (int) b2 << endl;
+
         // Figure out the colour palette
         BYTE bit = 7 - ((scrollX + pixel) % 8);
         BYTE colourBit0 = this->isBitSet(b1, bit) ? 0b01 : 0b00;
@@ -1821,19 +1830,23 @@ void Emulator::renderTiles(BYTE lcdControl) {
                 red = 255;
                 green = 255;
                 blue = 255;
+                //cout << "white" << endl;
                 break;
             case LIGHT_GRAY:
                 red = 0xCC;
                 green = 0xCC;
                 blue = 0xCC;
+                cout << "light gray" << endl;
                 break;
             case DARK_GRAY:
                 red = 0x77;
                 green = 0x77;
                 blue = 0x77;
+                cout << "dark gray" << endl;
                 break;
             default:
                 red = green = blue = 0;
+                cout << "black" << endl;
                 break;
         }
 
@@ -2054,6 +2067,9 @@ START OF OPCODES
 */
 int Emulator::LD_r_R(BYTE& loadTo, BYTE loadFrom) { 
     loadTo = loadFrom; // to is regXX.high/low, from is regXX.high/low
+
+    cout << "LD_r_R" << endl;
+
     return 4; 
 }
 
@@ -2071,6 +2087,9 @@ int Emulator::LD_r_n(BYTE& reg) {
     BYTE n = this->readMem(this->programCounter.regstr);
     this->programCounter.regstr++;
     reg = n;
+
+    cout << "LD_r_n" << endl;
+
     return 8;
 }
 
@@ -2196,6 +2215,10 @@ int Emulator::LD_BC_A() {
 int Emulator::LD_DE_A() {
     this->writeMem(this->regDE.regstr, this->regAF.high);
 
+    assert(this->internalMem[this->regDE.regstr] == this->regAF.high);
+
+    cout << "LD_DE_A" << endl;
+
     return 8;
 }
 
@@ -2314,6 +2337,8 @@ int Emulator::LDI_A_HL() {
     this->regAF.high = this->readMem(this->regHL.regstr);
     this->regHL.regstr++;
 
+    cout << "LDI_A_HL" << endl;
+
     return 8;
 }
 
@@ -2370,6 +2395,8 @@ int Emulator::LD_rr_nn(Register& reg) {
     nn |= this->readMem(this->programCounter.regstr);
     this->programCounter.regstr += 2;
     reg.regstr = nn;
+
+    cout << "LD_rr_nn" << endl;
 
     return 12;
 }
@@ -2475,7 +2502,7 @@ int Emulator::ADD_A_r(BYTE regR) {
     BYTE result = this->regAF.high + regR;
     
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -2516,7 +2543,7 @@ int Emulator::ADD_A_n() {
     BYTE result = this->regAF.high + n;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -2556,7 +2583,7 @@ int Emulator::ADD_A_HL() {
     BYTE result = this->regAF.high + toAdd;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -2598,7 +2625,7 @@ int Emulator::ADC_A_r(BYTE reg) {
     BYTE result = this->regAF.high + carry + toAdd;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -2640,7 +2667,7 @@ int Emulator::ADC_A_n() {
     this->programCounter.regstr++;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -2681,7 +2708,7 @@ int Emulator::ADC_A_HL() {
     BYTE result = this->regAF.high + carry + toAdd;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -2721,7 +2748,7 @@ int Emulator::SUB_r(BYTE reg) {
     BYTE result = this->regAF.high - reg;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -2767,7 +2794,7 @@ int Emulator::SUB_n() {
     BYTE result = this->regAF.high - n;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -2811,7 +2838,7 @@ int Emulator::SUB_HL() {
     BYTE result = this->regAF.high - toSub;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -2857,7 +2884,7 @@ int Emulator::SBC_A_r(BYTE reg) {
     BYTE result = this->regAF.high - toSub;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -2904,7 +2931,7 @@ int Emulator::SBC_A_n() {
     BYTE result = this->regAF.high - toSub;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -2949,7 +2976,7 @@ int Emulator::SBC_A_HL() {
     BYTE result = this->regAF.high - toSub;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -2993,7 +3020,7 @@ int Emulator::AND_r(BYTE reg) {
     BYTE result = this->regAF.high & reg;
     
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -3026,7 +3053,7 @@ int Emulator::AND_n() {
     this->programCounter.regstr++;
     
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -3058,7 +3085,7 @@ int Emulator::AND_HL() {
     BYTE result = this->regAF.high & this->readMem(this->regHL.regstr);
     
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -3090,7 +3117,7 @@ int Emulator::XOR_r(BYTE reg) {
     BYTE result = this->regAF.high ^ reg;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -3120,7 +3147,7 @@ int Emulator::XOR_n() {
     this->programCounter.regstr++;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -3149,7 +3176,7 @@ int Emulator::XOR_HL() {
     BYTE result = this->regAF.high ^ this->readMem(this->regHL.regstr);
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -3179,7 +3206,7 @@ int Emulator::OR_r(BYTE reg) {
     BYTE result = this->regAF.high | reg;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -3209,7 +3236,7 @@ int Emulator::OR_n() {
     this->programCounter.regstr++;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -3238,7 +3265,7 @@ int Emulator::OR_HL() {
     BYTE result = this->regAF.high | this->readMem(this->regHL.regstr);
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -3269,7 +3296,7 @@ int Emulator::CP_r(BYTE reg) {
     BYTE result = this->regAF.high - reg;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -3314,7 +3341,7 @@ int Emulator::CP_n() {
     BYTE result = this->regAF.high - n;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -3357,7 +3384,7 @@ int Emulator::CP_HL() {
     BYTE result = this->regAF.high - toSub;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFFF0;
+    this->regAF.regstr &= 0xFF00;
 
     // Zero flag
     if (result == 0x0) {
@@ -3403,6 +3430,8 @@ int Emulator::INC_r(BYTE& reg) {
     // Zero flag
     if (reg == 0x0) {
         this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    } else {
+        this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
@@ -3416,6 +3445,8 @@ int Emulator::INC_r(BYTE& reg) {
     else {
         this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
     }
+
+    cout << "INC_r" << endl;
 
     return 4;
 }
@@ -3442,6 +3473,8 @@ int Emulator::INC_HL() {
     // Zero flag
     if (reg == 0x0) {
         this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    } else {
+        this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
@@ -3481,13 +3514,15 @@ int Emulator::DEC_r(BYTE& reg) {
     // Zero flag
     if (result == 0x0) {
         this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    } else {
+        this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
     this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
 
     // Half carry flag 
-    if ((((result ^ reg ^ 0x1)) & 0x10) == 0x10) {
+    if (((result ^ reg ^ 0x1) & 0x10) == 0x10) {
         this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
     } 
     else {
@@ -3495,6 +3530,8 @@ int Emulator::DEC_r(BYTE& reg) {
     }
 
     reg = result;
+
+    cout << "DEC_r" << endl;
 
     return 4;
 }
@@ -3519,6 +3556,8 @@ int Emulator::DEC_HL() {
     // Zero flag
     if (result == 0x0) {
         this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    } else {
+        this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
@@ -4865,7 +4904,7 @@ int Emulator::SCF() {
 int Emulator::NOP() {
 
     // No flags affected
-    cout << "NOP" << endl;
+    //cout << "NOP" << endl;
     return 4;
 
 }
@@ -5082,6 +5121,8 @@ int Emulator::JR_f_PCdd(BYTE opcode) {
             jump = this->isBitSet(this->regAF.low, FLAG_CARRY);
             break;
     }
+
+    cout << "JR_f_PCDD" << endl;
 
     if (jump) {
         this->programCounter.regstr += dd;
