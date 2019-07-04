@@ -131,8 +131,6 @@ void Emulator::resetCPU() {
     this->doRenderPtr = nullptr;
     memset(this->displayPixels, 0, sizeof(this->displayPixels));
 
-    cout << "CPU Resetted!" << endl;
-
 }
 
 bool Emulator::loadGame(string file_path) {
@@ -160,6 +158,8 @@ bool Emulator::loadGame(string file_path) {
 
     // Copy ROM Banks 0 & 1 to internal memory
     memcpy(this->internalMem, this->cartridgeMem, 0x8000) ; // this is read only and never changes
+    //for (int i = 0 ; i < 0x2000; i++)
+		//this->RAMBanks[i] = m_Rom[0xA000+i] ;
 
     return true;
 }
@@ -1026,7 +1026,7 @@ void Emulator::writeMem(WORD address, BYTE data) {
 
     else if ((address >= 0xFEA0) && (address <= 0xFEFF)) {
         cout << "Something wrong in WriteMem. Unusable location." << endl;
-        assert(false);
+        //assert(false);
     }
 
     // FF04 is divider register, its value is reset to 0 if game attempts to 
@@ -1095,7 +1095,8 @@ void Emulator::handleBanking(WORD address, BYTE data) {
     else if ((address >= 0x2000) && (address <= 0x3FFF)) {
         if (this->MBC1) this->doChangeLoROMBank(data);
         // if MBC2, LSB of upper address byte must be 1 to select ROM bank
-        else if (this->isBitSet(address, 8)) this->doChangeLoROMBank(data);
+        // wtf is happening??
+        else if (!this->isBitSet(address, 8)) this->doChangeLoROMBank(data);
     }
 
     // do ROM or RAM bank change
@@ -1813,7 +1814,7 @@ void Emulator::renderTiles(BYTE lcdControl) {
         BYTE b1 = this->readMem(tileDataAddress);
         BYTE b2 = this->readMem(tileDataAddress + 1);
 
-        cout << "b1: " << (int) b1 << " | b2: " << (int) b2 << endl;
+        cout << "b1: " << (int) b1 << " | b2: " << (int) b2 << "addr: " << hex << (int) tileDataAddress << endl;
 
         // Figure out the colour palette
         BYTE bit = 7 - ((scrollX + pixel) % 8);

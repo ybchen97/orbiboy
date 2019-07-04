@@ -4,6 +4,7 @@
 
 #### Discrepancies to note:
 - Missing MBC2 section in writeMem at address A000-A1FF
+- MBC2 2000-3FFF ROM select value off?
 
 #### Others
 - Not completely sure on the exact workings of sprite priority in renderSprites(). Need to do more research
