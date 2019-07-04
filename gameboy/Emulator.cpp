@@ -1026,6 +1026,7 @@ void Emulator::writeMem(WORD address, BYTE data) {
 
     else if ((address >= 0xFEA0) && (address <= 0xFEFF)) {
         cout << "Something wrong in WriteMem. Unusable location." << endl;
+        assert(false);
     }
 
     // FF04 is divider register, its value is reset to 0 if game attempts to 
@@ -2137,6 +2138,8 @@ int Emulator::LD_HL_n() {
     this->writeMem(this->regHL.regstr, this->readMem(this->programCounter.regstr));
     this->programCounter.regstr++;
 
+    cout << "LD_HL_n" << endl;
+
     return 12;
 }
 
@@ -2237,6 +2240,8 @@ int Emulator::LD_nn_A() {
     this->programCounter.regstr += 2;
     this->writeMem(nn, this->regAF.high);
 
+    cout << "LD_nn_A" << endl;
+
     return 16;
 }
 
@@ -2255,6 +2260,8 @@ int Emulator::LD_A_FF00n() {
     this->programCounter.regstr++;
     this->regAF.high = this->readMem(0xFF00 + n);
 
+    cout << "LD_A_FF00n" << endl;
+
     return 12;
 }
 
@@ -2272,6 +2279,8 @@ int Emulator::LD_FF00n_A() {
     BYTE n = this->readMem(this->programCounter.regstr);
     this->programCounter.regstr++;
     this->writeMem(0xFF00 + n, this->regAF.high);
+
+    cout << "LD_FF00n_A" << endl;
 
     return 12;
 }
@@ -2354,6 +2363,8 @@ int Emulator::LDI_A_HL() {
 int Emulator::LDD_HL_A() {
     this->writeMem(this->regHL.regstr, this->regAF.high);
     this->regHL.regstr--;
+
+    cout << "LDD_HL_A" << endl;
 
     return 8;
 }
@@ -3126,6 +3137,8 @@ int Emulator::XOR_r(BYTE reg) {
 
     this->regAF.high = result;
 
+    cout << "XOR_r" << endl;
+
     return 4;
 }
 
@@ -3361,6 +3374,8 @@ int Emulator::CP_n() {
     if (this->regAF.high < n) {
         this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
     }
+
+    cout << "CP_n" << endl;
 
     return 8;
 }
@@ -4952,6 +4967,8 @@ int Emulator::STOP() {
 int Emulator::DI() {
     
     this->InterruptMasterEnabled = false;
+
+    cout << "DI" << endl;
 
     return 4;
 
