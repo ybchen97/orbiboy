@@ -54,88 +54,89 @@ TOP LEVEL CPU FUNCTIONS
 */
 void Emulator::resetCPU() {
 
-    this->regAF.regstr = 0x01B0; 
-    this->regBC.regstr = 0x0013; 
-    this->regDE.regstr = 0x00D8;
-    this->regHL.regstr = 0x014D;
-    this->stackPointer.regstr = 0xFFFE;
+    regAF.regstr = 0x01B0; 
+    regBC.regstr = 0x0013; 
+    regDE.regstr = 0x00D8;
+    regHL.regstr = 0x014D;
+    stackPointer.regstr = 0xFFFE;
 
     // After the 256 bytes of bootROM is executed, PC lands at 0x100 
     // bootROM is not implemented for this emulator
-    this->programCounter.regstr = 0x100; 
+    programCounter.regstr = 0x100; 
 
-    this->internalMem[0xFF05] = 0x00; // TIMA
-    this->internalMem[0xFF06] = 0x00; // TMA
-    this->internalMem[0xFF07] = 0x00; // TAC
-    this->internalMem[0xFF10] = 0x80; 
-    this->internalMem[0xFF11] = 0xBF; 
-    this->internalMem[0xFF12] = 0xF3; 
-    this->internalMem[0xFF14] = 0xBF; 
-    this->internalMem[0xFF16] = 0x3F; 
-    this->internalMem[0xFF17] = 0x00; 
-    this->internalMem[0xFF19] = 0xBF; 
-    this->internalMem[0xFF1A] = 0x7F; 
-    this->internalMem[0xFF1B] = 0xFF; 
-    this->internalMem[0xFF1C] = 0x9F; 
-    this->internalMem[0xFF1E] = 0xBF; 
-    this->internalMem[0xFF20] = 0xFF; 
-    this->internalMem[0xFF21] = 0x00; 
-    this->internalMem[0xFF22] = 0x00; 
-    this->internalMem[0xFF23] = 0xBF; 
-    this->internalMem[0xFF24] = 0x77; 
-    this->internalMem[0xFF25] = 0xF3;
-    this->internalMem[0xFF26] = 0xF1; 
-    this->internalMem[0xFF40] = 0x91; // LCDC - LCD control register
-    this->internalMem[0xFF42] = 0x00; // SCY - scroll Y
-    this->internalMem[0xFF43] = 0x00; // SCX - scroll X
-    this->internalMem[0xFF45] = 0x00; // LYC - LY Compare
-    this->internalMem[0xFF47] = 0xFC; // BGP - background colour palette
-    this->internalMem[0xFF48] = 0xFF; // OBP0 - Object Palette 0 (Sprites)
-    this->internalMem[0xFF49] = 0xFF; // OBP1 - Object Palette 1 (Sprites)
-    this->internalMem[0xFF4A] = 0x00; // WX - window X
-    this->internalMem[0xFF4B] = 0x00; // WY - window Y
-    this->internalMem[0xFFFF] = 0x00; // IE - Interrupt enable
+    internalMem[0xFF05] = 0x00; // TIMA
+    internalMem[0xFF06] = 0x00; // TMA
+    internalMem[0xFF07] = 0x00; // TAC
+    internalMem[0xFF10] = 0x80; 
+    internalMem[0xFF11] = 0xBF; 
+    internalMem[0xFF12] = 0xF3; 
+    internalMem[0xFF14] = 0xBF; 
+    internalMem[0xFF16] = 0x3F; 
+    internalMem[0xFF17] = 0x00; 
+    internalMem[0xFF19] = 0xBF; 
+    internalMem[0xFF1A] = 0x7F; 
+    internalMem[0xFF1B] = 0xFF; 
+    internalMem[0xFF1C] = 0x9F; 
+    internalMem[0xFF1E] = 0xBF; 
+    internalMem[0xFF20] = 0xFF; 
+    internalMem[0xFF21] = 0x00; 
+    internalMem[0xFF22] = 0x00; 
+    internalMem[0xFF23] = 0xBF; 
+    internalMem[0xFF24] = 0x77; 
+    internalMem[0xFF25] = 0xF3;
+    internalMem[0xFF26] = 0xF1; 
+    internalMem[0xFF40] = 0x91; // LCDC - LCD control register
+    internalMem[0xFF42] = 0x00; // SCY - scroll Y
+    internalMem[0xFF43] = 0x00; // SCX - scroll X
+    internalMem[0xFF45] = 0x00; // LYC - LY Compare
+    internalMem[0xFF47] = 0xFC; // BGP - background colour palette
+    internalMem[0xFF48] = 0xFF; // OBP0 - Object Palette 0 (Sprites)
+    internalMem[0xFF49] = 0xFF; // OBP1 - Object Palette 1 (Sprites)
+    internalMem[0xFF4A] = 0x00; // WX - window X
+    internalMem[0xFF4B] = 0x00; // WY - window Y
+    internalMem[0xFFFF] = 0x00; // IE - Interrupt enable
 
-    this->MBC1 = false;
-    this->MBC2 = false;
+    MBC1 = false;
+    MBC2 = false;
 
     // Choosing which MBC to use
-    switch (this->cartridgeMem[0x147]) {
-        case 1 : this->MBC1 = true ; break;
-        case 2 : this->MBC1 = true ; break;
-        case 3 : this->MBC1 = true ; break;
-        case 5 : this->MBC2 = true ; break;
-        case 6 : this->MBC2 = true ; break;
+    switch (cartridgeMem[0x147]) {
+        case 0 : break; // No memory swapping needed
+        case 1 : MBC1 = true ; break;
+        case 2 : MBC1 = true ; break;
+        case 3 : MBC1 = true ; break;
+        case 5 : MBC2 = true ; break;
+        case 6 : MBC2 = true ; break;
         default : break; 
     }
 
-    this->currentROMBank = 1;
+    currentROMBank = 1;
 
-    memset(this->RAMBanks, 0, sizeof(this->RAMBanks));
-    this->currentRAMBank = 0;
+    memset(RAMBanks, 0, sizeof(RAMBanks));
+    currentRAMBank = 0;
 
     // Initialize timers. Initial clock speed is 4096hz
-    this->timerUpdateConstant = 1024;
-    this->timerCounter = 1024;
-    this->dividerCounter = 0;
+    timerUpdateConstant = 1024;
+    timerCounter = 1024;
+    dividerCounter = 0;
 
     // Interrupts
-    this->InterruptMasterEnabled = false;
-    this->isHalted = false;
+    InterruptMasterEnabled = false;
+    isHalted = false;
 
     // Joypad
-    this->joypadState = 0xFF;
+    joypadState = 0xFF;
 
     // Graphics
-    this->scanlineCycleCount = 456;
-    this->doRenderPtr = nullptr;
-    memset(this->displayPixels, 0, sizeof(this->displayPixels));
+    scanlineCycleCount = 456;
+    doRenderPtr = nullptr;
+    memset(displayPixels, 0, sizeof(displayPixels));
 
 }
 
 bool Emulator::loadGame(string file_path) {
 
-    memset(this->cartridgeMem, 0, sizeof(this->cartridgeMem));
+    memset(cartridgeMem, 0, sizeof(cartridgeMem));
     
     //load in the game
     FILE* in;
@@ -152,14 +153,12 @@ bool Emulator::loadGame(string file_path) {
     int fileSize = ftell(in);
     rewind(in);
     
-    // Read file into catridgeMem
-    fread(this->cartridgeMem, fileSize, 1, in);
+    // Read file into cartridgeMem
+    fread(cartridgeMem, fileSize, 1, in);
     fclose(in);
 
     // Copy ROM Banks 0 & 1 to internal memory
-    memcpy(this->internalMem, this->cartridgeMem, 0x8000) ; // this is read only and never changes
-    //for (int i = 0 ; i < 0x2000; i++)
-		//this->RAMBanks[i] = m_Rom[0xA000+i] ;
+    memcpy(internalMem, cartridgeMem, 0x8000) ; // this is read only and never changes
 
     return true;
 }
@@ -174,35 +173,35 @@ void Emulator::update() { // MAIN UPDATE LOOP
 
     while (cyclesCount < maxCycles) {
 
-        int cycles = this->executeNextOpcode(); //executeNextOpcode will return the number of cycles taken
+        int cycles = executeNextOpcode(); //executeNextOpcode will return the number of cycles taken
         cyclesCount += cycles;
 
-        this->updateTimers(cycles);
-        this->updateGraphics(cycles);
-        this->handleInterrupts();
+        updateTimers(cycles);
+        updateGraphics(cycles);
+        handleInterrupts();
 
     }
 
 }
 
 void Emulator::setRenderGraphics(void(*funcPtr)()) {
-    this->doRenderPtr = funcPtr;
+    doRenderPtr = funcPtr;
 }
 
 int Emulator::executeNextOpcode() {
     int clockCycles;
 
-    BYTE opcode = this->readMem(this->programCounter.regstr);
+    BYTE opcode = readMem(programCounter.regstr);
 
-    if (opcode != 0) {
-        cout << "opcode: " << hex << (int) opcode << endl;
-    }
+    // if (opcode != 0) {
+    //     cout << "opcode: " << hex << (int) opcode << endl;
+    // }
 
-    if (this->isHalted) {
-        clockCycles = this->NOP();
+    if (isHalted) {
+        clockCycles = NOP();
     } else {
-        this->programCounter.regstr++;
-        clockCycles = this->executeOpcode(opcode);
+        programCounter.regstr++;
+        clockCycles = executeOpcode(opcode);
     }
 
     return clockCycles;
@@ -221,119 +220,119 @@ int Emulator::executeOpcode(BYTE opcode) {
         */
         
         // Load B, R/(HL)
-        case 0x40: cycles = this->LD_r_R(this->regBC.high, this->regBC.high); break;
-        case 0x41: cycles = this->LD_r_R(this->regBC.high, this->regBC.low); break;
-        case 0x42: cycles = this->LD_r_R(this->regBC.high, this->regDE.high); break;
-        case 0x43: cycles = this->LD_r_R(this->regBC.high, this->regDE.low); break;
-        case 0x44: cycles = this->LD_r_R(this->regBC.high, this->regHL.high); break;
-        case 0x45: cycles = this->LD_r_R(this->regBC.high, this->regHL.low); break;
-        case 0x46: cycles = this->LD_r_HL(this->regBC.high); break;
-        case 0x47: cycles = this->LD_r_R(this->regBC.high, this->regAF.high); break;
+        case 0x40: cycles = LD_r_R(regBC.high, regBC.high); break;
+        case 0x41: cycles = LD_r_R(regBC.high, regBC.low); break;
+        case 0x42: cycles = LD_r_R(regBC.high, regDE.high); break;
+        case 0x43: cycles = LD_r_R(regBC.high, regDE.low); break;
+        case 0x44: cycles = LD_r_R(regBC.high, regHL.high); break;
+        case 0x45: cycles = LD_r_R(regBC.high, regHL.low); break;
+        case 0x46: cycles = LD_r_HL(regBC.high); break;
+        case 0x47: cycles = LD_r_R(regBC.high, regAF.high); break;
 
         // Load C, R/(HL)
-        case 0x48: cycles = this->LD_r_R(this->regBC.low, this->regBC.high); break;
-        case 0x49: cycles = this->LD_r_R(this->regBC.low, this->regBC.low); break;
-        case 0x4A: cycles = this->LD_r_R(this->regBC.low, this->regDE.high); break;
-        case 0x4B: cycles = this->LD_r_R(this->regBC.low, this->regDE.low); break;
-        case 0x4C: cycles = this->LD_r_R(this->regBC.low, this->regHL.high); break;
-        case 0x4D: cycles = this->LD_r_R(this->regBC.low, this->regHL.low); break;
-        case 0x4E: cycles = this->LD_r_HL(this->regBC.low); break;
-        case 0x4F: cycles = this->LD_r_R(this->regBC.low, this->regAF.high); break;
+        case 0x48: cycles = LD_r_R(regBC.low, regBC.high); break;
+        case 0x49: cycles = LD_r_R(regBC.low, regBC.low); break;
+        case 0x4A: cycles = LD_r_R(regBC.low, regDE.high); break;
+        case 0x4B: cycles = LD_r_R(regBC.low, regDE.low); break;
+        case 0x4C: cycles = LD_r_R(regBC.low, regHL.high); break;
+        case 0x4D: cycles = LD_r_R(regBC.low, regHL.low); break;
+        case 0x4E: cycles = LD_r_HL(regBC.low); break;
+        case 0x4F: cycles = LD_r_R(regBC.low, regAF.high); break;
 
         // Load D, R/(HL)
-        case 0x50: cycles = this->LD_r_R(this->regDE.high, this->regBC.high); break;
-        case 0x51: cycles = this->LD_r_R(this->regDE.high, this->regBC.low); break;
-        case 0x52: cycles = this->LD_r_R(this->regDE.high, this->regDE.high); break;
-        case 0x53: cycles = this->LD_r_R(this->regDE.high, this->regDE.low); break;
-        case 0x54: cycles = this->LD_r_R(this->regDE.high, this->regHL.high); break;
-        case 0x55: cycles = this->LD_r_R(this->regDE.high, this->regHL.low); break;
-        case 0x56: cycles = this->LD_r_HL(this->regDE.high); break;
-        case 0x57: cycles = this->LD_r_R(this->regDE.high, this->regAF.high); break;
+        case 0x50: cycles = LD_r_R(regDE.high, regBC.high); break;
+        case 0x51: cycles = LD_r_R(regDE.high, regBC.low); break;
+        case 0x52: cycles = LD_r_R(regDE.high, regDE.high); break;
+        case 0x53: cycles = LD_r_R(regDE.high, regDE.low); break;
+        case 0x54: cycles = LD_r_R(regDE.high, regHL.high); break;
+        case 0x55: cycles = LD_r_R(regDE.high, regHL.low); break;
+        case 0x56: cycles = LD_r_HL(regDE.high); break;
+        case 0x57: cycles = LD_r_R(regDE.high, regAF.high); break;
 
         // Load E, R/(HL)
-        case 0x58: cycles = this->LD_r_R(this->regDE.low, this->regBC.high); break;
-        case 0x59: cycles = this->LD_r_R(this->regDE.low, this->regBC.low); break;
-        case 0x5A: cycles = this->LD_r_R(this->regDE.low, this->regDE.high); break;
-        case 0x5B: cycles = this->LD_r_R(this->regDE.low, this->regDE.low); break;
-        case 0x5C: cycles = this->LD_r_R(this->regDE.low, this->regHL.high); break;
-        case 0x5D: cycles = this->LD_r_R(this->regDE.low, this->regHL.low); break;
-        case 0x5E: cycles = this->LD_r_HL(this->regDE.low); break;
-        case 0x5F: cycles = this->LD_r_R(this->regDE.low, this->regAF.high); break;
+        case 0x58: cycles = LD_r_R(regDE.low, regBC.high); break;
+        case 0x59: cycles = LD_r_R(regDE.low, regBC.low); break;
+        case 0x5A: cycles = LD_r_R(regDE.low, regDE.high); break;
+        case 0x5B: cycles = LD_r_R(regDE.low, regDE.low); break;
+        case 0x5C: cycles = LD_r_R(regDE.low, regHL.high); break;
+        case 0x5D: cycles = LD_r_R(regDE.low, regHL.low); break;
+        case 0x5E: cycles = LD_r_HL(regDE.low); break;
+        case 0x5F: cycles = LD_r_R(regDE.low, regAF.high); break;
 
         // Load H, R/(HL)
-        case 0x60: cycles = this->LD_r_R(this->regHL.high, this->regBC.high); break;
-        case 0x61: cycles = this->LD_r_R(this->regHL.high, this->regBC.low); break;
-        case 0x62: cycles = this->LD_r_R(this->regHL.high, this->regDE.high); break;
-        case 0x63: cycles = this->LD_r_R(this->regHL.high, this->regDE.low); break;
-        case 0x64: cycles = this->LD_r_R(this->regHL.high, this->regHL.high); break;
-        case 0x65: cycles = this->LD_r_R(this->regHL.high, this->regHL.low); break;
-        case 0x66: cycles = this->LD_r_HL(this->regHL.high); break;
-        case 0x67: cycles = this->LD_r_R(this->regHL.high, this->regAF.high); break;
+        case 0x60: cycles = LD_r_R(regHL.high, regBC.high); break;
+        case 0x61: cycles = LD_r_R(regHL.high, regBC.low); break;
+        case 0x62: cycles = LD_r_R(regHL.high, regDE.high); break;
+        case 0x63: cycles = LD_r_R(regHL.high, regDE.low); break;
+        case 0x64: cycles = LD_r_R(regHL.high, regHL.high); break;
+        case 0x65: cycles = LD_r_R(regHL.high, regHL.low); break;
+        case 0x66: cycles = LD_r_HL(regHL.high); break;
+        case 0x67: cycles = LD_r_R(regHL.high, regAF.high); break;
 
         // Load L, R/(HL)
-        case 0x68: cycles = this->LD_r_R(this->regHL.low, this->regBC.high); break;
-        case 0x69: cycles = this->LD_r_R(this->regHL.low, this->regBC.low); break;
-        case 0x6A: cycles = this->LD_r_R(this->regHL.low, this->regDE.high); break;
-        case 0x6B: cycles = this->LD_r_R(this->regHL.low, this->regDE.low); break;
-        case 0x6C: cycles = this->LD_r_R(this->regHL.low, this->regHL.high); break;
-        case 0x6D: cycles = this->LD_r_R(this->regHL.low, this->regHL.low); break;
-        case 0x6E: cycles = this->LD_r_HL(this->regHL.low); break;
-        case 0x6F: cycles = this->LD_r_R(this->regHL.low, this->regAF.high); break;
+        case 0x68: cycles = LD_r_R(regHL.low, regBC.high); break;
+        case 0x69: cycles = LD_r_R(regHL.low, regBC.low); break;
+        case 0x6A: cycles = LD_r_R(regHL.low, regDE.high); break;
+        case 0x6B: cycles = LD_r_R(regHL.low, regDE.low); break;
+        case 0x6C: cycles = LD_r_R(regHL.low, regHL.high); break;
+        case 0x6D: cycles = LD_r_R(regHL.low, regHL.low); break;
+        case 0x6E: cycles = LD_r_HL(regHL.low); break;
+        case 0x6F: cycles = LD_r_R(regHL.low, regAF.high); break;
 
         // Load (HL), R
-        case 0x70: cycles = this->LD_HL_r(this->regBC.high); break;
-        case 0x71: cycles = this->LD_HL_r(this->regBC.low); break;
-        case 0x72: cycles = this->LD_HL_r(this->regDE.high); break;
-        case 0x73: cycles = this->LD_HL_r(this->regDE.low); break;
-        case 0x74: cycles = this->LD_HL_r(this->regHL.high); break;
-        case 0x75: cycles = this->LD_HL_r(this->regHL.low); break;
-        case 0x77: cycles = this->LD_HL_r(this->regAF.high); break;
+        case 0x70: cycles = LD_HL_r(regBC.high); break;
+        case 0x71: cycles = LD_HL_r(regBC.low); break;
+        case 0x72: cycles = LD_HL_r(regDE.high); break;
+        case 0x73: cycles = LD_HL_r(regDE.low); break;
+        case 0x74: cycles = LD_HL_r(regHL.high); break;
+        case 0x75: cycles = LD_HL_r(regHL.low); break;
+        case 0x77: cycles = LD_HL_r(regAF.high); break;
 
         // Load A, R/(HL)
-        case 0x78: cycles = this->LD_r_R(this->regAF.high, this->regBC.high); break;
-        case 0x79: cycles = this->LD_r_R(this->regAF.high, this->regBC.low); break;
-        case 0x7A: cycles = this->LD_r_R(this->regAF.high, this->regDE.high); break;
-        case 0x7B: cycles = this->LD_r_R(this->regAF.high, this->regDE.low); break;
-        case 0x7C: cycles = this->LD_r_R(this->regAF.high, this->regHL.high); break;
-        case 0x7D: cycles = this->LD_r_R(this->regAF.high, this->regHL.low); break;
-        case 0x7E: cycles = this->LD_r_HL(this->regAF.high); break;
-        case 0x7F: cycles = this->LD_r_R(this->regAF.high, this->regAF.high); break;
+        case 0x78: cycles = LD_r_R(regAF.high, regBC.high); break;
+        case 0x79: cycles = LD_r_R(regAF.high, regBC.low); break;
+        case 0x7A: cycles = LD_r_R(regAF.high, regDE.high); break;
+        case 0x7B: cycles = LD_r_R(regAF.high, regDE.low); break;
+        case 0x7C: cycles = LD_r_R(regAF.high, regHL.high); break;
+        case 0x7D: cycles = LD_r_R(regAF.high, regHL.low); break;
+        case 0x7E: cycles = LD_r_HL(regAF.high); break;
+        case 0x7F: cycles = LD_r_R(regAF.high, regAF.high); break;
 
         // Load R, n
-        case 0x06: cycles = this->LD_r_n(this->regBC.high); break;
-        case 0x0E: cycles = this->LD_r_n(this->regBC.low); break;
-        case 0x16: cycles = this->LD_r_n(this->regDE.high); break;
-        case 0x1E: cycles = this->LD_r_n(this->regDE.low); break;
-        case 0x26: cycles = this->LD_r_n(this->regHL.high); break;
-        case 0x2E: cycles = this->LD_r_n(this->regHL.low); break;
-        case 0x36: cycles = this->LD_HL_n(); break;
-        case 0x3E: cycles = this->LD_r_n(this->regAF.high); break;
+        case 0x06: cycles = LD_r_n(regBC.high); break;
+        case 0x0E: cycles = LD_r_n(regBC.low); break;
+        case 0x16: cycles = LD_r_n(regDE.high); break;
+        case 0x1E: cycles = LD_r_n(regDE.low); break;
+        case 0x26: cycles = LD_r_n(regHL.high); break;
+        case 0x2E: cycles = LD_r_n(regHL.low); break;
+        case 0x36: cycles = LD_HL_n(); break;
+        case 0x3E: cycles = LD_r_n(regAF.high); break;
 
         // Load A, RR
-        case 0x0A: cycles = this->LD_A_BC(); break;
-        case 0x1A: cycles = this->LD_A_DE(); break;
+        case 0x0A: cycles = LD_A_BC(); break;
+        case 0x1A: cycles = LD_A_DE(); break;
 
         // Load RR, A
-        case 0x02: cycles = this->LD_BC_A(); break;
-        case 0x12: cycles = this->LD_DE_A(); break;
+        case 0x02: cycles = LD_BC_A(); break;
+        case 0x12: cycles = LD_DE_A(); break;
 
         // Load A, nn
-        case 0xFA: cycles = this->LD_A_nn(); break;
+        case 0xFA: cycles = LD_A_nn(); break;
 
         // Load nn, A
-        case 0xEA: cycles = this->LD_nn_A(); break;
+        case 0xEA: cycles = LD_nn_A(); break;
 
         // Load A, FF00+n, FF00+c, vice versa
-        case 0xF0: cycles = this->LD_A_FF00n(); break;
-        case 0xE0: cycles = this->LD_FF00n_A(); break;
-        case 0xF2: cycles = this->LD_A_FF00C(); break;
-        case 0xE2: cycles = this->LD_FF00C_A(); break;
+        case 0xF0: cycles = LD_A_FF00n(); break;
+        case 0xE0: cycles = LD_FF00n_A(); break;
+        case 0xF2: cycles = LD_A_FF00C(); break;
+        case 0xE2: cycles = LD_FF00C_A(); break;
 
         // Load increment/decrement HL, A, vice versa
-        case 0x22: cycles = this->LDI_HL_A(); break;
-        case 0x2A: cycles = this->LDI_A_HL(); break;
-        case 0x32: cycles = this->LDD_HL_A(); break;
-        case 0x3A: cycles = this->LDD_A_HL(); break;
+        case 0x22: cycles = LDI_HL_A(); break;
+        case 0x2A: cycles = LDI_A_HL(); break;
+        case 0x32: cycles = LDD_HL_A(); break;
+        case 0x3A: cycles = LDD_A_HL(); break;
 
         /* 
         ************************************************************************
@@ -342,28 +341,28 @@ int Emulator::executeOpcode(BYTE opcode) {
         */
 
         // Load rr, nn
-        case 0x01: cycles = this->LD_rr_nn(this->regBC); break;
-        case 0x11: cycles = this->LD_rr_nn(this->regDE); break;
-        case 0x21: cycles = this->LD_rr_nn(this->regHL); break;
-        case 0x31: cycles = this->LD_rr_nn(this->stackPointer); break;
+        case 0x01: cycles = LD_rr_nn(regBC); break;
+        case 0x11: cycles = LD_rr_nn(regDE); break;
+        case 0x21: cycles = LD_rr_nn(regHL); break;
+        case 0x31: cycles = LD_rr_nn(stackPointer); break;
 
         // Load SP, HL
-        case 0xF9: cycles = this->LD_SP_HL(); break;
+        case 0xF9: cycles = LD_SP_HL(); break;
 
         // Load nn, SP
-        case 0x08: cycles = this->LD_nn_SP(); break;
+        case 0x08: cycles = LD_nn_SP(); break;
 
         // Push rr
-        case 0xC5: cycles = this->PUSH_rr(this->regBC); break;
-        case 0xD5: cycles = this->PUSH_rr(this->regDE); break;
-        case 0xE5: cycles = this->PUSH_rr(this->regHL); break;
-        case 0xF5: cycles = this->PUSH_rr(this->regAF); break;
+        case 0xC5: cycles = PUSH_rr(regBC); break;
+        case 0xD5: cycles = PUSH_rr(regDE); break;
+        case 0xE5: cycles = PUSH_rr(regHL); break;
+        case 0xF5: cycles = PUSH_rr(regAF); break;
 
         // Pop rr
-        case 0xC1: cycles = this->POP_rr(this->regBC); break;
-        case 0xD1: cycles = this->POP_rr(this->regDE); break;
-        case 0xE1: cycles = this->POP_rr(this->regHL); break;
-        case 0xF1: cycles = this->POP_rr(this->regAF); break;
+        case 0xC1: cycles = POP_rr(regBC); break;
+        case 0xD1: cycles = POP_rr(regDE); break;
+        case 0xE1: cycles = POP_rr(regHL); break;
+        case 0xF1: cycles = POP_rr(regAF); break;
 
         /* 
         ************************************************************************
@@ -372,134 +371,134 @@ int Emulator::executeOpcode(BYTE opcode) {
         */
 
         // Add A, r
-        case 0x80: cycles = this->ADD_A_r(this->regBC.high); break;
-        case 0x81: cycles = this->ADD_A_r(this->regBC.low); break;
-        case 0x82: cycles = this->ADD_A_r(this->regDE.high); break;
-        case 0x83: cycles = this->ADD_A_r(this->regDE.low); break;
-        case 0x84: cycles = this->ADD_A_r(this->regHL.high); break;
-        case 0x85: cycles = this->ADD_A_r(this->regHL.low); break;
-        case 0x86: cycles = this->ADD_A_HL(); break;
-        case 0x87: cycles = this->ADD_A_r(this->regAF.high); break;
+        case 0x80: cycles = ADD_A_r(regBC.high); break;
+        case 0x81: cycles = ADD_A_r(regBC.low); break;
+        case 0x82: cycles = ADD_A_r(regDE.high); break;
+        case 0x83: cycles = ADD_A_r(regDE.low); break;
+        case 0x84: cycles = ADD_A_r(regHL.high); break;
+        case 0x85: cycles = ADD_A_r(regHL.low); break;
+        case 0x86: cycles = ADD_A_HL(); break;
+        case 0x87: cycles = ADD_A_r(regAF.high); break;
 
         // Add A, n
-        case 0xC6: cycles = this->ADD_A_n(); break;
+        case 0xC6: cycles = ADD_A_n(); break;
 
         // ADC A, r
-        case 0x88: cycles = this->ADC_A_r(this->regBC.high); break;
-        case 0x89: cycles = this->ADC_A_r(this->regBC.low); break;
-        case 0x8A: cycles = this->ADC_A_r(this->regDE.high); break;
-        case 0x8B: cycles = this->ADC_A_r(this->regDE.low); break;
-        case 0x8C: cycles = this->ADC_A_r(this->regHL.high); break;
-        case 0x8D: cycles = this->ADC_A_r(this->regHL.low); break;
-        case 0x8E: cycles = this->ADC_A_HL(); break;
-        case 0x8F: cycles = this->ADC_A_r(this->regAF.high); break;
+        case 0x88: cycles = ADC_A_r(regBC.high); break;
+        case 0x89: cycles = ADC_A_r(regBC.low); break;
+        case 0x8A: cycles = ADC_A_r(regDE.high); break;
+        case 0x8B: cycles = ADC_A_r(regDE.low); break;
+        case 0x8C: cycles = ADC_A_r(regHL.high); break;
+        case 0x8D: cycles = ADC_A_r(regHL.low); break;
+        case 0x8E: cycles = ADC_A_HL(); break;
+        case 0x8F: cycles = ADC_A_r(regAF.high); break;
 
         // ADC A, n
-        case 0xCE: cycles = this->ADC_A_n(); break;
+        case 0xCE: cycles = ADC_A_n(); break;
 
         // Sub r
-        case 0x90: cycles = this->SUB_r(this->regBC.high); break;
-        case 0x91: cycles = this->SUB_r(this->regBC.low); break;
-        case 0x92: cycles = this->SUB_r(this->regDE.high); break;
-        case 0x93: cycles = this->SUB_r(this->regDE.low); break;
-        case 0x94: cycles = this->SUB_r(this->regHL.high); break;
-        case 0x95: cycles = this->SUB_r(this->regHL.low); break;
-        case 0x96: cycles = this->SUB_HL(); break;
-        case 0x97: cycles = this->SUB_r(this->regAF.high); break;
+        case 0x90: cycles = SUB_r(regBC.high); break;
+        case 0x91: cycles = SUB_r(regBC.low); break;
+        case 0x92: cycles = SUB_r(regDE.high); break;
+        case 0x93: cycles = SUB_r(regDE.low); break;
+        case 0x94: cycles = SUB_r(regHL.high); break;
+        case 0x95: cycles = SUB_r(regHL.low); break;
+        case 0x96: cycles = SUB_HL(); break;
+        case 0x97: cycles = SUB_r(regAF.high); break;
 
         // Sub n
-        case 0xD6: cycles = this->SUB_n(); break;
+        case 0xD6: cycles = SUB_n(); break;
 
         // SBC A, r
-        case 0x98: cycles = this->SBC_A_r(this->regBC.high); break;
-        case 0x99: cycles = this->SBC_A_r(this->regBC.low); break;
-        case 0x9A: cycles = this->SBC_A_r(this->regDE.high); break;
-        case 0x9B: cycles = this->SBC_A_r(this->regDE.low); break;
-        case 0x9C: cycles = this->SBC_A_r(this->regHL.high); break;
-        case 0x9D: cycles = this->SBC_A_r(this->regHL.low); break;
-        case 0x9E: cycles = this->SBC_A_HL(); break;
-        case 0x9F: cycles = this->SBC_A_r(this->regAF.high); break;  
+        case 0x98: cycles = SBC_A_r(regBC.high); break;
+        case 0x99: cycles = SBC_A_r(regBC.low); break;
+        case 0x9A: cycles = SBC_A_r(regDE.high); break;
+        case 0x9B: cycles = SBC_A_r(regDE.low); break;
+        case 0x9C: cycles = SBC_A_r(regHL.high); break;
+        case 0x9D: cycles = SBC_A_r(regHL.low); break;
+        case 0x9E: cycles = SBC_A_HL(); break;
+        case 0x9F: cycles = SBC_A_r(regAF.high); break;  
 
         // SBC A, n
-        case 0xDE: cycles = this->SBC_A_n(); break;
+        case 0xDE: cycles = SBC_A_n(); break;
 
         // AND r
-        case 0xA0: cycles = this->AND_r(this->regBC.high); break;
-        case 0xA1: cycles = this->AND_r(this->regBC.low); break;
-        case 0xA2: cycles = this->AND_r(this->regDE.high); break;
-        case 0xA3: cycles = this->AND_r(this->regDE.low); break;
-        case 0xA4: cycles = this->AND_r(this->regHL.high); break;
-        case 0xA5: cycles = this->AND_r(this->regHL.low); break;
-        case 0xA6: cycles = this->AND_HL();
-        case 0xA7: cycles = this->AND_r(this->regBC.high); break;
+        case 0xA0: cycles = AND_r(regBC.high); break;
+        case 0xA1: cycles = AND_r(regBC.low); break;
+        case 0xA2: cycles = AND_r(regDE.high); break;
+        case 0xA3: cycles = AND_r(regDE.low); break;
+        case 0xA4: cycles = AND_r(regHL.high); break;
+        case 0xA5: cycles = AND_r(regHL.low); break;
+        case 0xA6: cycles = AND_HL();
+        case 0xA7: cycles = AND_r(regBC.high); break;
 
         // AND n 
-        case 0xE6: cycles = this->AND_n(); break;
+        case 0xE6: cycles = AND_n(); break;
 
         // XOR r
-        case 0xA8: cycles = this->XOR_r(this->regBC.high); break;
-        case 0xA9: cycles = this->XOR_r(this->regBC.low); break;
-        case 0xAA: cycles = this->XOR_r(this->regDE.high); break;
-        case 0xAB: cycles = this->XOR_r(this->regDE.low); break;
-        case 0xAC: cycles = this->XOR_r(this->regHL.high); break;
-        case 0xAD: cycles = this->XOR_r(this->regHL.low); break;
-        case 0xAE: cycles = this->XOR_HL();
-        case 0xAF: cycles = this->XOR_r(this->regBC.high); break;
+        case 0xA8: cycles = XOR_r(regBC.high); break;
+        case 0xA9: cycles = XOR_r(regBC.low); break;
+        case 0xAA: cycles = XOR_r(regDE.high); break;
+        case 0xAB: cycles = XOR_r(regDE.low); break;
+        case 0xAC: cycles = XOR_r(regHL.high); break;
+        case 0xAD: cycles = XOR_r(regHL.low); break;
+        case 0xAE: cycles = XOR_HL();
+        case 0xAF: cycles = XOR_r(regBC.high); break;
 
         // XOR n
-        case 0xEE: cycles = this->XOR_n(); break;
+        case 0xEE: cycles = XOR_n(); break;
 
         // OR r
-        case 0xB0: cycles = this->OR_r(this->regBC.high); break;
-        case 0xB1: cycles = this->OR_r(this->regBC.low); break;
-        case 0xB2: cycles = this->OR_r(this->regDE.high); break;
-        case 0xB3: cycles = this->OR_r(this->regDE.low); break;
-        case 0xB4: cycles = this->OR_r(this->regHL.high); break;
-        case 0xB5: cycles = this->OR_r(this->regHL.low); break;
-        case 0xB6: cycles = this->OR_HL();
-        case 0xB7: cycles = this->OR_r(this->regBC.high); break;
+        case 0xB0: cycles = OR_r(regBC.high); break;
+        case 0xB1: cycles = OR_r(regBC.low); break;
+        case 0xB2: cycles = OR_r(regDE.high); break;
+        case 0xB3: cycles = OR_r(regDE.low); break;
+        case 0xB4: cycles = OR_r(regHL.high); break;
+        case 0xB5: cycles = OR_r(regHL.low); break;
+        case 0xB6: cycles = OR_HL();
+        case 0xB7: cycles = OR_r(regBC.high); break;
 
         // OR n 
-        case 0xF6: cycles = this->OR_n(); break;
+        case 0xF6: cycles = OR_n(); break;
 
         // CPr
-        case 0xB8: cycles = this->CP_r(this->regBC.high); break;
-        case 0xB9: cycles = this->CP_r(this->regBC.low); break;
-        case 0xBA: cycles = this->CP_r(this->regDE.high); break;
-        case 0xBB: cycles = this->CP_r(this->regDE.low); break;
-        case 0xBC: cycles = this->CP_r(this->regHL.high); break;
-        case 0xBD: cycles = this->CP_r(this->regHL.low); break;
-        case 0xBE: cycles = this->CP_HL();
-        case 0xBF: cycles = this->CP_r(this->regBC.high); break;
+        case 0xB8: cycles = CP_r(regBC.high); break;
+        case 0xB9: cycles = CP_r(regBC.low); break;
+        case 0xBA: cycles = CP_r(regDE.high); break;
+        case 0xBB: cycles = CP_r(regDE.low); break;
+        case 0xBC: cycles = CP_r(regHL.high); break;
+        case 0xBD: cycles = CP_r(regHL.low); break;
+        case 0xBE: cycles = CP_HL();
+        case 0xBF: cycles = CP_r(regBC.high); break;
 
         // CP n
-        case 0xFE: cycles = this->CP_n(); break;
+        case 0xFE: cycles = CP_n(); break;
 
         // INC r
-        case 0x04: cycles = this->INC_r(this->regBC.high); break;
-        case 0x14: cycles = this->INC_r(this->regDE.high); break;
-        case 0x24: cycles = this->INC_r(this->regHL.high); break;
-        case 0x34: cycles = this->INC_HL(); break;
-        case 0x0C: cycles = this->INC_r(this->regBC.low); break; 
-        case 0x1C: cycles = this->INC_r(this->regDE.low); break;
-        case 0x2C: cycles = this->INC_r(this->regHL.low); break;
-        case 0x3C: cycles = this->INC_r(this->regAF.high); break;  
+        case 0x04: cycles = INC_r(regBC.high); break;
+        case 0x14: cycles = INC_r(regDE.high); break;
+        case 0x24: cycles = INC_r(regHL.high); break;
+        case 0x34: cycles = INC_HL(); break;
+        case 0x0C: cycles = INC_r(regBC.low); break; 
+        case 0x1C: cycles = INC_r(regDE.low); break;
+        case 0x2C: cycles = INC_r(regHL.low); break;
+        case 0x3C: cycles = INC_r(regAF.high); break;  
 
         // DEC r
-        case 0x05: cycles = this->DEC_r(this->regBC.high); break;
-        case 0x15: cycles = this->DEC_r(this->regDE.high); break;
-        case 0x25: cycles = this->DEC_r(this->regHL.high); break;
-        case 0x35: cycles = this->DEC_HL(); break;
-        case 0x0D: cycles = this->DEC_r(this->regBC.low); break; 
-        case 0x1D: cycles = this->DEC_r(this->regDE.low); break;
-        case 0x2D: cycles = this->DEC_r(this->regHL.low); break;
-        case 0x3D: cycles = this->DEC_r(this->regAF.high); break;
+        case 0x05: cycles = DEC_r(regBC.high); break;
+        case 0x15: cycles = DEC_r(regDE.high); break;
+        case 0x25: cycles = DEC_r(regHL.high); break;
+        case 0x35: cycles = DEC_HL(); break;
+        case 0x0D: cycles = DEC_r(regBC.low); break; 
+        case 0x1D: cycles = DEC_r(regDE.low); break;
+        case 0x2D: cycles = DEC_r(regHL.low); break;
+        case 0x3D: cycles = DEC_r(regAF.high); break;
 
         // DAA
-        case 0x27: cycles = this->DAA(); break;
+        case 0x27: cycles = DAA(); break;
 
         // CPL
-        case 0x2F: cycles = this->CPL(); break;
+        case 0x2F: cycles = CPL(); break;
 
         /* 
         ************************************************************************
@@ -508,28 +507,28 @@ int Emulator::executeOpcode(BYTE opcode) {
         */
 
         // Add HL, rr
-        case 0x09: cycles = this->ADD_HL_rr(this->regBC.regstr); break;
-        case 0x19: cycles = this->ADD_HL_rr(this->regDE.regstr); break;
-        case 0x29: cycles = this->ADD_HL_rr(this->regHL.regstr); break;
-        case 0x39: cycles = this->ADD_HL_rr(this->stackPointer.regstr); break;
+        case 0x09: cycles = ADD_HL_rr(regBC.regstr); break;
+        case 0x19: cycles = ADD_HL_rr(regDE.regstr); break;
+        case 0x29: cycles = ADD_HL_rr(regHL.regstr); break;
+        case 0x39: cycles = ADD_HL_rr(stackPointer.regstr); break;
 
         // INC rr
-        case 0x03: cycles = this->INC_rr(this->regBC.regstr); break;
-        case 0x13: cycles = this->INC_rr(this->regDE.regstr); break;
-        case 0x23: cycles = this->INC_rr(this->regHL.regstr); break;
-        case 0x33: cycles = this->INC_rr(this->stackPointer.regstr); break;
+        case 0x03: cycles = INC_rr(regBC.regstr); break;
+        case 0x13: cycles = INC_rr(regDE.regstr); break;
+        case 0x23: cycles = INC_rr(regHL.regstr); break;
+        case 0x33: cycles = INC_rr(stackPointer.regstr); break;
 
         // DEC rr
-        case 0x0B: cycles = this->DEC_rr(this->regBC.regstr); break;
-        case 0x1B: cycles = this->DEC_rr(this->regDE.regstr); break;
-        case 0x2B: cycles = this->DEC_rr(this->regHL.regstr); break;
-        case 0x3B: cycles = this->DEC_rr(this->stackPointer.regstr); break;
+        case 0x0B: cycles = DEC_rr(regBC.regstr); break;
+        case 0x1B: cycles = DEC_rr(regDE.regstr); break;
+        case 0x2B: cycles = DEC_rr(regHL.regstr); break;
+        case 0x3B: cycles = DEC_rr(stackPointer.regstr); break;
 
         // Add SP, dd
-        case 0xE8: cycles = this->ADD_SP_dd(); break;
+        case 0xE8: cycles = ADD_SP_dd(); break;
 
         // Load HL, SP + dd
-        case 0xF8: cycles = this->LD_HL_SPdd(); break;
+        case 0xF8: cycles = LD_HL_SPdd(); break;
 
         /* 
         ************************************************************************
@@ -538,10 +537,10 @@ int Emulator::executeOpcode(BYTE opcode) {
         */
 
         // Non CB-prefixed Rotate commands
-        case 0x07: cycles = this->RLCA(); break; // RLCA        
-        case 0x17: cycles = this->RLA(); break; // RLA
-        case 0x0F: cycles = this->RRCA(); break; // RRCA
-        case 0x1F: cycles = this->RRA(); break; // RRA
+        case 0x07: cycles = RLCA(); break; // RLCA        
+        case 0x17: cycles = RLA(); break; // RLA
+        case 0x0F: cycles = RRCA(); break; // RRCA
+        case 0x1F: cycles = RRA(); break; // RRA
 
         /* 
         ************************************************************************
@@ -549,13 +548,13 @@ int Emulator::executeOpcode(BYTE opcode) {
         ************************************************************************
         */
 
-        case 0x3F: cycles = this->CCF(); break; // CCF
-        case 0x37: cycles = this->SCF(); break; // SCF
-        case 0x00: cycles = this->NOP(); break; // NOP
-        case 0x76: cycles = this->HALT(); break; // HALT
-        case 0x10: cycles = this->STOP(); break; // STOP
-        case 0xF3: cycles = this->DI(); break; // DI
-        case 0xFB: cycles = this->EI(); break; // EI
+        case 0x3F: cycles = CCF(); break; // CCF
+        case 0x37: cycles = SCF(); break; // SCF
+        case 0x00: cycles = NOP(); break; // NOP
+        case 0x76: cycles = HALT(); break; // HALT
+        case 0x10: cycles = STOP(); break; // STOP
+        case 0xF3: cycles = DI(); break; // DI
+        case 0xFB: cycles = EI(); break; // EI
 
         /* 
         ************************************************************************
@@ -564,56 +563,56 @@ int Emulator::executeOpcode(BYTE opcode) {
         */
 
         // JP nn
-        case 0xC3: cycles = this->JP_nn(); break;
+        case 0xC3: cycles = JP_nn(); break;
 
         // JP HL
-        case 0xE9: cycles = this->JP_HL(); break;
+        case 0xE9: cycles = JP_HL(); break;
 
         // JP f, nn
-        case 0xC2: cycles = this->JP_f_nn(opcode); break;
-        case 0xCA: cycles = this->JP_f_nn(opcode); break;
-        case 0xD2: cycles = this->JP_f_nn(opcode); break;
-        case 0xDA: cycles = this->JP_f_nn(opcode); break;
+        case 0xC2: cycles = JP_f_nn(opcode); break;
+        case 0xCA: cycles = JP_f_nn(opcode); break;
+        case 0xD2: cycles = JP_f_nn(opcode); break;
+        case 0xDA: cycles = JP_f_nn(opcode); break;
 
         // JR PC + dd
-        case 0x18: cycles = this->JR_PCdd(); break;
+        case 0x18: cycles = JR_PCdd(); break;
 
         // JR f, PC + dd
-        case 0x20: cycles = this->JR_f_PCdd(opcode); break;
-        case 0x28: cycles = this->JR_f_PCdd(opcode); break;
-        case 0x30: cycles = this->JR_f_PCdd(opcode); break;
-        case 0x38: cycles = this->JR_f_PCdd(opcode); break;
+        case 0x20: cycles = JR_f_PCdd(opcode); break;
+        case 0x28: cycles = JR_f_PCdd(opcode); break;
+        case 0x30: cycles = JR_f_PCdd(opcode); break;
+        case 0x38: cycles = JR_f_PCdd(opcode); break;
 
         // Call nn
-        case 0xCD: cycles = this->CALL_nn(); break;
+        case 0xCD: cycles = CALL_nn(); break;
 
         // Call f, nn
-        case 0xC4: cycles = this->CALL_f_nn(opcode); break;
-        case 0xCC: cycles = this->CALL_f_nn(opcode); break;
-        case 0xD4: cycles = this->CALL_f_nn(opcode); break;
-        case 0xDC: cycles = this->CALL_f_nn(opcode); break;
+        case 0xC4: cycles = CALL_f_nn(opcode); break;
+        case 0xCC: cycles = CALL_f_nn(opcode); break;
+        case 0xD4: cycles = CALL_f_nn(opcode); break;
+        case 0xDC: cycles = CALL_f_nn(opcode); break;
 
         // RET
-        case 0xC9: cycles = this->RET(); break;
+        case 0xC9: cycles = RET(); break;
         
         // RET f
-        case 0xC0: cycles = this->RET_f(opcode); break; 
-        case 0xC8: cycles = this->RET_f(opcode); break;
-        case 0xD0: cycles = this->RET_f(opcode); break;
-        case 0xD8: cycles = this->RET_f(opcode); break;
+        case 0xC0: cycles = RET_f(opcode); break; 
+        case 0xC8: cycles = RET_f(opcode); break;
+        case 0xD0: cycles = RET_f(opcode); break;
+        case 0xD8: cycles = RET_f(opcode); break;
 
         // RETI
-        case 0xD9: cycles = this->RETI(); break;
+        case 0xD9: cycles = RETI(); break;
 
         // RST n
-        case 0xC7: cycles = this->RST_n(opcode); break;
-        case 0xD7: cycles = this->RST_n(opcode); break;
-        case 0xE7: cycles = this->RST_n(opcode); break;
-        case 0xF7: cycles = this->RST_n(opcode); break;
-        case 0xCF: cycles = this->RST_n(opcode); break;
-        case 0xDF: cycles = this->RST_n(opcode); break;
-        case 0xEF: cycles = this->RST_n(opcode); break;
-        case 0xFF: cycles = this->RST_n(opcode); break;
+        case 0xC7: cycles = RST_n(opcode); break;
+        case 0xD7: cycles = RST_n(opcode); break;
+        case 0xE7: cycles = RST_n(opcode); break;
+        case 0xF7: cycles = RST_n(opcode); break;
+        case 0xCF: cycles = RST_n(opcode); break;
+        case 0xDF: cycles = RST_n(opcode); break;
+        case 0xEF: cycles = RST_n(opcode); break;
+        case 0xFF: cycles = RST_n(opcode); break;
 
         /* 
         ************************************************************************
@@ -630,8 +629,8 @@ int Emulator::executeOpcode(BYTE opcode) {
 
 int Emulator::executeCBOpcode() {
     
-    BYTE opcode = this->readMem(this->programCounter.regstr);
-    this->programCounter.regstr++;
+    BYTE opcode = readMem(programCounter.regstr);
+    programCounter.regstr++;
     int cycles;
 
     switch (opcode) {
@@ -643,84 +642,84 @@ int Emulator::executeCBOpcode() {
         */
 
         // RLC r
-        case 0x00: cycles = this->RLC_r(this->regBC.high); break;
-        case 0x01: cycles = this->RLC_r(this->regBC.low); break;
-        case 0x02: cycles = this->RLC_r(this->regDE.high); break;
-        case 0x03: cycles = this->RLC_r(this->regDE.low); break;
-        case 0x04: cycles = this->RLC_r(this->regHL.high); break;
-        case 0x05: cycles = this->RLC_r(this->regHL.low); break;
-        case 0x06: cycles = this->RLC_HL(); break;
-        case 0x07: cycles = this->RLC_r(this->regAF.high); break;
+        case 0x00: cycles = RLC_r(regBC.high); break;
+        case 0x01: cycles = RLC_r(regBC.low); break;
+        case 0x02: cycles = RLC_r(regDE.high); break;
+        case 0x03: cycles = RLC_r(regDE.low); break;
+        case 0x04: cycles = RLC_r(regHL.high); break;
+        case 0x05: cycles = RLC_r(regHL.low); break;
+        case 0x06: cycles = RLC_HL(); break;
+        case 0x07: cycles = RLC_r(regAF.high); break;
 
         // RRC r
-        case 0x08: cycles = this->RRC_r(this->regBC.high); break;
-        case 0x09: cycles = this->RRC_r(this->regBC.low); break;
-        case 0x0A: cycles = this->RRC_r(this->regDE.high); break;
-        case 0x0B: cycles = this->RRC_r(this->regDE.low); break;
-        case 0x0C: cycles = this->RRC_r(this->regHL.high); break;
-        case 0x0D: cycles = this->RRC_r(this->regHL.low); break;
-        case 0x0E: cycles = this->RRC_HL(); break;
-        case 0x0F: cycles = this->RRC_r(this->regAF.high); break;
+        case 0x08: cycles = RRC_r(regBC.high); break;
+        case 0x09: cycles = RRC_r(regBC.low); break;
+        case 0x0A: cycles = RRC_r(regDE.high); break;
+        case 0x0B: cycles = RRC_r(regDE.low); break;
+        case 0x0C: cycles = RRC_r(regHL.high); break;
+        case 0x0D: cycles = RRC_r(regHL.low); break;
+        case 0x0E: cycles = RRC_HL(); break;
+        case 0x0F: cycles = RRC_r(regAF.high); break;
 
         // RL r
-        case 0x10: cycles = this->RL_r(this->regBC.high); break;
-        case 0x11: cycles = this->RL_r(this->regBC.low); break;
-        case 0x12: cycles = this->RL_r(this->regDE.high); break;
-        case 0x13: cycles = this->RL_r(this->regDE.low); break;
-        case 0x14: cycles = this->RL_r(this->regHL.high); break;
-        case 0x15: cycles = this->RL_r(this->regHL.low); break;
-        case 0x16: cycles = this->RL_HL(); break;
-        case 0x17: cycles = this->RL_r(this->regAF.high); break;
+        case 0x10: cycles = RL_r(regBC.high); break;
+        case 0x11: cycles = RL_r(regBC.low); break;
+        case 0x12: cycles = RL_r(regDE.high); break;
+        case 0x13: cycles = RL_r(regDE.low); break;
+        case 0x14: cycles = RL_r(regHL.high); break;
+        case 0x15: cycles = RL_r(regHL.low); break;
+        case 0x16: cycles = RL_HL(); break;
+        case 0x17: cycles = RL_r(regAF.high); break;
 
         // RR r
-        case 0x18: cycles = this->RR_r(this->regBC.high); break;
-        case 0x19: cycles = this->RR_r(this->regBC.low); break;
-        case 0x1A: cycles = this->RR_r(this->regDE.high); break;
-        case 0x1B: cycles = this->RR_r(this->regDE.low); break;
-        case 0x1C: cycles = this->RR_r(this->regHL.high); break;
-        case 0x1D: cycles = this->RR_r(this->regHL.low); break;
-        case 0x1E: cycles = this->RR_HL(); break;
-        case 0x1F: cycles = this->RR_r(this->regAF.high); break;
+        case 0x18: cycles = RR_r(regBC.high); break;
+        case 0x19: cycles = RR_r(regBC.low); break;
+        case 0x1A: cycles = RR_r(regDE.high); break;
+        case 0x1B: cycles = RR_r(regDE.low); break;
+        case 0x1C: cycles = RR_r(regHL.high); break;
+        case 0x1D: cycles = RR_r(regHL.low); break;
+        case 0x1E: cycles = RR_HL(); break;
+        case 0x1F: cycles = RR_r(regAF.high); break;
 
         // SLA r
-        case 0x20: cycles = this->SLA_r(this->regBC.high); break;
-        case 0x21: cycles = this->SLA_r(this->regBC.low); break;
-        case 0x22: cycles = this->SLA_r(this->regDE.high); break;
-        case 0x23: cycles = this->SLA_r(this->regDE.low); break;
-        case 0x24: cycles = this->SLA_r(this->regHL.high); break;
-        case 0x25: cycles = this->SLA_r(this->regHL.low); break;
-        case 0x26: cycles = this->SLA_HL(); break;
-        case 0x27: cycles = this->SLA_r(this->regAF.high); break;
+        case 0x20: cycles = SLA_r(regBC.high); break;
+        case 0x21: cycles = SLA_r(regBC.low); break;
+        case 0x22: cycles = SLA_r(regDE.high); break;
+        case 0x23: cycles = SLA_r(regDE.low); break;
+        case 0x24: cycles = SLA_r(regHL.high); break;
+        case 0x25: cycles = SLA_r(regHL.low); break;
+        case 0x26: cycles = SLA_HL(); break;
+        case 0x27: cycles = SLA_r(regAF.high); break;
 
         // SRA r
-        case 0x28: cycles = this->SRA_r(this->regBC.high); break;
-        case 0x29: cycles = this->SRA_r(this->regBC.low); break;
-        case 0x2A: cycles = this->SRA_r(this->regDE.high); break;
-        case 0x2B: cycles = this->SRA_r(this->regDE.low); break;
-        case 0x2C: cycles = this->SRA_r(this->regHL.high); break;
-        case 0x2D: cycles = this->SRA_r(this->regHL.low); break;
-        case 0x2E: cycles = this->SRA_HL(); break;
-        case 0x2F: cycles = this->SRA_r(this->regAF.high); break;
+        case 0x28: cycles = SRA_r(regBC.high); break;
+        case 0x29: cycles = SRA_r(regBC.low); break;
+        case 0x2A: cycles = SRA_r(regDE.high); break;
+        case 0x2B: cycles = SRA_r(regDE.low); break;
+        case 0x2C: cycles = SRA_r(regHL.high); break;
+        case 0x2D: cycles = SRA_r(regHL.low); break;
+        case 0x2E: cycles = SRA_HL(); break;
+        case 0x2F: cycles = SRA_r(regAF.high); break;
 
         // Swap r
-        case 0x30: cycles = this->SWAP_r(this->regBC.high); break;
-        case 0x31: cycles = this->SWAP_r(this->regBC.low); break;
-        case 0x32: cycles = this->SWAP_r(this->regDE.high); break;
-        case 0x33: cycles = this->SWAP_r(this->regDE.low); break;
-        case 0x34: cycles = this->SWAP_r(this->regHL.high); break;
-        case 0x35: cycles = this->SWAP_r(this->regHL.low); break;
-        case 0x36: cycles = this->SWAP_HL(); break;
-        case 0x37: cycles = this->SWAP_r(this->regAF.high); break;
+        case 0x30: cycles = SWAP_r(regBC.high); break;
+        case 0x31: cycles = SWAP_r(regBC.low); break;
+        case 0x32: cycles = SWAP_r(regDE.high); break;
+        case 0x33: cycles = SWAP_r(regDE.low); break;
+        case 0x34: cycles = SWAP_r(regHL.high); break;
+        case 0x35: cycles = SWAP_r(regHL.low); break;
+        case 0x36: cycles = SWAP_HL(); break;
+        case 0x37: cycles = SWAP_r(regAF.high); break;
 
         // SRL r
-        case 0x38: cycles = this->SRL_r(this->regBC.high); break;
-        case 0x39: cycles = this->SRL_r(this->regBC.low); break;
-        case 0x3A: cycles = this->SRL_r(this->regDE.high); break;
-        case 0x3B: cycles = this->SRL_r(this->regDE.low); break;
-        case 0x3C: cycles = this->SRL_r(this->regHL.high); break;
-        case 0x3D: cycles = this->SRL_r(this->regHL.low); break;
-        case 0x3E: cycles = this->SRL_HL(); break;
-        case 0x3F: cycles = this->SRL_r(this->regAF.high); break;
+        case 0x38: cycles = SRL_r(regBC.high); break;
+        case 0x39: cycles = SRL_r(regBC.low); break;
+        case 0x3A: cycles = SRL_r(regDE.high); break;
+        case 0x3B: cycles = SRL_r(regDE.low); break;
+        case 0x3C: cycles = SRL_r(regHL.high); break;
+        case 0x3D: cycles = SRL_r(regHL.low); break;
+        case 0x3E: cycles = SRL_HL(); break;
+        case 0x3F: cycles = SRL_r(regAF.high); break;
 
         /* 
         ************************************************************************
@@ -729,244 +728,244 @@ int Emulator::executeCBOpcode() {
         */   
 
         // BIT 0, r
-        case 0x40: cycles = this->BIT_n_r(this->regBC.high, 0); break;
-        case 0x41: cycles = this->BIT_n_r(this->regBC.low, 0); break;
-        case 0x42: cycles = this->BIT_n_r(this->regDE.high, 0); break;
-        case 0x43: cycles = this->BIT_n_r(this->regDE.low, 0); break;
-        case 0x44: cycles = this->BIT_n_r(this->regHL.high, 0); break;
-        case 0x45: cycles = this->BIT_n_r(this->regHL.low, 0); break;
-        case 0x46: cycles = this->BIT_n_HL(0); break;
-        case 0x47: cycles = this->BIT_n_r(this->regAF.high, 0); break;
+        case 0x40: cycles = BIT_n_r(regBC.high, 0); break;
+        case 0x41: cycles = BIT_n_r(regBC.low, 0); break;
+        case 0x42: cycles = BIT_n_r(regDE.high, 0); break;
+        case 0x43: cycles = BIT_n_r(regDE.low, 0); break;
+        case 0x44: cycles = BIT_n_r(regHL.high, 0); break;
+        case 0x45: cycles = BIT_n_r(regHL.low, 0); break;
+        case 0x46: cycles = BIT_n_HL(0); break;
+        case 0x47: cycles = BIT_n_r(regAF.high, 0); break;
 
         // BIT 1, r
-        case 0x48: cycles = this->BIT_n_r(this->regBC.high, 1); break;
-        case 0x49: cycles = this->BIT_n_r(this->regBC.low, 1); break;
-        case 0x4A: cycles = this->BIT_n_r(this->regDE.high, 1); break;
-        case 0x4B: cycles = this->BIT_n_r(this->regDE.low, 1); break;
-        case 0x4C: cycles = this->BIT_n_r(this->regHL.high, 1); break;
-        case 0x4D: cycles = this->BIT_n_r(this->regHL.low, 1); break;
-        case 0x4E: cycles = this->BIT_n_HL(1); break;
-        case 0x4F: cycles = this->BIT_n_r(this->regAF.high, 1); break;
+        case 0x48: cycles = BIT_n_r(regBC.high, 1); break;
+        case 0x49: cycles = BIT_n_r(regBC.low, 1); break;
+        case 0x4A: cycles = BIT_n_r(regDE.high, 1); break;
+        case 0x4B: cycles = BIT_n_r(regDE.low, 1); break;
+        case 0x4C: cycles = BIT_n_r(regHL.high, 1); break;
+        case 0x4D: cycles = BIT_n_r(regHL.low, 1); break;
+        case 0x4E: cycles = BIT_n_HL(1); break;
+        case 0x4F: cycles = BIT_n_r(regAF.high, 1); break;
 
         // BIT 2, r
-        case 0x50: cycles = this->BIT_n_r(this->regBC.high, 2); break;
-        case 0x51: cycles = this->BIT_n_r(this->regBC.low, 2); break;
-        case 0x52: cycles = this->BIT_n_r(this->regDE.high, 2); break;
-        case 0x53: cycles = this->BIT_n_r(this->regDE.low, 2); break;
-        case 0x54: cycles = this->BIT_n_r(this->regHL.high, 2); break;
-        case 0x55: cycles = this->BIT_n_r(this->regHL.low, 2); break;
-        case 0x56: cycles = this->BIT_n_HL(2); break;
-        case 0x57: cycles = this->BIT_n_r(this->regAF.high, 2); break;
+        case 0x50: cycles = BIT_n_r(regBC.high, 2); break;
+        case 0x51: cycles = BIT_n_r(regBC.low, 2); break;
+        case 0x52: cycles = BIT_n_r(regDE.high, 2); break;
+        case 0x53: cycles = BIT_n_r(regDE.low, 2); break;
+        case 0x54: cycles = BIT_n_r(regHL.high, 2); break;
+        case 0x55: cycles = BIT_n_r(regHL.low, 2); break;
+        case 0x56: cycles = BIT_n_HL(2); break;
+        case 0x57: cycles = BIT_n_r(regAF.high, 2); break;
 
         // BIT 3, r
-        case 0x58: cycles = this->BIT_n_r(this->regBC.high, 3); break;
-        case 0x59: cycles = this->BIT_n_r(this->regBC.low, 3); break;
-        case 0x5A: cycles = this->BIT_n_r(this->regDE.high, 3); break;
-        case 0x5B: cycles = this->BIT_n_r(this->regDE.low, 3); break;
-        case 0x5C: cycles = this->BIT_n_r(this->regHL.high, 3); break;
-        case 0x5D: cycles = this->BIT_n_r(this->regHL.low, 3); break;
-        case 0x5E: cycles = this->BIT_n_HL(3); break;
-        case 0x5F: cycles = this->BIT_n_r(this->regAF.high, 3); break;
+        case 0x58: cycles = BIT_n_r(regBC.high, 3); break;
+        case 0x59: cycles = BIT_n_r(regBC.low, 3); break;
+        case 0x5A: cycles = BIT_n_r(regDE.high, 3); break;
+        case 0x5B: cycles = BIT_n_r(regDE.low, 3); break;
+        case 0x5C: cycles = BIT_n_r(regHL.high, 3); break;
+        case 0x5D: cycles = BIT_n_r(regHL.low, 3); break;
+        case 0x5E: cycles = BIT_n_HL(3); break;
+        case 0x5F: cycles = BIT_n_r(regAF.high, 3); break;
 
         // BIT 4, r
-        case 0x60: cycles = this->BIT_n_r(this->regBC.high, 4); break;
-        case 0x61: cycles = this->BIT_n_r(this->regBC.low, 4); break;
-        case 0x62: cycles = this->BIT_n_r(this->regDE.high, 4); break;
-        case 0x63: cycles = this->BIT_n_r(this->regDE.low, 4); break;
-        case 0x64: cycles = this->BIT_n_r(this->regHL.high, 4); break;
-        case 0x65: cycles = this->BIT_n_r(this->regHL.low, 4); break;
-        case 0x66: cycles = this->BIT_n_HL(4); break;
-        case 0x67: cycles = this->BIT_n_r(this->regAF.high, 4); break;
+        case 0x60: cycles = BIT_n_r(regBC.high, 4); break;
+        case 0x61: cycles = BIT_n_r(regBC.low, 4); break;
+        case 0x62: cycles = BIT_n_r(regDE.high, 4); break;
+        case 0x63: cycles = BIT_n_r(regDE.low, 4); break;
+        case 0x64: cycles = BIT_n_r(regHL.high, 4); break;
+        case 0x65: cycles = BIT_n_r(regHL.low, 4); break;
+        case 0x66: cycles = BIT_n_HL(4); break;
+        case 0x67: cycles = BIT_n_r(regAF.high, 4); break;
 
         // BIT 5, r
-        case 0x68: cycles = this->BIT_n_r(this->regBC.high, 5); break;
-        case 0x69: cycles = this->BIT_n_r(this->regBC.low, 5); break;
-        case 0x6A: cycles = this->BIT_n_r(this->regDE.high, 5); break;
-        case 0x6B: cycles = this->BIT_n_r(this->regDE.low, 5); break;
-        case 0x6C: cycles = this->BIT_n_r(this->regHL.high, 5); break;
-        case 0x6D: cycles = this->BIT_n_r(this->regHL.low, 5); break;
-        case 0x6E: cycles = this->BIT_n_HL(5); break;
-        case 0x6F: cycles = this->BIT_n_r(this->regAF.high, 5); break;
+        case 0x68: cycles = BIT_n_r(regBC.high, 5); break;
+        case 0x69: cycles = BIT_n_r(regBC.low, 5); break;
+        case 0x6A: cycles = BIT_n_r(regDE.high, 5); break;
+        case 0x6B: cycles = BIT_n_r(regDE.low, 5); break;
+        case 0x6C: cycles = BIT_n_r(regHL.high, 5); break;
+        case 0x6D: cycles = BIT_n_r(regHL.low, 5); break;
+        case 0x6E: cycles = BIT_n_HL(5); break;
+        case 0x6F: cycles = BIT_n_r(regAF.high, 5); break;
 
         // BIT 6, r
-        case 0x70: cycles = this->BIT_n_r(this->regBC.high, 6); break;
-        case 0x71: cycles = this->BIT_n_r(this->regBC.low, 6); break;
-        case 0x72: cycles = this->BIT_n_r(this->regDE.high, 6); break;
-        case 0x73: cycles = this->BIT_n_r(this->regDE.low, 6); break;
-        case 0x74: cycles = this->BIT_n_r(this->regHL.high, 6); break;
-        case 0x75: cycles = this->BIT_n_r(this->regHL.low, 6); break;
-        case 0x76: cycles = this->BIT_n_HL(6); break;
-        case 0x77: cycles = this->BIT_n_r(this->regAF.high, 4); break;
+        case 0x70: cycles = BIT_n_r(regBC.high, 6); break;
+        case 0x71: cycles = BIT_n_r(regBC.low, 6); break;
+        case 0x72: cycles = BIT_n_r(regDE.high, 6); break;
+        case 0x73: cycles = BIT_n_r(regDE.low, 6); break;
+        case 0x74: cycles = BIT_n_r(regHL.high, 6); break;
+        case 0x75: cycles = BIT_n_r(regHL.low, 6); break;
+        case 0x76: cycles = BIT_n_HL(6); break;
+        case 0x77: cycles = BIT_n_r(regAF.high, 4); break;
 
         // BIT 7, r
-        case 0x78: cycles = this->BIT_n_r(this->regBC.high, 7); break;
-        case 0x79: cycles = this->BIT_n_r(this->regBC.low, 7); break;
-        case 0x7A: cycles = this->BIT_n_r(this->regDE.high, 7); break;
-        case 0x7B: cycles = this->BIT_n_r(this->regDE.low, 7); break;
-        case 0x7C: cycles = this->BIT_n_r(this->regHL.high, 7); break;
-        case 0x7D: cycles = this->BIT_n_r(this->regHL.low, 7); break;
-        case 0x7E: cycles = this->BIT_n_HL(6); break;
-        case 0x77F:this->BIT_n_r(this->regAF.high, 7); break;
+        case 0x78: cycles = BIT_n_r(regBC.high, 7); break;
+        case 0x79: cycles = BIT_n_r(regBC.low, 7); break;
+        case 0x7A: cycles = BIT_n_r(regDE.high, 7); break;
+        case 0x7B: cycles = BIT_n_r(regDE.low, 7); break;
+        case 0x7C: cycles = BIT_n_r(regHL.high, 7); break;
+        case 0x7D: cycles = BIT_n_r(regHL.low, 7); break;
+        case 0x7E: cycles = BIT_n_HL(6); break;
+        case 0x77F:BIT_n_r(regAF.high, 7); break;
 
         // RES 0, r
-        case 0x80: cycles = this->RES_n_r(this->regBC.high, 0); break;
-        case 0x81: cycles = this->RES_n_r(this->regBC.low, 0); break;
-        case 0x82: cycles = this->RES_n_r(this->regDE.high, 0); break;
-        case 0x83: cycles = this->RES_n_r(this->regDE.low, 0); break;
-        case 0x84: cycles = this->RES_n_r(this->regHL.high, 0); break;
-        case 0x85: cycles = this->RES_n_r(this->regHL.low, 0); break;
-        case 0x86: cycles = this->RES_n_HL(0); break;
-        case 0x87: cycles = this->RES_n_r(this->regAF.high, 0); break;
+        case 0x80: cycles = RES_n_r(regBC.high, 0); break;
+        case 0x81: cycles = RES_n_r(regBC.low, 0); break;
+        case 0x82: cycles = RES_n_r(regDE.high, 0); break;
+        case 0x83: cycles = RES_n_r(regDE.low, 0); break;
+        case 0x84: cycles = RES_n_r(regHL.high, 0); break;
+        case 0x85: cycles = RES_n_r(regHL.low, 0); break;
+        case 0x86: cycles = RES_n_HL(0); break;
+        case 0x87: cycles = RES_n_r(regAF.high, 0); break;
 
         // RES 1, r
-        case 0x88: cycles = this->RES_n_r(this->regBC.high, 1); break;
-        case 0x89: cycles = this->RES_n_r(this->regBC.low, 1); break;
-        case 0x8A: cycles = this->RES_n_r(this->regDE.high, 1); break;
-        case 0x8B: cycles = this->RES_n_r(this->regDE.low, 1); break;
-        case 0x8C: cycles = this->RES_n_r(this->regHL.high, 1); break;
-        case 0x8D: cycles = this->RES_n_r(this->regHL.low, 1); break;
-        case 0x8E: cycles = this->RES_n_HL(1); break;
-        case 0x8F: cycles = this->RES_n_r(this->regAF.high, 1); break;
+        case 0x88: cycles = RES_n_r(regBC.high, 1); break;
+        case 0x89: cycles = RES_n_r(regBC.low, 1); break;
+        case 0x8A: cycles = RES_n_r(regDE.high, 1); break;
+        case 0x8B: cycles = RES_n_r(regDE.low, 1); break;
+        case 0x8C: cycles = RES_n_r(regHL.high, 1); break;
+        case 0x8D: cycles = RES_n_r(regHL.low, 1); break;
+        case 0x8E: cycles = RES_n_HL(1); break;
+        case 0x8F: cycles = RES_n_r(regAF.high, 1); break;
 
         // RES 2, r
-        case 0x90: cycles = this->RES_n_r(this->regBC.high, 2); break;
-        case 0x91: cycles = this->RES_n_r(this->regBC.low, 2); break;
-        case 0x92: cycles = this->RES_n_r(this->regDE.high, 2); break;
-        case 0x93: cycles = this->RES_n_r(this->regDE.low, 2); break;
-        case 0x94: cycles = this->RES_n_r(this->regHL.high, 2); break;
-        case 0x95: cycles = this->RES_n_r(this->regHL.low, 2); break;
-        case 0x96: cycles = this->RES_n_HL(2); break;
-        case 0x97: cycles = this->RES_n_r(this->regAF.high, 2); break;
+        case 0x90: cycles = RES_n_r(regBC.high, 2); break;
+        case 0x91: cycles = RES_n_r(regBC.low, 2); break;
+        case 0x92: cycles = RES_n_r(regDE.high, 2); break;
+        case 0x93: cycles = RES_n_r(regDE.low, 2); break;
+        case 0x94: cycles = RES_n_r(regHL.high, 2); break;
+        case 0x95: cycles = RES_n_r(regHL.low, 2); break;
+        case 0x96: cycles = RES_n_HL(2); break;
+        case 0x97: cycles = RES_n_r(regAF.high, 2); break;
 
         // RES 3, r
-        case 0x98: cycles = this->RES_n_r(this->regBC.high, 3); break;
-        case 0x99: cycles = this->RES_n_r(this->regBC.low, 3); break;
-        case 0x9A: cycles = this->RES_n_r(this->regDE.high, 3); break;
-        case 0x9B: cycles = this->RES_n_r(this->regDE.low, 3); break;
-        case 0x9C: cycles = this->RES_n_r(this->regHL.high, 3); break;
-        case 0x9D: cycles = this->RES_n_r(this->regHL.low, 3); break;
-        case 0x9E: cycles = this->RES_n_HL(3); break;
-        case 0x9F: cycles = this->RES_n_r(this->regAF.high, 3); break;
+        case 0x98: cycles = RES_n_r(regBC.high, 3); break;
+        case 0x99: cycles = RES_n_r(regBC.low, 3); break;
+        case 0x9A: cycles = RES_n_r(regDE.high, 3); break;
+        case 0x9B: cycles = RES_n_r(regDE.low, 3); break;
+        case 0x9C: cycles = RES_n_r(regHL.high, 3); break;
+        case 0x9D: cycles = RES_n_r(regHL.low, 3); break;
+        case 0x9E: cycles = RES_n_HL(3); break;
+        case 0x9F: cycles = RES_n_r(regAF.high, 3); break;
 
         // RES 4, r
-        case 0xA0: cycles = this->RES_n_r(this->regBC.high, 4); break;
-        case 0xA1: cycles = this->RES_n_r(this->regBC.low, 4); break;
-        case 0xA2: cycles = this->RES_n_r(this->regDE.high, 4); break;
-        case 0xA3: cycles = this->RES_n_r(this->regDE.low, 4); break;
-        case 0xA4: cycles = this->RES_n_r(this->regHL.high, 4); break;
-        case 0xA5: cycles = this->RES_n_r(this->regHL.low, 4); break;
-        case 0xA6: cycles = this->RES_n_HL(4); break;
-        case 0xA7: cycles = this->RES_n_r(this->regAF.high, 4); break;
+        case 0xA0: cycles = RES_n_r(regBC.high, 4); break;
+        case 0xA1: cycles = RES_n_r(regBC.low, 4); break;
+        case 0xA2: cycles = RES_n_r(regDE.high, 4); break;
+        case 0xA3: cycles = RES_n_r(regDE.low, 4); break;
+        case 0xA4: cycles = RES_n_r(regHL.high, 4); break;
+        case 0xA5: cycles = RES_n_r(regHL.low, 4); break;
+        case 0xA6: cycles = RES_n_HL(4); break;
+        case 0xA7: cycles = RES_n_r(regAF.high, 4); break;
 
         // RES 5, r
-        case 0xA8: cycles = this->RES_n_r(this->regBC.high, 5); break;
-        case 0xA9: cycles = this->RES_n_r(this->regBC.low, 5); break;
-        case 0xAA: cycles = this->RES_n_r(this->regDE.high, 5); break;
-        case 0xAB: cycles = this->RES_n_r(this->regDE.low, 5); break;
-        case 0xAC: cycles = this->RES_n_r(this->regHL.high, 5); break;
-        case 0xAD: cycles = this->RES_n_r(this->regHL.low, 5); break;
-        case 0xAE: cycles = this->RES_n_HL(5); break;
-        case 0xAF: cycles = this->RES_n_r(this->regAF.high, 5); break;
+        case 0xA8: cycles = RES_n_r(regBC.high, 5); break;
+        case 0xA9: cycles = RES_n_r(regBC.low, 5); break;
+        case 0xAA: cycles = RES_n_r(regDE.high, 5); break;
+        case 0xAB: cycles = RES_n_r(regDE.low, 5); break;
+        case 0xAC: cycles = RES_n_r(regHL.high, 5); break;
+        case 0xAD: cycles = RES_n_r(regHL.low, 5); break;
+        case 0xAE: cycles = RES_n_HL(5); break;
+        case 0xAF: cycles = RES_n_r(regAF.high, 5); break;
 
         // RES 6, r
-        case 0xB0: cycles = this->RES_n_r(this->regBC.high, 6); break;
-        case 0xB1: cycles = this->RES_n_r(this->regBC.low, 6); break;
-        case 0xB2: cycles = this->RES_n_r(this->regDE.high, 6); break;
-        case 0xB3: cycles = this->RES_n_r(this->regDE.low, 6); break;
-        case 0xB4: cycles = this->RES_n_r(this->regHL.high, 6); break;
-        case 0xB5: cycles = this->RES_n_r(this->regHL.low, 6); break;
-        case 0xB6: cycles = this->RES_n_HL(6); break;
-        case 0xB7: cycles = this->RES_n_r(this->regAF.high, 4); break;
+        case 0xB0: cycles = RES_n_r(regBC.high, 6); break;
+        case 0xB1: cycles = RES_n_r(regBC.low, 6); break;
+        case 0xB2: cycles = RES_n_r(regDE.high, 6); break;
+        case 0xB3: cycles = RES_n_r(regDE.low, 6); break;
+        case 0xB4: cycles = RES_n_r(regHL.high, 6); break;
+        case 0xB5: cycles = RES_n_r(regHL.low, 6); break;
+        case 0xB6: cycles = RES_n_HL(6); break;
+        case 0xB7: cycles = RES_n_r(regAF.high, 4); break;
 
         // RES 7, r
-        case 0xB8: cycles = this->RES_n_r(this->regBC.high, 7); break;
-        case 0xB9: cycles = this->RES_n_r(this->regBC.low, 7); break;
-        case 0xBA: cycles = this->RES_n_r(this->regDE.high, 7); break;
-        case 0xBB: cycles = this->RES_n_r(this->regDE.low, 7); break;
-        case 0xBC: cycles = this->RES_n_r(this->regHL.high, 7); break;
-        case 0xBD: cycles = this->RES_n_r(this->regHL.low, 7); break;
-        case 0xBE: cycles = this->RES_n_HL(6); break;
-        case 0xB7F:this->RES_n_r(this->regAF.high, 7); break;
+        case 0xB8: cycles = RES_n_r(regBC.high, 7); break;
+        case 0xB9: cycles = RES_n_r(regBC.low, 7); break;
+        case 0xBA: cycles = RES_n_r(regDE.high, 7); break;
+        case 0xBB: cycles = RES_n_r(regDE.low, 7); break;
+        case 0xBC: cycles = RES_n_r(regHL.high, 7); break;
+        case 0xBD: cycles = RES_n_r(regHL.low, 7); break;
+        case 0xBE: cycles = RES_n_HL(6); break;
+        case 0xB7F:RES_n_r(regAF.high, 7); break;
 
         // SET 0, r
-        case 0xC0: cycles = this->SET_n_r(this->regBC.high, 0); break;
-        case 0xC1: cycles = this->SET_n_r(this->regBC.low, 0); break;
-        case 0xC2: cycles = this->SET_n_r(this->regDE.high, 0); break;
-        case 0xC3: cycles = this->SET_n_r(this->regDE.low, 0); break;
-        case 0xC4: cycles = this->SET_n_r(this->regHL.high, 0); break;
-        case 0xC5: cycles = this->SET_n_r(this->regHL.low, 0); break;
-        case 0xC6: cycles = this->SET_n_HL(0); break;
-        case 0xC7: cycles = this->SET_n_r(this->regAF.high, 0); break;
+        case 0xC0: cycles = SET_n_r(regBC.high, 0); break;
+        case 0xC1: cycles = SET_n_r(regBC.low, 0); break;
+        case 0xC2: cycles = SET_n_r(regDE.high, 0); break;
+        case 0xC3: cycles = SET_n_r(regDE.low, 0); break;
+        case 0xC4: cycles = SET_n_r(regHL.high, 0); break;
+        case 0xC5: cycles = SET_n_r(regHL.low, 0); break;
+        case 0xC6: cycles = SET_n_HL(0); break;
+        case 0xC7: cycles = SET_n_r(regAF.high, 0); break;
 
         // SET 1, r
-        case 0xC8: cycles = this->SET_n_r(this->regBC.high, 1); break;
-        case 0xC9: cycles = this->SET_n_r(this->regBC.low, 1); break;
-        case 0xCA: cycles = this->SET_n_r(this->regDE.high, 1); break;
-        case 0xCB: cycles = this->SET_n_r(this->regDE.low, 1); break;
-        case 0xCC: cycles = this->SET_n_r(this->regHL.high, 1); break;
-        case 0xCD: cycles = this->SET_n_r(this->regHL.low, 1); break;
-        case 0xCE: cycles = this->SET_n_HL(1); break;
-        case 0xCF: cycles = this->SET_n_r(this->regAF.high, 1); break;
+        case 0xC8: cycles = SET_n_r(regBC.high, 1); break;
+        case 0xC9: cycles = SET_n_r(regBC.low, 1); break;
+        case 0xCA: cycles = SET_n_r(regDE.high, 1); break;
+        case 0xCB: cycles = SET_n_r(regDE.low, 1); break;
+        case 0xCC: cycles = SET_n_r(regHL.high, 1); break;
+        case 0xCD: cycles = SET_n_r(regHL.low, 1); break;
+        case 0xCE: cycles = SET_n_HL(1); break;
+        case 0xCF: cycles = SET_n_r(regAF.high, 1); break;
 
         // SET 2, r
-        case 0xD0: cycles = this->SET_n_r(this->regBC.high, 2); break;
-        case 0xD1: cycles = this->SET_n_r(this->regBC.low, 2); break;
-        case 0xD2: cycles = this->SET_n_r(this->regDE.high, 2); break;
-        case 0xD3: cycles = this->SET_n_r(this->regDE.low, 2); break;
-        case 0xD4: cycles = this->SET_n_r(this->regHL.high, 2); break;
-        case 0xD5: cycles = this->SET_n_r(this->regHL.low, 2); break;
-        case 0xD6: cycles = this->SET_n_HL(2); break;
-        case 0xD7: cycles = this->SET_n_r(this->regAF.high, 2); break;
+        case 0xD0: cycles = SET_n_r(regBC.high, 2); break;
+        case 0xD1: cycles = SET_n_r(regBC.low, 2); break;
+        case 0xD2: cycles = SET_n_r(regDE.high, 2); break;
+        case 0xD3: cycles = SET_n_r(regDE.low, 2); break;
+        case 0xD4: cycles = SET_n_r(regHL.high, 2); break;
+        case 0xD5: cycles = SET_n_r(regHL.low, 2); break;
+        case 0xD6: cycles = SET_n_HL(2); break;
+        case 0xD7: cycles = SET_n_r(regAF.high, 2); break;
 
         // SET 3, r
-        case 0xD8: cycles = this->SET_n_r(this->regBC.high, 3); break;
-        case 0xD9: cycles = this->SET_n_r(this->regBC.low, 3); break;
-        case 0xDA: cycles = this->SET_n_r(this->regDE.high, 3); break;
-        case 0xDB: cycles = this->SET_n_r(this->regDE.low, 3); break;
-        case 0xDC: cycles = this->SET_n_r(this->regHL.high, 3); break;
-        case 0xDD: cycles = this->SET_n_r(this->regHL.low, 3); break;
-        case 0xDE: cycles = this->SET_n_HL(3); break;
-        case 0xDF: cycles = this->SET_n_r(this->regAF.high, 3); break;
+        case 0xD8: cycles = SET_n_r(regBC.high, 3); break;
+        case 0xD9: cycles = SET_n_r(regBC.low, 3); break;
+        case 0xDA: cycles = SET_n_r(regDE.high, 3); break;
+        case 0xDB: cycles = SET_n_r(regDE.low, 3); break;
+        case 0xDC: cycles = SET_n_r(regHL.high, 3); break;
+        case 0xDD: cycles = SET_n_r(regHL.low, 3); break;
+        case 0xDE: cycles = SET_n_HL(3); break;
+        case 0xDF: cycles = SET_n_r(regAF.high, 3); break;
 
         // SET 4, r
-        case 0xE0: cycles = this->SET_n_r(this->regBC.high, 4); break;
-        case 0xE1: cycles = this->SET_n_r(this->regBC.low, 4); break;
-        case 0xE2: cycles = this->SET_n_r(this->regDE.high, 4); break;
-        case 0xE3: cycles = this->SET_n_r(this->regDE.low, 4); break;
-        case 0xE4: cycles = this->SET_n_r(this->regHL.high, 4); break;
-        case 0xE5: cycles = this->SET_n_r(this->regHL.low, 4); break;
-        case 0xE6: cycles = this->SET_n_HL(4); break;
-        case 0xE7: cycles = this->SET_n_r(this->regAF.high, 4); break;
+        case 0xE0: cycles = SET_n_r(regBC.high, 4); break;
+        case 0xE1: cycles = SET_n_r(regBC.low, 4); break;
+        case 0xE2: cycles = SET_n_r(regDE.high, 4); break;
+        case 0xE3: cycles = SET_n_r(regDE.low, 4); break;
+        case 0xE4: cycles = SET_n_r(regHL.high, 4); break;
+        case 0xE5: cycles = SET_n_r(regHL.low, 4); break;
+        case 0xE6: cycles = SET_n_HL(4); break;
+        case 0xE7: cycles = SET_n_r(regAF.high, 4); break;
 
         // SET 5, r
-        case 0xE8: cycles = this->SET_n_r(this->regBC.high, 5); break;
-        case 0xE9: cycles = this->SET_n_r(this->regBC.low, 5); break;
-        case 0xEA: cycles = this->SET_n_r(this->regDE.high, 5); break;
-        case 0xEB: cycles = this->SET_n_r(this->regDE.low, 5); break;
-        case 0xEC: cycles = this->SET_n_r(this->regHL.high, 5); break;
-        case 0xED: cycles = this->SET_n_r(this->regHL.low, 5); break;
-        case 0xEE: cycles = this->SET_n_HL(5); break;
-        case 0xEF: cycles = this->SET_n_r(this->regAF.high, 5); break;
+        case 0xE8: cycles = SET_n_r(regBC.high, 5); break;
+        case 0xE9: cycles = SET_n_r(regBC.low, 5); break;
+        case 0xEA: cycles = SET_n_r(regDE.high, 5); break;
+        case 0xEB: cycles = SET_n_r(regDE.low, 5); break;
+        case 0xEC: cycles = SET_n_r(regHL.high, 5); break;
+        case 0xED: cycles = SET_n_r(regHL.low, 5); break;
+        case 0xEE: cycles = SET_n_HL(5); break;
+        case 0xEF: cycles = SET_n_r(regAF.high, 5); break;
 
         // SET 6, r
-        case 0xF0: cycles = this->SET_n_r(this->regBC.high, 6); break;
-        case 0xF1: cycles = this->SET_n_r(this->regBC.low, 6); break;
-        case 0xF2: cycles = this->SET_n_r(this->regDE.high, 6); break;
-        case 0xF3: cycles = this->SET_n_r(this->regDE.low, 6); break;
-        case 0xF4: cycles = this->SET_n_r(this->regHL.high, 6); break;
-        case 0xF5: cycles = this->SET_n_r(this->regHL.low, 6); break;
-        case 0xF6: cycles = this->SET_n_HL(6); break;
-        case 0xF7: cycles = this->SET_n_r(this->regAF.high, 4); break;
+        case 0xF0: cycles = SET_n_r(regBC.high, 6); break;
+        case 0xF1: cycles = SET_n_r(regBC.low, 6); break;
+        case 0xF2: cycles = SET_n_r(regDE.high, 6); break;
+        case 0xF3: cycles = SET_n_r(regDE.low, 6); break;
+        case 0xF4: cycles = SET_n_r(regHL.high, 6); break;
+        case 0xF5: cycles = SET_n_r(regHL.low, 6); break;
+        case 0xF6: cycles = SET_n_HL(6); break;
+        case 0xF7: cycles = SET_n_r(regAF.high, 4); break;
 
         // SET 7, r
-        case 0xF8: cycles = this->SET_n_r(this->regBC.high, 7); break;
-        case 0xF9: cycles = this->SET_n_r(this->regBC.low, 7); break;
-        case 0xFA: cycles = this->SET_n_r(this->regDE.high, 7); break;
-        case 0xFB: cycles = this->SET_n_r(this->regDE.low, 7); break;
-        case 0xFC: cycles = this->SET_n_r(this->regHL.high, 7); break;
-        case 0xFD: cycles = this->SET_n_r(this->regHL.low, 7); break;
-        case 0xFE: cycles = this->SET_n_HL(6); break;
-        case 0xFF: cycles = this->SET_n_r(this->regAF.high, 7); break;
+        case 0xF8: cycles = SET_n_r(regBC.high, 7); break;
+        case 0xF9: cycles = SET_n_r(regBC.low, 7); break;
+        case 0xFA: cycles = SET_n_r(regDE.high, 7); break;
+        case 0xFB: cycles = SET_n_r(regDE.low, 7); break;
+        case 0xFC: cycles = SET_n_r(regHL.high, 7); break;
+        case 0xFD: cycles = SET_n_r(regHL.low, 7); break;
+        case 0xFE: cycles = SET_n_HL(6); break;
+        case 0xFF: cycles = SET_n_r(regAF.high, 7); break;
     }
 
     return cycles;
@@ -984,22 +983,35 @@ BYTE Emulator::readMem(WORD address) const {
 
     // If reading from switchable ROM banking area
     if ((address >= 0x4000) && (address <= 0x7FFF)) {
-        WORD newAddress = (this->currentROMBank * 0x4000) + (address - 0x4000);
-        return this->cartridgeMem[newAddress];
+        WORD newAddress = (currentROMBank * 0x4000) + (address - 0x4000);
+        return cartridgeMem[newAddress];
     } 
     
-    // If reading from the switchable RAM banking area
+    // If reading from the switchable external RAM banking area
     else if ((address >= 0xA000) && (address <= 0xBFFF)) {
-        WORD newAddress = (this->currentRAMBank * 0x2000) + (address - 0xA000);
-        return this->RAMBanks[newAddress];
+        // if in ROM mode, only RAM bank 0 can be accessed
+        assert(ROMBanking == (currentRAMBank == 0));
+        WORD newAddress = (currentRAMBank * 0x2000) + (address - 0xA000);
+        return RAMBanks[newAddress];
     }
+    
+    // Since ECHO RAM is the same as Work RAM
+    else if ((address >= 0xE000) && (address <= 0xFDFF)) {
+        return internalMem[address - 0x2000];
+    }
+
+    // Unusable area
+    else if ((address >= 0xFEA0) && (address <= 0xFEFF)) {
+        return 0x00;
+    }
+
     // Joypad Register
     else if (address == 0xFF00) { 
-        return this->getJoypadState();
+        return getJoypadState();
     }
 
     // else return what's in the memory
-    return this->internalMem[address];
+    return internalMem[address];
 
 }
 
@@ -1007,21 +1019,24 @@ void Emulator::writeMem(WORD address, BYTE data) {
 
     // write attempts to ROM
     if (address < 0x8000) {
-        this->handleBanking(address, data);
+        cout << "banking occured" << endl;
+        handleBanking(address, data);
     }
 
-    // write attempts to RAM
+    // write attempts to external RAM
     else if ((address >= 0xA000) && (address <= 0xBFFF)) {
-        if (this->enableRAM) {
-            WORD newAddress = (address - 0xA000) + (this->currentRAMBank * 0x2000);
-            this->RAMBanks[newAddress] = data;
+        if (enableRAM) {
+            // In ROM mode, only RAM bank 0 can be accessed
+            assert(ROMBanking == (currentRAMBank == 0));
+            WORD newAddress = (address - 0xA000) + (currentRAMBank * 0x2000);
+            RAMBanks[newAddress] = data;
         }
     }
 
-    // writing to Echo RAM also writes to work RAM
+    // writing to ECHO RAM also writes to work RAM (0xC000 - 0xDDFF)
     else if ((address >= 0xE000) && (address <= 0xFDFF)) {
-        this->internalMem[address] = data;
-        this->writeMem(address - 0x2000, data);
+        // internalMem[address] = data;
+        writeMem(address - 0x2000, data);
     }
 
     else if ((address >= 0xFEA0) && (address <= 0xFEFF)) {
@@ -1032,7 +1047,7 @@ void Emulator::writeMem(WORD address, BYTE data) {
     // FF04 is divider register, its value is reset to 0 if game attempts to 
     // write to it
     else if (address == DIVIDER) { 
-        this->internalMem[DIVIDER] = 0;
+        internalMem[DIVIDER] = 0;
     }
 
     // if game changes the freq, the counter must change accordingly
@@ -1040,28 +1055,28 @@ void Emulator::writeMem(WORD address, BYTE data) {
         // get the currentFreq, do the writing, then compare with newFreq. if different, counter must be updated
 
         // to extract bit 1 and 0 of timer controller register
-        BYTE currentFreq = this->readMem(TAC) & 0x3; 
-        this->internalMem[TAC] = data; // write the data to the address
-        BYTE newFreq = this->readMem(TAC) & 0x3;
+        BYTE currentFreq = readMem(TAC) & 0x3; 
+        internalMem[TAC] = data; // write the data to the address
+        BYTE newFreq = readMem(TAC) & 0x3;
 
         // if the freq has changed
         if (currentFreq != newFreq) { 
             switch (newFreq) {
                 case 0b00: 
-                    this->timerCounter = 1024; 
-                    this->timerUpdateConstant = 1024; 
+                    timerCounter = 1024; 
+                    timerUpdateConstant = 1024; 
                     break; // 4096Hz
                 case 0b01: 
-                    this->timerCounter = 16;
-                    this->timerUpdateConstant = 16;
+                    timerCounter = 16;
+                    timerUpdateConstant = 16;
                     break; // 262144Hz
                 case 0b10: 
-                    this->timerCounter = 64; 
-                    this->timerUpdateConstant = 64;
+                    timerCounter = 64; 
+                    timerUpdateConstant = 64;
                     break; // 65536Hz
                 case 0b11: 
-                    this->timerCounter = 256; 
-                    this->timerUpdateConstant = 256; 
+                    timerCounter = 256; 
+                    timerUpdateConstant = 256; 
                     break; // 16384Hz
                 default:
                     cout << "Something is wrong!" << endl;
@@ -1071,16 +1086,16 @@ void Emulator::writeMem(WORD address, BYTE data) {
 
     // reset the current scanline to 0 if game tries to write to it
     else if (address == 0xFF44) {
-        this->internalMem[address] = 0;
+        internalMem[address] = 0;
     }
     
     // launches a DMA to access the Sprites Attributes table
     else if (address == 0xFF46) {
-        this->doDMATransfer(data);
+        doDMATransfer(data);
     }
 
     else {
-        this->internalMem[address] = data;
+        internalMem[address] = data;
     }
 
 }
@@ -1088,24 +1103,24 @@ void Emulator::writeMem(WORD address, BYTE data) {
 void Emulator::handleBanking(WORD address, BYTE data) {
     // do RAM enabling
     if (address < 0x2000) {
-        this->doRAMBankEnable(address, data);
+        doRAMBankEnable(address, data);
     }
 
     // do ROM bank change
     else if ((address >= 0x2000) && (address <= 0x3FFF)) {
-        if (this->MBC1) this->doChangeLoROMBank(data);
+        if (MBC1) doChangeLoROMBank(data);
         // if MBC2, LSB of upper address byte must be 1 to select ROM bank
         // wtf is happening??
-        else if (!this->isBitSet(address, 8)) this->doChangeLoROMBank(data);
+        else if (!isBitSet(address, 8)) doChangeLoROMBank(data);
     }
 
     // do ROM or RAM bank change
     else if ((address >= 0x4000) && (address <= 0x5FFF)) {
-        if (this->MBC1) {
-            if (this->ROMBanking) {
-                this->doChangeHiROMBank(data);
+        if (MBC1) {
+            if (ROMBanking) {
+                doChangeHiROMBank(data);
             } else {
-                this->doRAMBankChange(data);
+                doRAMBankChange(data);
             }
         }
     }
@@ -1113,8 +1128,8 @@ void Emulator::handleBanking(WORD address, BYTE data) {
     // this changes whether we are doing ROM banking
     // or RAM banking with the above if statement
     else if ((address >= 0x6000) && (address <= 0x7FFF)) {
-        if (this->MBC1) {
-            this->doChangeROMRAMMode(data);
+        if (MBC1) {
+            doChangeROMRAMMode(data);
         }
     }
 
@@ -1123,15 +1138,16 @@ void Emulator::handleBanking(WORD address, BYTE data) {
 void Emulator::doRAMBankEnable(WORD address, BYTE data) {
 
     // for MBC2, LSB of upper byte of address must be 0 to do enable
-    if (this->MBC2) {
-        if (this->isBitSet(address, 8)) return;
+    if (MBC2) {
+        if (isBitSet(address, 8)) return;
     }
 
     BYTE testData = data & 0xF;
     if (testData == 0xA) {
-        this->enableRAM = true;
-    } else if (testData == 0x0) {
-        this->enableRAM = false;
+        enableRAM = true;
+    } else {
+        // Any other value written will disable RAM
+        enableRAM = false;
     }
 
 }
@@ -1139,9 +1155,9 @@ void Emulator::doRAMBankEnable(WORD address, BYTE data) {
 void Emulator::doChangeLoROMBank(BYTE data) {
     
     // if MBC2, current ROM bank is lower nibble of data
-    if (this->MBC2) {
-        this->currentROMBank = data & 0xF;
-        if (this->currentROMBank == 0x0) this->currentROMBank = 0x1;
+    if (MBC2) {
+        currentROMBank = data & 0xF;
+        if (currentROMBank == 0x0) currentROMBank = 0x1;
         return;
     }
 
@@ -1151,8 +1167,8 @@ void Emulator::doChangeLoROMBank(BYTE data) {
     // always be accessed from 0x0000-3FFF
     if (lower5bits == 0x0) lower5bits = 0x1;
     
-    this->currentROMBank &= 0xE0; // mask the last 5 bits to 0
-    this->currentROMBank |= lower5bits; // match last 5 bits to lower5bits
+    currentROMBank &= 0xE0; // mask the last 5 bits to 0
+    currentROMBank |= lower5bits; // match last 5 bits to lower5bits
 
 }
 
@@ -1161,35 +1177,30 @@ void Emulator::doChangeHiROMBank(BYTE data) {
     // change bit 6-5 of currentROMBank to bit 6-5 of data
 
     // turn off the upper 3 bits of the current rom (since bit 7 must == 0)
-    this->currentROMBank &= 0x1F;
+    currentROMBank &= 0x1F;
 
-    data &= 0xE0; // turn off the lower 5 bits of the data
-    this->currentROMBank |= data; // match higher 3 bits of data
-
-    // to make sure bit 7 == 0? might cause error here, might just only read 
-    // first 7 bits from the 8 bit address to find which ROM bank to use. not 
-    // sure, please check!
-    assert(((this->currentROMBank >> 7) & 0x1) == 0x0);
+    data &= 0x3; // Get the lower 2 bits of the data
+    data <<= 5;
+    currentROMBank |= data; // match higher 2 bits of data
 
 }
 
 void Emulator::doRAMBankChange(BYTE data) {
     // only 4 RAM banks to choose from, 0x0-3
-    this->currentRAMBank = data & 0x3;
+    currentRAMBank = data & 0x3;
 }
 
 void Emulator::doChangeROMRAMMode(BYTE data) {
     
     // ROM banking mode: 0x0
     // RAM banking mode: 0x1
-    BYTE newData = data & 0x1;
-    this->ROMBanking = newData == 0x0;
+    ROMBanking = ((data & 0x1) == 0x0);
     
     // The program may freely switch between both modes, the only limitiation 
     // is that only RAM Bank 00h can be used during Mode 0, and only ROM Banks 
     // 00-1Fh can be used during Mode 1.
-    if (this->ROMBanking) {
-        this->currentRAMBank = 0x0;
+    if (ROMBanking) {
+        currentRAMBank = 0x0;
     }
 }
 
@@ -1214,32 +1225,32 @@ While handling interrupts, for any flagged interrupts, they will be triggered.
 */
 
 void Emulator::flagInterrupt(int interruptID) { 
-    BYTE requestReg = this->readMem(0xFF0F);
-    requestReg = this->bitSet(requestReg, interruptID); // Set the corresponding bit in the interrupt req register 0xFF0F
+    BYTE requestReg = readMem(0xFF0F);
+    requestReg = bitSet(requestReg, interruptID); // Set the corresponding bit in the interrupt req register 0xFF0F
 
     // If halted, wake up
-    this->isHalted = false;
+    isHalted = false;
 
-    this->writeMem(0xFF0F, requestReg); // Update the request register;
+    writeMem(0xFF0F, requestReg); // Update the request register;
 }
 
 void Emulator::handleInterrupts() {
     if (InterruptMasterEnabled) { // Check if the IME switch is true
-        BYTE requestReg = this->readMem(0xFF0F);
-        BYTE enabledReg = this->readMem(0xFFFF);
+        BYTE requestReg = readMem(0xFF0F);
+        BYTE enabledReg = readMem(0xFFFF);
 
         if ((requestReg & enabledReg) > 0) { // If there are any valid interrupt requests enabled
-            this->InterruptMasterEnabled = false; // Disable further interrupts
+            InterruptMasterEnabled = false; // Disable further interrupts
             
-            this->stackPointer.regstr--;
-            this->writeMem(this->stackPointer.regstr, this->programCounter.high);
-            this->stackPointer.regstr--;
-            this->writeMem(this->stackPointer.regstr, this->programCounter.low);
+            stackPointer.regstr--;
+            writeMem(stackPointer.regstr, programCounter.high);
+            stackPointer.regstr--;
+            writeMem(stackPointer.regstr, programCounter.low);
             // Saves current PC to SP, SP is now pointing at bottom of PC. Need to increment SP by 2 when returning
 
             for (int i = 0; i < 5; i++) { // Go through the bits and service the flagged interrupts
-                bool isFlagged = this->isBitSet(requestReg, i);
-                bool isEnabled = this->isBitSet(enabledReg, i);
+                bool isFlagged = isBitSet(requestReg, i);
+                bool isEnabled = isBitSet(enabledReg, i);
                 if (isFlagged && isEnabled) { // If n-th bit is flagged and enabled, trigger the corresponding interrupt
                     triggerInterrupt(i);
                 }
@@ -1250,20 +1261,20 @@ void Emulator::handleInterrupts() {
 
 void Emulator::triggerInterrupt(int interruptID) {
     BYTE requestReg = readMem(0xFF0F);
-    requestReg = this->bitReset(requestReg, interruptID); // Resetting the n-th bit
-    this->writeMem(0xFF0F, requestReg); 
+    requestReg = bitReset(requestReg, interruptID); // Resetting the n-th bit
+    writeMem(0xFF0F, requestReg); 
     switch (interruptID) {
         case 0 : // V-Blank
-            this->programCounter.regstr = 0x40;
+            programCounter.regstr = 0x40;
             break;
         case 1 : // LCD
-            this->programCounter.regstr = 0x48;
+            programCounter.regstr = 0x48;
             break;
         case 2 : // Timer
-            this->programCounter.regstr = 0x50;
+            programCounter.regstr = 0x50;
             break;
         case 4 : // Joypad
-            this->programCounter.regstr = 0x60;
+            programCounter.regstr = 0x60;
             break;
     }
 }
@@ -1320,32 +1331,33 @@ void Emulator::updateTimers(int cycles) {
     Consider defining DIVIDER TIMA TMA TAC as 0xFF04 0xFF05 0xFF06 0xFF07 respectively
     */
 
-    this->dividerCounter += cycles; // TO DECLARE SOMEWHERE
+    dividerCounter += cycles; // TO DECLARE SOMEWHERE
     // Handle divider register first
 
-    if (this->dividerCounter >= 256) {
-       this->dividerCounter = 0; // reset it to start counting for upcoming cycles
-       this->internalMem[DIVIDER]++; // directly modifying instead of using writeMem
+    if (dividerCounter >= 256) {
+       dividerCounter = 0; // reset it to start counting for upcoming cycles
+       internalMem[DIVIDER]++; // directly modifying instead of using writeMem
     }
 
-    if (this->clockEnabled()) {
+    if (clockEnabled()) {
 
-        this->timerCounter -= cycles; // TO DECLARE SOMEWHERE. DECLARE timerUpdateConstant AS WELL!!!
+        timerCounter -= cycles; // TO DECLARE SOMEWHERE. DECLARE timerUpdateConstant AS WELL!!!
         // Decrement counter instead of increment so just need to keep track if <= 0
 
-        if (this->timerCounter <= 0) { // To increment TIMA
+        if (timerCounter <= 0) { // To increment TIMA
 
             // Reset counter to prep for next update
-            this->timerCounter = this->timerUpdateConstant; 
+            timerCounter = timerUpdateConstant; 
 
             // TIMA is at 255, about to overflow
-            if (this->readMem(TIMA) == 0xFF) { 
-                this->writeMem(TIMA, this->readMem(TMA)); // set value of TIMA to value of TMA
+            if (readMem(TIMA) == 0xFF) { 
+
+                writeMem(TIMA, readMem(TMA)); // set value of TIMA to value of TMA
                 
-                this->flagInterrupt(2); // The interrupt flagged is corresponded to bit 2 of interrupt register
+                flagInterrupt(2); // The interrupt flagged is corresponded to bit 2 of interrupt register
                 
             } else {
-                this->writeMem(TIMA, this->readMem(TIMA) + 1); // TIMA is incremented by 1
+                writeMem(TIMA, readMem(TIMA) + 1); // TIMA is incremented by 1
             }
 
         }
@@ -1356,7 +1368,7 @@ void Emulator::updateTimers(int cycles) {
 
 bool Emulator::clockEnabled() {
     // Bit 2 of TAC specifies whether timer is enabled(1) or disabled(0)
-    return this->isBitSet(this->readMem(TAC), 2);
+    return isBitSet(readMem(TAC), 2);
 }
 
 /*
@@ -1414,11 +1426,11 @@ void Emulator::buttonPressed(int key) {
     bool previouslyUnpressed = false; // Keeps track if the button was previously unpressed
     bool flagIntrpt = false; // Keeps track if interrupt should be flagged
 
-    if (this->isBitSet(this->joypadState, key)) { // If the key was set at 1 (unpressed)
+    if (isBitSet(joypadState, key)) { // If the key was set at 1 (unpressed)
         previouslyUnpressed = true;
     }
 
-    this->joypadState = this->bitReset(this->joypadState, key); // Set the key to 0 (pressed)
+    joypadState = bitReset(joypadState, key); // Set the key to 0 (pressed)
 
     // Now, determine if the key is directional or normal button
 
@@ -1431,8 +1443,8 @@ void Emulator::buttonPressed(int key) {
 
     BYTE joypadReg = internalMem[0xFF00];
 
-    if ((!this->isBitSet(joypadReg, 4) && directionalButton) || 
-            (!this->isBitSet(joypadReg, 5) && !directionalButton)) {
+    if ((!isBitSet(joypadReg, 4) && directionalButton) || 
+            (!isBitSet(joypadReg, 5) && !directionalButton)) {
                 if (previouslyUnpressed) {
                     flagIntrpt = true;
                 }
@@ -1444,22 +1456,22 @@ void Emulator::buttonPressed(int key) {
 }
 
 void Emulator::buttonReleased(int key) {
-    this->joypadState = this->bitSet(this->joypadState, key);
+    joypadState = bitSet(joypadState, key);
 }
 
 BYTE Emulator::getJoypadState() const {
-    BYTE joypadReg = this->internalMem[0xFF00];
+    BYTE joypadReg = internalMem[0xFF00];
     joypadReg &= 0xF0; // Sets bits 0-3 to 0;
 
     // If program requests for directional buttons
-    if (!this->isBitSet(joypadReg, 4)) {
-        BYTE directionals = this->joypadState & 0x0F; // Sets bits 4-7 to 0
+    if (!isBitSet(joypadReg, 4)) {
+        BYTE directionals = joypadState & 0x0F; // Sets bits 4-7 to 0
         joypadReg |= directionals;
     }
 
     // If program requests for normal buttons
-    else if (!this->isBitSet(joypadReg, 5)) {
-        BYTE normalButtons = this->joypadState >> 4;
+    else if (!isBitSet(joypadReg, 5)) {
+        BYTE normalButtons = joypadState >> 4;
         joypadReg |= normalButtons;
     }
 
@@ -1568,37 +1580,36 @@ each sprite taking up 4 bytes in the OAM.
 
 void Emulator::updateGraphics(int cycles) {
 
-    this->setLCDStatus();
+    setLCDStatus();
 
-    if (LCDEnabled()) {
-        this->scanlineCycleCount -= cycles;
-    } else {
+    if (!LCDEnabled()) {
         return;
     }
+    scanlineCycleCount -= cycles;
 
     // move onto the next scanline
-    if (this->scanlineCycleCount <= 0) {
+    if (scanlineCycleCount <= 0) {
         // need to update directly since gameboy will always reset scanline to 0
         // if attempting to write to 0xFF44 in memory
-        this->internalMem[0xFF44]++;
-        BYTE currentLine = this->readMem(0xFF44);
+        internalMem[0xFF44]++;
+        BYTE currentLine = readMem(0xFF44);
 
-        this->scanlineCycleCount = 456;
+        scanlineCycleCount = 456;
 
         // encountered vblank period
         if (currentLine == 144) {
-            this->renderGraphics();
-            this->flagInterrupt(0);
+            renderGraphics();
+            flagInterrupt(0);
         }
 
         // if gone past scanline 153 reset to 0
         else if (currentLine > 153) {
-            this->internalMem[0xFF44] = 0;
+            internalMem[0xFF44] = 0;
         }
 
         // draw the current scanline
         else if (currentLine < 144) {
-            this->drawScanLine();
+            drawScanLine();
         }
     }
 
@@ -1606,21 +1617,21 @@ void Emulator::updateGraphics(int cycles) {
 
 void Emulator::setLCDStatus() {
 
-    BYTE status = this->readMem(0xFF41);
+    BYTE status = readMem(0xFF41);
 
     if (!LCDEnabled()) {
         // set the mode to 1 (vblank) during lcd disabled and reset scanline
-        this->scanlineCycleCount = 456;
-        this->internalMem[0xFF44] = 0;
+        scanlineCycleCount = 456;
+        internalMem[0xFF44] = 0;
         // set last 2 bits of status to 01
-        status = this->bitSet(status, 0);
-        status = this->bitReset(status, 1);
+        status = bitSet(status, 0);
+        status = bitReset(status, 1);
 
-        this->writeMem(0xFF41, status);
+        writeMem(0xFF41, status);
         return;
     }
 
-    BYTE currentLine = this->readMem(0xFF44);
+    BYTE currentLine = readMem(0xFF44);
     BYTE currentMode = status & 0x3;
 
     BYTE newMode = 0;
@@ -1630,10 +1641,10 @@ void Emulator::setLCDStatus() {
     if (currentLine >= 144) {
         newMode = 1;
         // set last 2 bits of status to 01
-        status = this->bitSet(status, 0);
-        status = this->bitReset(status, 1);
+        status = bitSet(status, 0);
+        status = bitReset(status, 1);
         // check if vblank interrupt (bit 4) is enabled
-        needInterrupt = this->isBitSet(status, 4);
+        needInterrupt = isBitSet(status, 4);
     } else  {
         
         /*
@@ -1647,71 +1658,71 @@ void Emulator::setLCDStatus() {
         */
 
         // mode 2: 456 - 80 = 376
-        if (this->scanlineCycleCount > 376) {
+        if (scanlineCycleCount >= 376) {
             newMode = 2;
             // set last 2 bits of status to 10
-            status = this->bitReset(status, 0);
-            status = this->bitSet(status, 1);
+            status = bitReset(status, 0);
+            status = bitSet(status, 1);
             // check if OAM interrupt (bit 5) is enabled
-            needInterrupt = this->isBitSet(status, 5);
+            needInterrupt = isBitSet(status, 5);
         }
 
         // mode 3: 376 - 172 = 204
-        else if (this->scanlineCycleCount > 204) {
+        else if (scanlineCycleCount >= 204) {
             newMode = 3;
             // set last 2 bits of status to 11
-            status = this->bitSet(status, 0);
-            status = this->bitSet(status, 1);
+            status = bitSet(status, 0);
+            status = bitSet(status, 1);
         }
 
         // mode 0
         else {
             newMode = 0;
             // set last 2 bits of status to 00
-            status = this->bitReset(status, 0);
-            status = this->bitReset(status, 1);
+            status = bitReset(status, 0);
+            status = bitReset(status, 1);
             // check if hblank interrupt (bit 3) is enabled
-            needInterrupt = this->isBitSet(status, 3);
+            needInterrupt = isBitSet(status, 3);
         }
     }
 
     // if a new mode is entered, request interrupt
     if (needInterrupt && (newMode != currentMode)) {
-        this->flagInterrupt(1);
+        flagInterrupt(1);
     }
 
     // check for the coincidence flag
-    if (currentLine == this->readMem(0xFF45)) {
+    if (currentLine == readMem(0xFF45)) {
         // set coincidence flag (bit 2) to 1
-        status = this->bitSet(status, 2);
+        status = bitSet(status, 2);
         // check if coincidence flag interrupt (bit 6) is enabled
-        if (this->isBitSet(status, 6)) {
-            this->flagInterrupt(1);
+        if (isBitSet(status, 6)) {
+            flagInterrupt(1);
         }
     } else {
         // set coincidence flag (bit 2) to 0
-        status = this->bitReset(status, 2);
+        status = bitReset(status, 2);
     }
 
-    this->writeMem(0xFF41, status);
+    writeMem(0xFF41, status);
 
 }
 
 bool Emulator::LCDEnabled() {
-    return this->isBitSet(this->readMem(0xFF40), 7);
+    return isBitSet(readMem(0xFF40), 7);
 }
 
 void Emulator::drawScanLine() {
-    BYTE lcdControl = this->readMem(0xFF40);
+    BYTE lcdControl = readMem(0xFF40);
 
     // Draw only if LCD is enabled
-    if (this->LCDEnabled()) {
-        if (this->isBitSet(lcdControl, 0)) {
-            this->renderTiles(lcdControl);
+    if (LCDEnabled()) {
+        if (isBitSet(lcdControl, 0)) {
+            renderTiles(lcdControl);
         }
 
-        if (this->isBitSet(lcdControl, 1)) {
-            this->renderSprites(lcdControl);
+        if (isBitSet(lcdControl, 1)) {
+            renderSprites(lcdControl);
         }
     }
 }
@@ -1726,14 +1737,15 @@ void Emulator::renderTiles(BYTE lcdControl) {
     */
 
     // Get coordinates of viewport
-    BYTE scrollY = this->readMem(0xFF42);
-    BYTE scrollX = this->readMem(0xFF43);
-    BYTE windowY = this->readMem(0xFF4A);
-    BYTE windowX = this->readMem(0xFF4B) - 7;
+    BYTE scrollY = readMem(0xFF42);
+    BYTE scrollX = readMem(0xFF43);
+    BYTE windowY = readMem(0xFF4A);
+    BYTE windowX = readMem(0xFF4B) - 7;
 
     // Check if window is enabled and if current scanline is within windowY
     bool usingWindow = false;
-    if (this->isBitSet(lcdControl, 5) && (windowY <= this->readMem(0xFF44))) {
+    BYTE currentLine = readMem(0xFF44);
+    if (isBitSet(lcdControl, 5) && (windowY <= currentLine)) {
         usingWindow = true;
     }
 
@@ -1741,26 +1753,30 @@ void Emulator::renderTiles(BYTE lcdControl) {
     WORD tileDataLocation;
     bool unsignedAddressing;
 
-    if (this->isBitSet(lcdControl, 4)) {
+    if (isBitSet(lcdControl, 4)) {
         // location: 0x8000-8FFF
         tileDataLocation = 0x8000;
         unsignedAddressing = true;
     } else {
         // location: 0x8800-97FF
-        tileDataLocation = 0x8800;
+        // Tile #0 is actually at 0x9000
+        // 0x80 (-128) is the lowest tile at 0x8800
+        tileDataLocation = 0x9000;
         unsignedAddressing = false;
     }
 
-    // Get background Tile Map location
+    // Get Tile Map location
     WORD tileMapLocation;
     if (!usingWindow) {
-        if (this->isBitSet(lcdControl, 3)) {
+        // BG Tile Map Display Select
+        if (isBitSet(lcdControl, 3)) {
             tileMapLocation = 0x9C00;
         } else {
             tileMapLocation = 0x9800;
         }
     } else {
-        if (this->isBitSet(lcdControl, 3)) {
+        // Window Tile Map Display Select
+        if (isBitSet(lcdControl, 6)) {
             tileMapLocation = 0x9C00;
         } else {
             tileMapLocation = 0x9800;
@@ -1771,13 +1787,13 @@ void Emulator::renderTiles(BYTE lcdControl) {
     BYTE tileY;
     BYTE tileYOffset;
     if (!usingWindow) {
-        tileY = (BYTE)(((scrollY + this->readMem(0xFF44)) / 8) % 32);
-        tileYOffset = (BYTE)((scrollY + this->readMem(0xFF04)) % 8);
+        tileY = (BYTE)(((scrollY + currentLine) / 8) % 32);
+        tileYOffset = (BYTE)((scrollY + currentLine) % 8);
     } else {
         // POSSIBLE BUG: need to % 32 to wrap???
         // Or because window is not scrollable and always display from top left?
-        tileY = (BYTE)((this->readMem(0xFF44) - windowY) / 8);
-        tileYOffset = (BYTE)((this->readMem(0xFF04) - windowY) % 8);
+        tileY = (BYTE)((currentLine - windowY) / 8);
+        tileYOffset = (BYTE)((currentLine - windowY) % 8);
     }
 
     // For loop to draw the current line of pixels
@@ -1793,7 +1809,7 @@ void Emulator::renderTiles(BYTE lcdControl) {
         }
 
         // Calculate tile identifier number from tileY & tileX
-        BYTE tileNum = this->readMem(tileMapLocation + (tileY*32) + tileX);
+        BYTE tileNum = readMem(tileMapLocation + (tileY*32) + tileX);
         
         // Get tile data address
         WORD tileDataAddress;
@@ -1804,25 +1820,25 @@ void Emulator::renderTiles(BYTE lcdControl) {
             // Tile number is signed and each tile is 16 bytes
             tileDataAddress = tileDataLocation + (static_cast<SIGNED_BYTE>(tileNum) * 16);
             // tileDataAddress here is in the region 0x8800-97FF
-            assert(tileDataAddress >= 0x8800 == true);
+            assert(((tileDataAddress >= 0x8800) && (tileDataAddress <= 0x97FF))== true);
         }
 
         // Each line is 2 bytes long, to get the current line, add the offset
         tileDataAddress += (tileYOffset << 1);
 
         // Read the 2 bytes of data
-        BYTE b1 = this->readMem(tileDataAddress);
-        BYTE b2 = this->readMem(tileDataAddress + 1);
-
-        cout << "b1: " << (int) b1 << " | b2: " << (int) b2 << "addr: " << hex << (int) tileDataAddress << endl;
+        BYTE b1 = readMem(tileDataAddress);
+        BYTE b2 = readMem(tileDataAddress + 1);
 
         // Figure out the colour palette
         BYTE bit = 7 - ((scrollX + pixel) % 8);
-        BYTE colourBit0 = this->isBitSet(b1, bit) ? 0b01 : 0b00;
-        BYTE colourBit1 = this->isBitSet(b2, bit) ? 0b10 : 0b00;
+        BYTE colourBit0 = isBitSet(b1, bit) ? 0b01 : 0b00;
+        BYTE colourBit1 = isBitSet(b2, bit) ? 0b10 : 0b00;
+
+        // cout << "Palette: " << (int) readMem(0xFF47) << " | colour bits: " << (int) (colourBit0 + colourBit1) << " | Colour: ";
 
         // Get the colour
-        COLOUR colour = this->getColour(colourBit1 + colourBit0, 0xFF47);
+        COLOUR colour = getColour(colourBit1 + colourBit0, 0xFF47);
         
         // Default colour is black where RGB = [0,0,0]
         int red, green, blue; 
@@ -1832,30 +1848,29 @@ void Emulator::renderTiles(BYTE lcdControl) {
                 red = 255;
                 green = 255;
                 blue = 255;
-                //cout << "white" << endl;
+                // cout << "white" << endl;
                 break;
             case LIGHT_GRAY:
                 red = 0xCC;
                 green = 0xCC;
                 blue = 0xCC;
-                cout << "light gray" << endl;
+                // cout << "light gray" << endl;
                 break;
             case DARK_GRAY:
                 red = 0x77;
                 green = 0x77;
                 blue = 0x77;
-                cout << "dark gray" << endl;
+                // cout << "dark gray" << endl;
                 break;
             default:
                 red = green = blue = 0;
-                cout << "black" << endl;
+                // cout << "black" << endl;
                 break;
         }
 
         // Update Screen pixels
-        BYTE currentLine = this->readMem(0xFF44);
         // Store in pixel format ARGB8888
-        this->displayPixels[pixel + (currentLine * 160)] = (0xFF << 24) | (red << 16) | (green << 8) | blue;
+        displayPixels[pixel + (currentLine * 160)] = (0xFF << 24) | (red << 16) | (green << 8) | blue;
 
     }
 
@@ -1864,7 +1879,7 @@ void Emulator::renderTiles(BYTE lcdControl) {
 COLOUR Emulator::getColour(BYTE colourNum, WORD address) const {
 
     // Reading colour palette from memory
-    BYTE palette = this->readMem(address);
+    BYTE palette = readMem(address);
     /*
     Register FF47 contains the colour palette for background. It assigns gray 
     shades to the colour numbers as follows:
@@ -1894,7 +1909,7 @@ void Emulator::renderSprites(BYTE lcdControl) {
 
     // Check sprite size
     bool use8x16 = false;
-    if (this->isBitSet(lcdControl, 2)) {
+    if (isBitSet(lcdControl, 2)) {
         use8x16 = true;
     }
     
@@ -1907,15 +1922,15 @@ void Emulator::renderSprites(BYTE lcdControl) {
         // BYTE2: Tile identifier number. Used to look up tile pattern in VRAM
         // BYTE3: Sprite attributes
         BYTE index = sprite << 2;
-        BYTE yPos = this->readMem(0xFE00 + index) - 16;
-        BYTE xPos = this->readMem(0xFE00 + index + 1) - 8;
-        BYTE tileNum = this->readMem(0xFE00 + index + 2);
-        BYTE attributes = this->readMem(0xFE00 + index + 3);
+        BYTE yPos = readMem(0xFE00 + index) - 16;
+        BYTE xPos = readMem(0xFE00 + index + 1) - 8;
+        BYTE tileNum = readMem(0xFE00 + index + 2);
+        BYTE attributes = readMem(0xFE00 + index + 3);
 
-        bool yFlip = this->isBitSet(attributes, 6);
-        bool xFlip = this->isBitSet(attributes, 5);
+        bool yFlip = isBitSet(attributes, 6);
+        bool xFlip = isBitSet(attributes, 5);
 
-        int scanLine = this->readMem(0xFF44);
+        int scanLine = readMem(0xFF44);
 
         int ySize = use8x16 ? 16 : 8;
 
@@ -1936,8 +1951,8 @@ void Emulator::renderSprites(BYTE lcdControl) {
             WORD lineDataAddress = (0x8000 + (tileNum * 16)) + tileYOffset;
 
             // Read the 2 bytes of data
-            BYTE b1 = this->readMem(lineDataAddress);
-            BYTE b2 = this->readMem(lineDataAddress + 1);
+            BYTE b1 = readMem(lineDataAddress);
+            BYTE b2 = readMem(lineDataAddress + 1);
 
             // It is easier to read in from right to left as
             // pixel 0 is bit 7
@@ -1954,12 +1969,12 @@ void Emulator::renderSprites(BYTE lcdControl) {
 
                 // The rest is the same as in renderTiles
                 // Figure out the colour palette
-                BYTE colourBit0 = this->isBitSet(b1, colourBit) ? 0b01 : 0b00;
-                BYTE colourBit1 = this->isBitSet(b2, colourBit) ? 0b10 : 0b00;
+                BYTE colourBit0 = isBitSet(b1, colourBit) ? 0b01 : 0b00;
+                BYTE colourBit1 = isBitSet(b2, colourBit) ? 0b10 : 0b00;
 
                 // Get the colour
-                WORD cAddress = this->isBitSet(attributes, 4) ? 0xFF49 : 0xFF48;
-                COLOUR colour = this->getColour(colourBit1+colourBit0,cAddress);
+                WORD cAddress = isBitSet(attributes, 4) ? 0xFF49 : 0xFF48;
+                COLOUR colour = getColour(colourBit1 + colourBit0, cAddress);
 
                 // Default colour is black where RGB = [0,0,0]
                 int red, green, blue;
@@ -1980,21 +1995,22 @@ void Emulator::renderSprites(BYTE lcdControl) {
                         break;        
                     default:
                         red = green = blue = 0;
+                        break;
                 }
 
                 // Get the pixel to draw
                 int pixel = xPos + (0 - tilePixel + 7);
 
                 // check if pixel is hidden behind background
-                if (this->isBitSet(attributes, 7)) {
+                if (isBitSet(attributes, 7)) {
 
-                    if (this->displayPixels[pixel + (scanLine * 160)] != 0xFFFFFFFF) {
+                    if (displayPixels[pixel + (scanLine * 160)] != 0xFFFFFFFF) {
                         continue ;
                     }
                     
                 }
                 // Update Screen pixels
-                this->displayPixels[pixel + (scanLine * 160)] = (0xFF << 24) | (red << 16) | (green << 8) | blue;
+                displayPixels[pixel + (scanLine * 160)] = (0xFF << 24) | (red << 16) | (green << 8) | blue;
 
             }
 
@@ -2018,13 +2034,13 @@ void Emulator::doDMATransfer(BYTE data) {
     */
     WORD address = data << 8; 
     for (int i = 0x00; i < 0xA0; i++) {
-        this->writeMem(0xFE00 + i, this->readMem(address + i));
+        writeMem(0xFE00 + i, readMem(address + i));
     }
 }
 
 void Emulator::renderGraphics() {
-    if (this->doRenderPtr != nullptr) {
-        this->doRenderPtr();
+    if (doRenderPtr != nullptr) {
+        doRenderPtr();
     }
 }
 
@@ -2086,8 +2102,8 @@ int Emulator::LD_r_R(BYTE& loadTo, BYTE loadFrom) {
     Flags affected(znhc): ----
  */
 int Emulator::LD_r_n(BYTE& reg) {
-    BYTE n = this->readMem(this->programCounter.regstr);
-    this->programCounter.regstr++;
+    BYTE n = readMem(programCounter.regstr);
+    programCounter.regstr++;
     reg = n;
 
     cout << "LD_r_n" << endl;
@@ -2106,7 +2122,9 @@ int Emulator::LD_r_n(BYTE& reg) {
     Flags affected(znhc): ----
  */
 int Emulator::LD_r_HL(BYTE& reg) {
-    reg = this->readMem(this->regHL.regstr);
+    reg = readMem(regHL.regstr);
+
+    cout << "LD_r_HL" << endl;
 
     return 8;
 }
@@ -2121,7 +2139,9 @@ int Emulator::LD_r_HL(BYTE& reg) {
     Flags affected(znhc): ----
  */
 int Emulator::LD_HL_r(BYTE reg) {
-    this->writeMem(this->regHL.regstr, reg);
+    writeMem(regHL.regstr, reg);
+
+    cout << "LD_HL_r" << endl;
 
     return 8;
 }
@@ -2136,8 +2156,9 @@ int Emulator::LD_HL_r(BYTE reg) {
     Flags affected(znhc): ----
  */
 int Emulator::LD_HL_n() {
-    this->writeMem(this->regHL.regstr, this->readMem(this->programCounter.regstr));
-    this->programCounter.regstr++;
+    BYTE imm = readMem(programCounter.regstr);
+    programCounter.regstr++;
+    writeMem(regHL.regstr, imm);
 
     cout << "LD_HL_n" << endl;
 
@@ -2154,7 +2175,9 @@ int Emulator::LD_HL_n() {
     Flags affected(znhc): ----
  */
 int Emulator::LD_A_BC() {
-    this->regAF.high = this->readMem(this->regBC.regstr);
+    regAF.high = readMem(regBC.regstr);
+
+    cout << "LD_A_BC" << endl;
 
     return 8;
 }
@@ -2169,13 +2192,15 @@ int Emulator::LD_A_BC() {
     Flags affected(znhc): ----
  */
 int Emulator::LD_A_DE() {
-    this->regAF.high = this->readMem(this->regDE.regstr);
+    regAF.high = readMem(regDE.regstr);
+
+    cout << "LD_A_DE" << endl;
 
     return 8;
 }
 
 /*
-    LD A, nn  (0xFA)
+    LD A, (nn)  (0xFA)
 
     Loads content of memory location specified by immediate 16 bit address into register A.
 
@@ -2184,16 +2209,18 @@ int Emulator::LD_A_DE() {
     Flags affected(znhc): ----
  */
 int Emulator::LD_A_nn() {
-    WORD nn = this->readMem(this->programCounter.regstr + 1) << 8;
-    nn |= this->readMem(this->programCounter.regstr);
-    this->programCounter.regstr += 2;
-    this->regAF.high = nn;
+    WORD nn = readMem(programCounter.regstr + 1) << 8;
+    nn |= readMem(programCounter.regstr);
+    programCounter.regstr += 2;
+    regAF.high = readMem(nn);
+
+    cout << "LD_A_nn" << endl;
 
     return 16;
 }
 
 /*
-    LD BC, A  (0x02)
+    LD (BC), A  (0x02)
 
     Loads content of register A into memory location specified by BC.
 
@@ -2202,13 +2229,15 @@ int Emulator::LD_A_nn() {
     Flags affected(znhc): ----
  */
 int Emulator::LD_BC_A() {
-    this->writeMem(this->regBC.regstr, this->regAF.high);
+    writeMem(regBC.regstr, regAF.high);
+
+    cout << "LD_BC_A" << endl;
 
     return 8;
 }
 
 /*
-    LD DE, A  (0x12)
+    LD (DE), A  (0x12)
 
     Loads content of register A into memory location specified by DE.
 
@@ -2217,9 +2246,9 @@ int Emulator::LD_BC_A() {
     Flags affected(znhc): ----
  */
 int Emulator::LD_DE_A() {
-    this->writeMem(this->regDE.regstr, this->regAF.high);
+    writeMem(regDE.regstr, regAF.high);
 
-    assert(this->internalMem[this->regDE.regstr] == this->regAF.high);
+    assert(internalMem[regDE.regstr] == regAF.high);
 
     cout << "LD_DE_A" << endl;
 
@@ -2227,7 +2256,7 @@ int Emulator::LD_DE_A() {
 }
 
 /*
-    LD nn, A  (0xEA)
+    LD (nn), A  (0xEA)
 
     Loads content of register A into memory location specified by immediate 16 bit address.
 
@@ -2236,10 +2265,10 @@ int Emulator::LD_DE_A() {
     Flags affected(znhc): ----
  */
 int Emulator::LD_nn_A() {
-    WORD nn = this->readMem(this->programCounter.regstr + 1) << 8;
-    nn |= this->readMem(this->programCounter.regstr);
-    this->programCounter.regstr += 2;
-    this->writeMem(nn, this->regAF.high);
+    WORD nn = readMem(programCounter.regstr + 1) << 8;
+    nn |= readMem(programCounter.regstr);
+    programCounter.regstr += 2;
+    writeMem(nn, regAF.high);
 
     cout << "LD_nn_A" << endl;
 
@@ -2247,7 +2276,7 @@ int Emulator::LD_nn_A() {
 }
 
 /*
-    LD A, FF00+n  (0xF0)
+    LD A, (FF00+n)  (0xF0)
 
     Loads content of memory location specified by FF00+n into register A,
     where n is the immediate 8 bit data
@@ -2257,9 +2286,9 @@ int Emulator::LD_nn_A() {
     Flags affected(znhc): ----
  */
 int Emulator::LD_A_FF00n() {
-    BYTE n = this->readMem(this->programCounter.regstr);
-    this->programCounter.regstr++;
-    this->regAF.high = this->readMem(0xFF00 + n);
+    BYTE n = readMem(programCounter.regstr);
+    programCounter.regstr++;
+    regAF.high = readMem(0xFF00 + n);
 
     cout << "LD_A_FF00n" << endl;
 
@@ -2267,7 +2296,7 @@ int Emulator::LD_A_FF00n() {
 }
 
 /*
-    LD FF00+n, A  (0xE0)
+    LD (FF00+n), A  (0xE0)
 
     Loads content of register A into memory location specified by FF00+n,
     where n is the immediate 8 bit data.
@@ -2277,9 +2306,9 @@ int Emulator::LD_A_FF00n() {
     Flags affected(znhc): ----
  */
 int Emulator::LD_FF00n_A() {
-    BYTE n = this->readMem(this->programCounter.regstr);
-    this->programCounter.regstr++;
-    this->writeMem(0xFF00 + n, this->regAF.high);
+    BYTE n = readMem(programCounter.regstr);
+    programCounter.regstr++;
+    writeMem(0xFF00 + n, regAF.high);
 
     cout << "LD_FF00n_A" << endl;
 
@@ -2287,7 +2316,7 @@ int Emulator::LD_FF00n_A() {
 }
 
 /*
-    LD A, FF00+C  (0xF2)
+    LD A, (FF00+C)  (0xF2)
 
     Loads content of memory location specified by FF00+C into register A,
     where C is the content of register C
@@ -2297,13 +2326,15 @@ int Emulator::LD_FF00n_A() {
     Flags affected(znhc): ----
  */
 int Emulator::LD_A_FF00C() {
-    this->regAF.high = this->readMem(0xFF00 + this->regBC.low);
+    regAF.high = readMem(0xFF00 + regBC.low);
+
+    cout << "LD_A_FF00C" << endl;
 
     return 8;
 }
 
 /*
-    LD FF00+C, A  (0xE2)
+    LD (FF00+C), A  (0xE2)
 
     Loads content of register A into memory location specified by FF00+C,
     where C is the content of register C
@@ -2313,13 +2344,15 @@ int Emulator::LD_A_FF00C() {
     Flags affected(znhc): ----
  */
 int Emulator::LD_FF00C_A() {
-    this->writeMem(0xFF00 + this->regBC.low, this->regAF.high);
+    writeMem(0xFF00 + regBC.low, regAF.high);
+
+    cout << "LD_FF00C_A" << endl;
 
     return 8;
 }
 
 /*
-    LDI HL, A  (0x22)
+    LDI (HL), A  (0x22)
 
     Loads content of register A into memory location specified by HL, then increment HL.
 
@@ -2328,14 +2361,16 @@ int Emulator::LD_FF00C_A() {
     Flags affected(znhc): ----
  */
 int Emulator::LDI_HL_A() {
-    this->writeMem(this->regHL.regstr, this->regAF.high);
-    this->regHL.regstr++;
+    writeMem(regHL.regstr, regAF.high);
+    regHL.regstr++;
+
+    cout << "LDI_HL_A" << endl;
 
     return 8;
 }
 
 /*
-    LDI A, HL  (0x2A)
+    LDI A, (HL)  (0x2A)
 
     Loads content of memory location specified by HL into register A, then increment HL.
 
@@ -2344,8 +2379,8 @@ int Emulator::LDI_HL_A() {
     Flags affected(znhc): ----
  */
 int Emulator::LDI_A_HL() {
-    this->regAF.high = this->readMem(this->regHL.regstr);
-    this->regHL.regstr++;
+    regAF.high = readMem(regHL.regstr);
+    regHL.regstr++;
 
     cout << "LDI_A_HL" << endl;
 
@@ -2353,7 +2388,7 @@ int Emulator::LDI_A_HL() {
 }
 
 /*
-    LDD HL, A  (0x32)
+    LDD (HL), A  (0x32)
 
     Loads content of register A into memory location specified by HL, then decrement HL.
 
@@ -2362,8 +2397,8 @@ int Emulator::LDI_A_HL() {
     Flags affected(znhc): ----
  */
 int Emulator::LDD_HL_A() {
-    this->writeMem(this->regHL.regstr, this->regAF.high);
-    this->regHL.regstr--;
+    writeMem(regHL.regstr, regAF.high);
+    regHL.regstr--;
 
     cout << "LDD_HL_A" << endl;
 
@@ -2371,7 +2406,7 @@ int Emulator::LDD_HL_A() {
 }
 
 /*
-    LDD A, HL  (0x3A)
+    LDD A, (HL)  (0x3A)
 
     Loads content of memory location specified by HL into register A, then decrement HL.
 
@@ -2380,8 +2415,10 @@ int Emulator::LDD_HL_A() {
     Flags affected(znhc): ----
  */
 int Emulator::LDD_A_HL() {
-    this->regAF.high = this->readMem(this->regHL.regstr);
-    this->regHL.regstr--;
+    regAF.high = readMem(regHL.regstr);
+    regHL.regstr--;
+
+    cout << "LDD_A_HL" << endl;
 
     return 8;
 }
@@ -2403,9 +2440,9 @@ int Emulator::LDD_A_HL() {
     Flags affected(znhc): ----
  */
 int Emulator::LD_rr_nn(Register& reg) {
-    WORD nn = this->readMem(this->programCounter.regstr + 1) << 8;
-    nn |= this->readMem(this->programCounter.regstr);
-    this->programCounter.regstr += 2;
+    WORD nn = readMem(programCounter.regstr + 1) << 8;
+    nn |= readMem(programCounter.regstr);
+    programCounter.regstr += 2;
     reg.regstr = nn;
 
     cout << "LD_rr_nn" << endl;
@@ -2423,13 +2460,15 @@ int Emulator::LD_rr_nn(Register& reg) {
     Flags affected(znhc): ----
  */
 int Emulator::LD_SP_HL() {
-    this->stackPointer.regstr = this->regHL.regstr;
+    stackPointer.regstr = regHL.regstr;
+
+    cout << "LD_SP_HL" << endl;
 
     return 8;
 }
 
 /*
-    LD nn, SP  (0x08)
+    LD (nn), SP  (0x08)
 
     Loads content of SP into memory location specified by nn
 
@@ -2438,12 +2477,14 @@ int Emulator::LD_SP_HL() {
     Flags affected(znhc): ----
  */
 int Emulator::LD_nn_SP() {
-    WORD nn = this->readMem(this->programCounter.regstr + 1) << 8;
-    nn |= this->readMem(this->programCounter.regstr);
-    this->programCounter.regstr += 2;
+    WORD nn = readMem(programCounter.regstr + 1) << 8;
+    nn |= readMem(programCounter.regstr);
+    programCounter.regstr += 2;
 
-    this->writeMem(nn + 1, this->stackPointer.high);
-    this->writeMem(nn, this->stackPointer.low);
+    writeMem(nn + 1, stackPointer.high);
+    writeMem(nn, stackPointer.low);
+
+    cout << "LD_nn_SP" << endl;
 
     return 20;
 }
@@ -2459,10 +2500,12 @@ int Emulator::LD_nn_SP() {
     Flags affected(znhc): ----
  */
 int Emulator::PUSH_rr(Register reg) {
-    this->stackPointer.regstr--;
-    this->writeMem(this->stackPointer.regstr, reg.high);
-    this->stackPointer.regstr--;
-    this->writeMem(this->stackPointer.regstr, reg.low);
+    stackPointer.regstr--;
+    writeMem(stackPointer.regstr, reg.high);
+    stackPointer.regstr--;
+    writeMem(stackPointer.regstr, reg.low);
+
+    cout << "PUSH_rr" << endl;
 
     return 16;
 }
@@ -2478,14 +2521,16 @@ int Emulator::PUSH_rr(Register reg) {
     Flags affected(znhc): ----
  */
 int Emulator::POP_rr(Register& reg) {
-    reg.low = this->readMem(this->stackPointer.regstr);
-    this->stackPointer.regstr++;
-    reg.high = this->readMem(this->stackPointer.regstr);
-    this->stackPointer.regstr++;
+    reg.low = readMem(stackPointer.regstr);
+    stackPointer.regstr++;
+    reg.high = readMem(stackPointer.regstr);
+    stackPointer.regstr++;
 
-    if (reg.regstr == this->regAF.regstr) {
-        this->regAF.regstr &= 0xFFF0;
+    if (reg.regstr == regAF.regstr) {
+        regAF.regstr &= 0xFFF0;
     }
+
+    cout << "POP_rr" << endl;
 
     return 12;
 }
@@ -2511,27 +2556,29 @@ int Emulator::POP_rr(Register& reg) {
     - c: Set if carry from bit 7
  */
 int Emulator::ADD_A_r(BYTE regR) {
-    BYTE result = this->regAF.high + regR;
+    BYTE result = regAF.high + regR;
     
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Half carry flag 
-    if (((regR ^ this->regAF.high ^ result) & 0x10) == 0x10) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    if (((regR ^ regAF.high ^ result) & 0x10) == 0x10) {
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     }
 
     // Carry flag
-    if (result < this->regAF.high) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    if (result < regAF.high) {
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "ADD_A_r" << endl;
 
     return 4;
 }
@@ -2550,29 +2597,31 @@ int Emulator::ADD_A_r(BYTE regR) {
     - c: Set if carry from bit 7
  */
 int Emulator::ADD_A_n() {
-    BYTE n = this->readMem(this->programCounter.regstr);
-    this->programCounter.regstr++;
-    BYTE result = this->regAF.high + n;
+    BYTE n = readMem(programCounter.regstr);
+    programCounter.regstr++;
+    BYTE result = regAF.high + n;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Half carry flag 
-    if (((n ^ this->regAF.high ^ result) & 0x10) == 0x10) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    if (((n ^ regAF.high ^ result) & 0x10) == 0x10) {
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     }
 
     // Carry flag
-    if (result < this->regAF.high) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    if (result < regAF.high) {
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "ADD_A_n" << endl;
 
     return 8;
 }
@@ -2591,28 +2640,30 @@ int Emulator::ADD_A_n() {
     - c: Set if carry from bit 7
  */
 int Emulator::ADD_A_HL() {
-    BYTE toAdd = this->readMem(this->regHL.regstr);
-    BYTE result = this->regAF.high + toAdd;
+    BYTE toAdd = readMem(regHL.regstr);
+    BYTE result = regAF.high + toAdd;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Half carry flag 
-    if (((toAdd ^ this->regAF.high ^ result) & 0x10) == 0x10) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    if (((toAdd ^ regAF.high ^ result) & 0x10) == 0x10) {
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     }
 
     // Carry flag
-    if (result < this->regAF.high) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    if (result < regAF.high) {
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "ADD_A_HL" << endl;
 
     return 8;
 }
@@ -2632,29 +2683,31 @@ int Emulator::ADD_A_HL() {
     - c: Set if carry from bit 7
  */
 int Emulator::ADC_A_r(BYTE reg) {
-    BYTE carry = this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0x01 : 0x00;
+    BYTE carry = isBitSet(regAF.low, FLAG_CARRY) ? 0x01 : 0x00;
     BYTE toAdd = carry + reg;
-    BYTE result = this->regAF.high + carry + toAdd;
+    BYTE result = regAF.high + carry + toAdd;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Half carry flag 
-    if (((toAdd ^ this->regAF.high ^ result) & 0x10) == 0x10) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    if (((toAdd ^ regAF.high ^ result) & 0x10) == 0x10) {
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     }
 
     // Carry flag
-    if (result < this->regAF.high) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    if (result < regAF.high) {
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "ADC_A_r" << endl;
 
     return 4;
 }
@@ -2673,30 +2726,32 @@ int Emulator::ADC_A_r(BYTE reg) {
     - c: Set if carry from bit 7
  */
 int Emulator::ADC_A_n() {
-    BYTE carry = this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0x01 : 0x00;
-    BYTE toAdd = carry + this->readMem(this->programCounter.regstr);
-    BYTE result = this->regAF.high + carry + toAdd;
-    this->programCounter.regstr++;
+    BYTE carry = isBitSet(regAF.low, FLAG_CARRY) ? 0x01 : 0x00;
+    BYTE toAdd = carry + readMem(programCounter.regstr);
+    BYTE result = regAF.high + carry + toAdd;
+    programCounter.regstr++;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Half carry flag 
-    if (((toAdd ^ this->regAF.high ^ result) & 0x10) == 0x10) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    if (((toAdd ^ regAF.high ^ result) & 0x10) == 0x10) {
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     }
 
     // Carry flag
-    if (result < this->regAF.high) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    if (result < regAF.high) {
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "ADC_A_n" << endl;
 
     return 8;
 }
@@ -2715,29 +2770,31 @@ int Emulator::ADC_A_n() {
     - c: Set if carry from bit 7
  */
 int Emulator::ADC_A_HL() {
-    BYTE carry = this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0x01 : 0x00;
-    BYTE toAdd = carry + this->readMem(this->regHL.regstr);
-    BYTE result = this->regAF.high + carry + toAdd;
+    BYTE carry = isBitSet(regAF.low, FLAG_CARRY) ? 0x01 : 0x00;
+    BYTE toAdd = carry + readMem(regHL.regstr);
+    BYTE result = regAF.high + carry + toAdd;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Half carry flag 
-    if (((toAdd ^ this->regAF.high ^ result) & 0x10) == 0x10) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    if (((toAdd ^ regAF.high ^ result) & 0x10) == 0x10) {
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     }
 
     // Carry flag
-    if (result < this->regAF.high) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    if (result < regAF.high) {
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "ADC_A_HL" << endl;
 
     return 8;
 }
@@ -2757,31 +2814,33 @@ int Emulator::ADC_A_HL() {
     - c: Set if A less than r
  */
 int Emulator::SUB_r(BYTE reg) {
-    BYTE result = this->regAF.high - reg;
+    BYTE result = regAF.high - reg;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+    regAF.low = bitSet(regAF.low, FLAG_SUB);
 
     // Half carry flag 
     // If lower nibble of A is less than lower nibble of r, set HCF
-    if ((this->regAF.high & 0x0F) < (reg & 0x0F)) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    if ((regAF.high & 0x0F) < (reg & 0x0F)) {
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     }
 
     // Carry flag
-    if (this->regAF.high < reg) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    if (regAF.high < reg) {
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "SUB_r" << endl;
 
     return 4;
 }
@@ -2800,34 +2859,36 @@ int Emulator::SUB_r(BYTE reg) {
     - c: Set if A less than n
  */
 int Emulator::SUB_n() {
-    BYTE n = this->readMem(this->programCounter.regstr);
-    this->programCounter.regstr++;
+    BYTE n = readMem(programCounter.regstr);
+    programCounter.regstr++;
 
-    BYTE result = this->regAF.high - n;
+    BYTE result = regAF.high - n;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+    regAF.low = bitSet(regAF.low, FLAG_SUB);
 
     // Half carry flag 
     // If lower nibble of A is less than lower nibble of n, set HCF
-    if ((this->regAF.high & 0x0F) < (n & 0x0F)) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    if ((regAF.high & 0x0F) < (n & 0x0F)) {
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     }
 
     // Carry flag
-    if (this->regAF.high < n) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    if (regAF.high < n) {
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "SUB_n" << endl;
 
     return 8;
 }
@@ -2846,32 +2907,34 @@ int Emulator::SUB_n() {
     - c: Set if A less than (HL)
  */
 int Emulator::SUB_HL() {
-    BYTE toSub = this->readMem(this->regHL.regstr);
-    BYTE result = this->regAF.high - toSub;
+    BYTE toSub = readMem(regHL.regstr);
+    BYTE result = regAF.high - toSub;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+    regAF.low = bitSet(regAF.low, FLAG_SUB);
 
     // Half carry flag 
     // If lower nibble of A is less than lower nibble of toSub, set HCF
-    if ((this->regAF.high & 0x0F) < (toSub & 0x0F)) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    if ((regAF.high & 0x0F) < (toSub & 0x0F)) {
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     }
 
     // Carry flag
-    if (this->regAF.high < toSub) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    if (regAF.high < toSub) {
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "SUB_HL" << endl;
 
     return 8;
 }
@@ -2891,33 +2954,35 @@ int Emulator::SUB_HL() {
     - c: Set if A less than toSub
  */
 int Emulator::SBC_A_r(BYTE reg) {
-    BYTE carry = this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0x1 : 0x0;
+    BYTE carry = isBitSet(regAF.low, FLAG_CARRY) ? 0x1 : 0x0;
     BYTE toSub = carry + reg;
-    BYTE result = this->regAF.high - toSub;
+    BYTE result = regAF.high - toSub;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+    regAF.low = bitSet(regAF.low, FLAG_SUB);
 
     // Half carry flag 
     // If lower nibble of A is less than lower nibble of toSub, set HCF
-    if ((this->regAF.high & 0x0F) < (toSub & 0x0F)) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    if ((regAF.high & 0x0F) < (toSub & 0x0F)) {
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     }
 
     // Carry flag
-    if (this->regAF.high < toSub) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    if (regAF.high < toSub) {
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "SBC_A_r" << endl;
 
     return 4;
 }
@@ -2936,35 +3001,37 @@ int Emulator::SBC_A_r(BYTE reg) {
     - c: Set if A less than toSub
  */
 int Emulator::SBC_A_n() {
-    BYTE carry = this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0x1 : 0x0;
-    BYTE toSub = carry + this->readMem(this->programCounter.regstr);
-    this->programCounter.regstr++;
+    BYTE carry = isBitSet(regAF.low, FLAG_CARRY) ? 0x1 : 0x0;
+    BYTE toSub = carry + readMem(programCounter.regstr);
+    programCounter.regstr++;
 
-    BYTE result = this->regAF.high - toSub;
+    BYTE result = regAF.high - toSub;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+    regAF.low = bitSet(regAF.low, FLAG_SUB);
 
     // Half carry flag 
     // If lower nibble of A is less than lower nibble of toSub, set HCF
-    if ((this->regAF.high & 0x0F) < (toSub & 0x0F)) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    if ((regAF.high & 0x0F) < (toSub & 0x0F)) {
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     }
 
     // Carry flag
-    if (this->regAF.high < toSub) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    if (regAF.high < toSub) {
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "SBC_A_n" << endl;
 
     return 8;
 }
@@ -2983,33 +3050,35 @@ int Emulator::SBC_A_n() {
     - c: Set if A less than toSub
  */
 int Emulator::SBC_A_HL() {
-    BYTE carry = this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0x1 : 0x0;
-    BYTE toSub = carry + this->readMem(this->regHL.regstr);
-    BYTE result = this->regAF.high - toSub;
+    BYTE carry = isBitSet(regAF.low, FLAG_CARRY) ? 0x1 : 0x0;
+    BYTE toSub = carry + readMem(regHL.regstr);
+    BYTE result = regAF.high - toSub;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+    regAF.low = bitSet(regAF.low, FLAG_SUB);
 
     // Half carry flag 
     // If lower nibble of A is less than lower nibble of toSub, set HCF
-    if ((this->regAF.high & 0x0F) < (toSub & 0x0F)) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    if ((regAF.high & 0x0F) < (toSub & 0x0F)) {
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     }
 
     // Carry flag
-    if (this->regAF.high < toSub) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    if (regAF.high < toSub) {
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "SBC_A_HL" << endl;
 
     return 8;
 }
@@ -3029,20 +3098,22 @@ int Emulator::SBC_A_HL() {
     - c: 0
  */
 int Emulator::AND_r(BYTE reg) {
-    BYTE result = this->regAF.high & reg;
+    BYTE result = regAF.high & reg;
     
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Half carry flag 
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "AND_r" << endl;
 
     return 4;
 }
@@ -3061,21 +3132,23 @@ int Emulator::AND_r(BYTE reg) {
     - c: 0
  */
 int Emulator::AND_n() {
-    BYTE result = this->regAF.high & this->readMem(this->programCounter.regstr);
-    this->programCounter.regstr++;
+    BYTE result = regAF.high & readMem(programCounter.regstr);
+    programCounter.regstr++;
     
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Half carry flag 
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "AND_n" << endl;
 
     return 8;
 }
@@ -3094,20 +3167,22 @@ int Emulator::AND_n() {
     - c: 0
  */
 int Emulator::AND_HL() {
-    BYTE result = this->regAF.high & this->readMem(this->regHL.regstr);
+    BYTE result = regAF.high & readMem(regHL.regstr);
     
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Half carry flag 
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "AND_HL" << endl;
 
     return 8;
 }
@@ -3126,17 +3201,17 @@ int Emulator::AND_HL() {
     - c: 0
  */
 int Emulator::XOR_r(BYTE reg) {
-    BYTE result = this->regAF.high ^ reg;
+    BYTE result = regAF.high ^ reg;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
 
     cout << "XOR_r" << endl;
 
@@ -3157,18 +3232,20 @@ int Emulator::XOR_r(BYTE reg) {
     - c: 0
  */
 int Emulator::XOR_n() {
-    BYTE result = this->regAF.high ^ this->readMem(this->programCounter.regstr);
-    this->programCounter.regstr++;
+    BYTE result = regAF.high ^ readMem(programCounter.regstr);
+    programCounter.regstr++;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "XOR_n" << endl;
 
     return 8;
 }
@@ -3187,17 +3264,19 @@ int Emulator::XOR_n() {
     - c: 0
  */
 int Emulator::XOR_HL() {
-    BYTE result = this->regAF.high ^ this->readMem(this->regHL.regstr);
+    BYTE result = regAF.high ^ readMem(regHL.regstr);
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "XOR_HL" << endl;
 
     return 8;
 }
@@ -3217,17 +3296,19 @@ int Emulator::XOR_HL() {
     - c: 0
  */
 int Emulator::OR_r(BYTE reg) {
-    BYTE result = this->regAF.high | reg;
+    BYTE result = regAF.high | reg;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "OR_r" << endl;
 
     return 4;
 }
@@ -3246,18 +3327,20 @@ int Emulator::OR_r(BYTE reg) {
     - c: 0
  */
 int Emulator::OR_n() {
-    BYTE result = this->regAF.high | this->readMem(this->programCounter.regstr);
-    this->programCounter.regstr++;
+    BYTE result = regAF.high | readMem(programCounter.regstr);
+    programCounter.regstr++;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "OR_n" << endl;
 
     return 8;
 }
@@ -3276,17 +3359,19 @@ int Emulator::OR_n() {
     - c: 0
  */
 int Emulator::OR_HL() {
-    BYTE result = this->regAF.high | this->readMem(this->regHL.regstr);
+    BYTE result = regAF.high | readMem(regHL.regstr);
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "OR_HL" << endl;
 
     return 8;
 }
@@ -3307,29 +3392,31 @@ int Emulator::OR_HL() {
     - c: Set if A less than r
  */
 int Emulator::CP_r(BYTE reg) {
-    BYTE result = this->regAF.high - reg;
+    BYTE result = regAF.high - reg;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+    regAF.low = bitSet(regAF.low, FLAG_SUB);
 
     // Half carry flag 
     // If lower nibble of A is less than lower nibble of r, set HCF
-    if ((this->regAF.high & 0x0F) < (reg & 0x0F)) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    if ((regAF.high & 0x0F) < (reg & 0x0F)) {
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     }
 
     // Carry flag
-    if (this->regAF.high < reg) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    if (regAF.high < reg) {
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
+
+    cout << "CP_r" << endl;
 
     return 4;
 }
@@ -3349,31 +3436,31 @@ int Emulator::CP_r(BYTE reg) {
     - c: Set if A less than n
  */
 int Emulator::CP_n() {
-    BYTE n = this->readMem(this->programCounter.regstr);
-    this->programCounter.regstr++;
+    BYTE n = readMem(programCounter.regstr);
+    programCounter.regstr++;
 
-    BYTE result = this->regAF.high - n;
+    BYTE result = regAF.high - n;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+    regAF.low = bitSet(regAF.low, FLAG_SUB);
 
     // Half carry flag 
     // If lower nibble of A is less than lower nibble of n, set HCF
-    if ((this->regAF.high & 0x0F) < (n & 0x0F)) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    if ((regAF.high & 0x0F) < (n & 0x0F)) {
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     }
 
     // Carry flag
-    if (this->regAF.high < n) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    if (regAF.high < n) {
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
 
     cout << "CP_n" << endl;
@@ -3396,30 +3483,32 @@ int Emulator::CP_n() {
     - c: Set if A less than (HL)
  */
 int Emulator::CP_HL() {
-    BYTE toSub = this->readMem(this->regHL.regstr);
-    BYTE result = this->regAF.high - toSub;
+    BYTE toSub = readMem(regHL.regstr);
+    BYTE result = regAF.high - toSub;
 
     // Reset the flags
-    this->regAF.regstr &= 0xFF00;
+    regAF.low &= 0x00;
 
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+    regAF.low = bitSet(regAF.low, FLAG_SUB);
 
     // Half carry flag 
     // If lower nibble of A is less than lower nibble of toSub, set HCF
-    if ((this->regAF.high & 0x0F) < (toSub & 0x0F)) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    if ((regAF.high & 0x0F) < (toSub & 0x0F)) {
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     }
 
     // Carry flag
-    if (this->regAF.high < toSub) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    if (regAF.high < toSub) {
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
+
+    cout << "CP_HL" << endl;
 
     return 8;
 }
@@ -3439,27 +3528,27 @@ int Emulator::CP_HL() {
     - c: Not affected
  */
 int Emulator::INC_r(BYTE& reg) {
-    bool wasBit3Set = this->isBitSet(reg, 3);
+    bool wasBit3Set = isBitSet(reg, 3);
     reg++;
-    bool afterBit3Set = this->isBitSet(reg, 3);
+    bool afterBit3Set = isBitSet(reg, 3);
     
     // Zero flag
     if (reg == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     } else {
-        this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitReset(regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
 
     // Half carry flag 
     // Set if bit 3 was set before the increment, then not set after the increment
     if (wasBit3Set && !afterBit3Set) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     } 
     else {
-        this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+        regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
     }
 
     cout << "INC_r" << endl;
@@ -3470,7 +3559,7 @@ int Emulator::INC_r(BYTE& reg) {
 /*
     INC HL (0x34)
 
-    Increments register HL by 1.
+    Increments byte at address (HL) by 1.
 
     12 cycles
 
@@ -3481,31 +3570,33 @@ int Emulator::INC_r(BYTE& reg) {
     - c: Not affected
  */
 int Emulator::INC_HL() {
-    BYTE reg = this->readMem(this->regHL.regstr);
-    bool wasBit3Set = this->isBitSet(reg, 3);
-    reg++;
-    bool afterBit3Set = this->isBitSet(reg, 3);
+    BYTE HLdata = readMem(regHL.regstr);
+    bool wasBit3Set = isBitSet(HLdata, 3);
+    HLdata++;
+    bool afterBit3Set = isBitSet(HLdata, 3);
     
     // Zero flag
-    if (reg == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+    if (HLdata == 0x0) {
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     } else {
-        this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitReset(regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
 
     // Half carry flag 
     // Set if bit 3 was set before the increment, then not set after the increment
     if (wasBit3Set && !afterBit3Set) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     } 
     else {
-        this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+        regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
     }
 
-    this->writeMem(this->regHL.regstr, reg);
+    writeMem(regHL.regstr, HLdata);
+
+    cout << "INC_HL" << endl;
 
     return 12;
 }
@@ -3529,20 +3620,20 @@ int Emulator::DEC_r(BYTE& reg) {
     
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     } else {
-        this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitReset(regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+    regAF.low = bitSet(regAF.low, FLAG_SUB);
 
     // Half carry flag 
     if (((result ^ reg ^ 0x1) & 0x10) == 0x10) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     } 
     else {
-        this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+        regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
     }
 
     reg = result;
@@ -3566,28 +3657,30 @@ int Emulator::DEC_r(BYTE& reg) {
     - c: Not affected
  */
 int Emulator::DEC_HL() {
-    BYTE initial = this->readMem(this->regHL.regstr);
+    BYTE initial = readMem(regHL.regstr);
     BYTE result =  initial - 1;
     
     // Zero flag
     if (result == 0x0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     } else {
-        this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitReset(regAF.low, FLAG_ZERO);
     }
 
     // Subtract flag
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_SUB);
+    regAF.low = bitSet(regAF.low, FLAG_SUB);
 
     // Half carry flag 
     if ((((result ^ initial ^ 0x1)) & 0x10) == 0x10) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+        regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
     } 
     else {
-        this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+        regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
     }
 
-    this->writeMem(this->regHL.regstr, result);
+    writeMem(regHL.regstr, result);
+
+    cout << "DEC_HL" << endl;
 
     return 12;
 }
@@ -3606,51 +3699,53 @@ int Emulator::DEC_HL() {
     - c: x
  */
 int Emulator::DAA() {
-    int result = this->regAF.high;
+    int result = regAF.high;
 
     // After an addition
-    if (!this->isBitSet(this->regAF.low, FLAG_SUB)) {
-        if (this->isBitSet(this->regAF.low, FLAG_HALFCARRY) || (result & 0xF) > 9) {
+    if (!isBitSet(regAF.low, FLAG_SUB)) {
+        if (isBitSet(regAF.low, FLAG_HALFCARRY) || (result & 0xF) > 9) {
             result += 0x06;
         }
 
-        if (this->isBitSet(this->regAF.low, FLAG_CARRY) || (result > 0x9F)) {
+        if (isBitSet(regAF.low, FLAG_CARRY) || (result > 0x9F)) {
             result += 0x60;
         }
     }
     // After a subtraction
     else
     {
-        if (this->isBitSet(this->regAF.low, FLAG_HALFCARRY)) {
+        if (isBitSet(regAF.low, FLAG_HALFCARRY)) {
             result = (result - 0x06) & 0xFF;
         }
 
-        if (this->isBitSet(this->regAF.low, FLAG_CARRY)) {
+        if (isBitSet(regAF.low, FLAG_CARRY)) {
             result -= 0x60;
         }
     }
 
     // Half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Carry flag
     // If it overflowed
     if ((result & 0x100) == 0x100) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+        regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
     
     result &= 0xFF;
 
     // Zero flag
     if (result == 0) {
-        this->regAF.low = this->bitSet(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitSet(regAF.low, FLAG_ZERO);
     }
     else
     {
-        this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
+        regAF.low = bitReset(regAF.low, FLAG_ZERO);
     }
 
-    this->regAF.high = (BYTE) result;
+    regAF.high = (BYTE) result;
+
+    cout << "DAA" << endl;
 
     return 4;
 }
@@ -3669,15 +3764,17 @@ int Emulator::DAA() {
     - c: Not affected
  */
 int Emulator::CPL() {
-    BYTE result = this->regAF.high ^ 0xFF;
+    BYTE result = regAF.high ^ 0xFF;
 
     // Half carry flag
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
 
     // Carry flag
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    regAF.low = bitSet(regAF.low, FLAG_CARRY);
 
-    this->regAF.high = result;
+    regAF.high = result;
+
+    cout << "CPL" << endl;
 
     return 4;
 }
@@ -3704,24 +3801,26 @@ int Emulator::CPL() {
 */
 int Emulator::ADD_HL_rr(WORD rr) {
 
-    WORD before = this->regHL.regstr;
+    WORD before = regHL.regstr;
     
     // Add contents and store result in HL
     WORD result = before + rr;
-    this->regHL.regstr = result;
+    regHL.regstr = result;
 
     // Reset subtract flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
 
     // Update half carry flag
-    this->regAF.low = ((result ^ before ^ rr) & 0x1000)
-        ? this->bitSet(this->regAF.low, FLAG_HALFCARRY)
-        : this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = ((result ^ before ^ rr) & 0x1000)
+        ? bitSet(regAF.low, FLAG_HALFCARRY)
+        : bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update carry flag
-    this->regAF.low = (result < before) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = (result < before) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "ADD_HL_rr" << endl;
 
     return 8;
 
@@ -3741,6 +3840,8 @@ int Emulator::INC_rr(WORD& rr) {
 
     rr++;
 
+    cout << "INC_rr" << endl;
+
     return 8;
 
 }
@@ -3758,6 +3859,8 @@ int Emulator::INC_rr(WORD& rr) {
 int Emulator::DEC_rr(WORD& rr) {
 
     rr--;
+
+    cout << "DEC_rr" << endl;
 
     return 8;
 
@@ -3779,27 +3882,29 @@ int Emulator::DEC_rr(WORD& rr) {
 */
 int Emulator::ADD_SP_dd() {
 
-    WORD before = this->stackPointer.regstr;
-    SIGNED_BYTE dd = static_cast<SIGNED_BYTE>(this->readMem(this->programCounter.regstr));
-    this->programCounter.regstr++;
+    WORD before = stackPointer.regstr;
+    SIGNED_BYTE dd = static_cast<SIGNED_BYTE>(readMem(programCounter.regstr));
+    programCounter.regstr++;
 
     // Adding dd to SP and storing result in SP
     WORD result = before + dd;
-    this->stackPointer.regstr = result;
+    stackPointer.regstr = result;
 
     // Reset zero and subtract flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_ZERO);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
 
     // Update half carry flag
-    this->regAF.low = ((result & 0x0F) < (before & 0x0F))
-        ? this->bitSet(this->regAF.low, FLAG_HALFCARRY)
-        : this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = ((result & 0x0F) < (before & 0x0F))
+        ? bitSet(regAF.low, FLAG_HALFCARRY)
+        : bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update carry flag
-    this->regAF.low = ((result & 0xFF) < (before & 0xFF)) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = ((result & 0xFF) < (before & 0xFF)) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "ADD_SP_dd" << endl;
 
     return 16;
 
@@ -3821,27 +3926,29 @@ int Emulator::ADD_SP_dd() {
 */
 int Emulator::LD_HL_SPdd() {
 
-    WORD before = this->stackPointer.regstr;
-    SIGNED_BYTE dd = static_cast<SIGNED_BYTE>(this->readMem(this->programCounter.regstr));
-    this->programCounter.regstr++;
+    WORD before = stackPointer.regstr;
+    SIGNED_BYTE dd = static_cast<SIGNED_BYTE>(readMem(programCounter.regstr));
+    programCounter.regstr++;
 
     // Adding dd to SP, and load result into HL
-    WORD result = this->stackPointer.regstr + dd;
-    this->regHL.regstr = result;
+    WORD result = stackPointer.regstr + dd;
+    regHL.regstr = result;
 
     // Reset zero and subtract flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_ZERO);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
 
     // Update half carry flag
-    this->regAF.low = ((result & 0x0F) < (before & 0x0F))
-        ? this->bitSet(this->regAF.low, FLAG_HALFCARRY)
-        : this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = ((result & 0x0F) < (before & 0x0F))
+        ? bitSet(regAF.low, FLAG_HALFCARRY)
+        : bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update carry flag
-    this->regAF.low = ((result & 0xFF) < (before & 0xFF)) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = ((result & 0xFF) < (before & 0xFF)) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "LD_HL_SPdd" << endl;
 
     return 12;
 
@@ -3870,7 +3977,7 @@ Rotate and Shift Commands
 
 int Emulator::RLCA() {
 
-    BYTE data = this->regAF.high;
+    BYTE data = regAF.high;
     BYTE bit7 = data >> 7;
 
     // Shift data left and copy bit 7 to bit 0
@@ -3878,17 +3985,19 @@ int Emulator::RLCA() {
     data |= bit7;
 
     // Store result back into accumulator
-    this->regAF.high = data;
+    regAF.high = data;
 
     // Reset zero, subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_ZERO);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Copy bit 7 into carry flag
-    this->regAF.low = this->isBitSet(bit7, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit7, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "RLCA" << endl;
 
     return 4;
 
@@ -3911,25 +4020,27 @@ int Emulator::RLCA() {
 
 int Emulator::RLA() {
 
-    BYTE data = this->regAF.high;
+    BYTE data = regAF.high;
     BYTE bit7 = data >> 7;
 
     // Shift data left and copy old carry flag to bit 0
     data <<= 1;
-    data |= (this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0b1 : 0b0);
+    data |= (isBitSet(regAF.low, FLAG_CARRY) ? 0b1 : 0b0);
 
     // Store result back into accumulator
-    this->regAF.high = data;
+    regAF.high = data;
 
     // Reset zero, subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_ZERO);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Copy bit 7 into carry flag
-    this->regAF.low = this->isBitSet(bit7, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit7, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "RLA" << endl;
 
     return 4;
 
@@ -3951,7 +4062,7 @@ int Emulator::RLA() {
 */
 int Emulator::RRCA() {
 
-    BYTE data = this->regAF.high;
+    BYTE data = regAF.high;
     BYTE bit0 = data & 0b1;
 
     // Shift data right and copy bit 0 to bit 7
@@ -3959,17 +4070,19 @@ int Emulator::RRCA() {
     data |= (bit0 << 7);
 
     // Store result back into accumulator
-    this->regAF.high = data;
+    regAF.high = data;
 
     // Reset zero, subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_ZERO);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Copy bit 0 into carry flag
-    this->regAF.low = this->isBitSet(bit0, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit0, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "RRCA" << endl;
 
     return 4;
 }
@@ -3991,25 +4104,27 @@ int Emulator::RRCA() {
 
 int Emulator::RRA() {
 
-    BYTE data = this->regAF.high;
+    BYTE data = regAF.high;
     BYTE bit0 = data & 0b1;
 
     // Shift data right and copy old carry flag to bit 7
     data >>= 1;
-    data |= ((this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0b1 : 0b0) << 7);
+    data |= ((isBitSet(regAF.low, FLAG_CARRY) ? 0b1 : 0b0) << 7);
 
     // Store result back into accumulator
-    this->regAF.high = data;
+    regAF.high = data;
 
     // Reset zero, subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_ZERO);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_ZERO);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Copy bit 0 into carry flag
-    this->regAF.low = this->isBitSet(bit0, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit0, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "RRA" << endl;
 
     return 4;
 
@@ -4043,18 +4158,20 @@ int Emulator::RLC_r(BYTE& r) {
     r = data;
 
     // Reset subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
 
     // Copy bit 7 into carry flag
-    this->regAF.low = this->isBitSet(bit7, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit7, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "RLC_r" << endl;
 
     return 8;
 
@@ -4076,7 +4193,7 @@ int Emulator::RLC_r(BYTE& r) {
 */
 int Emulator::RLC_HL() {
 
-    BYTE data = this->readMem(this->regHL.regstr);
+    BYTE data = readMem(regHL.regstr);
     BYTE bit7 = data >> 7;
 
     // Shift data left and copy bit 7 to bit 0
@@ -4084,21 +4201,23 @@ int Emulator::RLC_HL() {
     data |= bit7;
 
     // Store result back into memory
-    this->writeMem(this->regHL.regstr, data);
+    writeMem(regHL.regstr, data);
 
     // Reset subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
 
     // Copy bit 7 into carry flag
-    this->regAF.low = this->isBitSet(bit7, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit7, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "RLC_HL" << endl;
 
     return 16;
 
@@ -4127,24 +4246,26 @@ int Emulator::RL_r(BYTE& r) {
 
     // Shift data left and copy old carry flag to bit 0
     data <<= 1;
-    data |= (this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0b1 : 0b0);
+    data |= (isBitSet(regAF.low, FLAG_CARRY) ? 0b1 : 0b0);
 
     // Store result back into r
     r = data;
 
     // Reset subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
 
     // Copy bit 7 into carry flag
-    this->regAF.low = this->isBitSet(bit7, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit7, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "RL_r" << endl;
 
     return 8;
 
@@ -4168,29 +4289,31 @@ int Emulator::RL_r(BYTE& r) {
 
 int Emulator::RL_HL() {
 
-    BYTE data = this->readMem(this->regHL.regstr);
+    BYTE data = readMem(regHL.regstr);
     BYTE bit7 = data >> 7;
 
     // Shift data left and copy old carry flag to bit 0
     data <<= 1;
-    data |= (this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0b1 : 0b0);
+    data |= (isBitSet(regAF.low, FLAG_CARRY) ? 0b1 : 0b0);
 
     // Store result back into memory
-    this->writeMem(this->regHL.regstr, data);
+    writeMem(regHL.regstr, data);
 
     // Reset subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
 
     // Copy bit 7 into carry flag
-    this->regAF.low = this->isBitSet(bit7, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit7, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "RL_HL" << endl;
 
     return 16;
 
@@ -4224,18 +4347,20 @@ int Emulator::RRC_r(BYTE& r) {
     r = data;
 
     // Reset subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->regAF.low = this->isBitSet(bit0, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit0, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "RRC_r" << endl;
 
     return 8;
 
@@ -4257,7 +4382,7 @@ int Emulator::RRC_r(BYTE& r) {
 */
 int Emulator::RRC_HL() {
 
-    BYTE data = this->readMem(this->regHL.regstr);
+    BYTE data = readMem(regHL.regstr);
     BYTE bit0 = data & 0b1;
 
     // Shift data right and copy bit 0 to bit 7
@@ -4265,21 +4390,23 @@ int Emulator::RRC_HL() {
     data |= (bit0 << 7);
 
     // Store result back into memory
-    this->writeMem(this->regHL.regstr, data);
+    writeMem(regHL.regstr, data);
 
     // Reset subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->regAF.low = this->isBitSet(bit0, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit0, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "RRC_HL" << endl;
 
     return 16;
 
@@ -4308,24 +4435,26 @@ int Emulator::RR_r(BYTE& r) {
 
     // Shift data right and copy old carry flag to bit 7
     data >>= 1;
-    data |= ((this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0b1 : 0b0) << 7);
+    data |= ((isBitSet(regAF.low, FLAG_CARRY) ? 0b1 : 0b0) << 7);
 
     // Store result back into r
     r = data;
 
     // Reset subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->regAF.low = this->isBitSet(bit0, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit0, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "RR_r" << endl;
 
     return 8;
 
@@ -4349,29 +4478,31 @@ int Emulator::RR_r(BYTE& r) {
 
 int Emulator::RR_HL() {
 
-    BYTE data = this->readMem(this->regHL.regstr);
+    BYTE data = readMem(regHL.regstr);
     BYTE bit0 = data & 0b1;
 
     // Shift data right and copy old carry flag to bit 7
     data >>= 1;
-    data |= ((this->isBitSet(this->regAF.low, FLAG_CARRY) ? 0b1 : 0b0) << 7);
+    data |= ((isBitSet(regAF.low, FLAG_CARRY) ? 0b1 : 0b0) << 7);
 
     // Store result back into memory
-    this->writeMem(this->regHL.regstr, data);
+    writeMem(regHL.regstr, data);
 
     // Reset subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->regAF.low = this->isBitSet(bit0, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit0, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "RR_HL" << endl;
 
     return 16;
 
@@ -4402,18 +4533,20 @@ int Emulator::SLA_r(BYTE& r) {
     r = data;
 
     // Reset subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
 
     // Copy bit 7 into carry flag
-    this->regAF.low = this->isBitSet(bit7, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit7, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "SLA_r" << endl;
 
     return 8;
 
@@ -4435,26 +4568,28 @@ int Emulator::SLA_r(BYTE& r) {
 */
 int Emulator::SLA_HL() {
 
-    BYTE data = this->readMem(this->regHL.regstr);
+    BYTE data = readMem(regHL.regstr);
     BYTE bit7 = data >> 7;
 
     // Shift data left and store it back into memory
     data <<= 1;
-    this->writeMem(this->regHL.regstr, data);
+    writeMem(regHL.regstr, data);
 
     // Reset subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
 
     // Copy bit 7 into carry flag
-    this->regAF.low = this->isBitSet(bit7, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit7, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "SLA_HL" << endl;
 
     return 16;
 
@@ -4485,14 +4620,16 @@ int Emulator::SWAP_r(BYTE& r) {
     r = data;
 
     // Reset subtract, halfcarry and carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_CARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
+
+    cout << "SWAP_r" << endl;
 
     return 8;
 
@@ -4513,23 +4650,25 @@ int Emulator::SWAP_r(BYTE& r) {
 */
 int Emulator::SWAP_HL() {
 
-    BYTE data = this->readMem(this->regHL.regstr);
+    BYTE data = readMem(regHL.regstr);
     BYTE lowerNibble = data & 0x0F;
     BYTE upperNibble = (data & 0xF0) >> 4;
 
     // Swap the nibbles in data and store it back into memory
     data = (lowerNibble << 4) | upperNibble;
-    this->writeMem(this->regHL.regstr, data);
+    writeMem(regHL.regstr, data);
 
     // Reset subtract, halfcarry and carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_CARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
+
+    cout << "SWAP_HL" << endl;
 
     return 16;
 
@@ -4561,18 +4700,20 @@ int Emulator::SRA_r(BYTE& r) {
     r = data;
 
     // Reset subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->regAF.low = this->isBitSet(bit0, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit0, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "SRA_r" << endl;
 
     return 8;
 
@@ -4595,26 +4736,28 @@ int Emulator::SRA_r(BYTE& r) {
 */
 int Emulator::SRA_HL() {
 
-    BYTE data = this->readMem(this->regHL.regstr);
+    BYTE data = readMem(regHL.regstr);
     BYTE bit0 = data & 0b1;
 
     // Shift data right, persist bit 7, and store it back into memory
     data = (data >> 1) | (data & 0x80);
-    this->writeMem(this->regHL.regstr, data);
+    writeMem(regHL.regstr, data);
 
     // Reset subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->regAF.low = this->isBitSet(bit0, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit0, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "SRA_HL" << endl;
 
     return 16;
 
@@ -4643,24 +4786,26 @@ int Emulator::SRL_r(BYTE& r) {
 
     // Shift data right, reset bit 7
     data >>= 1;
-    data = this->bitReset(data, 7);
+    data = bitReset(data, 7);
 
     // Store result back into r
     r = data;
 
     // Reset subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->regAF.low = this->isBitSet(bit0, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit0, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "SRL_r" << endl;
 
     return 8;
 
@@ -4683,29 +4828,31 @@ int Emulator::SRL_r(BYTE& r) {
 */
 int Emulator::SRL_HL() {
 
-    BYTE data = this->readMem(this->regHL.regstr);
+    BYTE data = readMem(regHL.regstr);
     BYTE bit0 = data & 0b1;
 
     // Shift data right, reset bit 7
     data >>= 1;
-    data = this->bitReset(data, 7);
+    data = bitReset(data, 7);
 
     // Store result back into memory
-    this->writeMem(this->regHL.regstr, data);
+    writeMem(regHL.regstr, data);
 
     // Reset subtract and half carry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Update zero flag
-    this->regAF.low = (data == 0x0) 
-        ? this->bitSet(this->regAF.low, FLAG_ZERO) 
-        : this->bitReset(this->regAF.low, FLAG_ZERO);
+    regAF.low = (data == 0x0) 
+        ? bitSet(regAF.low, FLAG_ZERO) 
+        : bitReset(regAF.low, FLAG_ZERO);
 
     // Copy bit 0 into carry flag
-    this->regAF.low = this->isBitSet(bit0, 0) 
-        ? this->bitSet(this->regAF.low, FLAG_CARRY)
-        : this->bitReset(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(bit0, 0) 
+        ? bitSet(regAF.low, FLAG_CARRY)
+        : bitReset(regAF.low, FLAG_CARRY);
+
+    cout << "SRL_HL" << endl;
 
     return 16;
 
@@ -4733,13 +4880,15 @@ Single Bit Operation Commands
 int Emulator::BIT_n_r(BYTE& r, int n) {
 
     // Update zero flag
-    this->regAF.low = this->isBitSet(r, n) 
-        ? this->bitReset(this->regAF.low, FLAG_ZERO)
-        : this->bitSet(this->regAF.low, FLAG_ZERO);
+    regAF.low = isBitSet(r, n) 
+        ? bitReset(regAF.low, FLAG_ZERO)
+        : bitSet(regAF.low, FLAG_ZERO);
     
     // Reset subtract flag, set halfcarry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
+
+    cout << "BIT_n_r" << endl;
 
     return 8;
 
@@ -4762,13 +4911,15 @@ int Emulator::BIT_n_r(BYTE& r, int n) {
 int Emulator::BIT_n_HL(int n) {
 
     // Update zero flag
-    this->regAF.low = this->isBitSet(this->readMem(this->regHL.regstr), n) 
-        ? this->bitReset(this->regAF.low, FLAG_ZERO)
-        : this->bitSet(this->regAF.low, FLAG_ZERO);
+    regAF.low = isBitSet(readMem(regHL.regstr), n) 
+        ? bitReset(regAF.low, FLAG_ZERO)
+        : bitSet(regAF.low, FLAG_ZERO);
     
     // Reset subtract flag, set halfcarry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
+
+    cout << "BIT_n_HL" << endl;
 
     return 12;
 
@@ -4786,7 +4937,9 @@ int Emulator::BIT_n_HL(int n) {
 */
 int Emulator::SET_n_r(BYTE& r, int n) {
 
-    r = this->bitSet(r, n);
+    r = bitSet(r, n);
+
+    cout << "SET_n_r" << endl;
 
     return 8;
 
@@ -4804,8 +4957,10 @@ int Emulator::SET_n_r(BYTE& r, int n) {
 int Emulator::SET_n_HL(int n) {
 
     // this works for utility function!
-    BYTE result = this->bitSet(this->readMem(this->regHL.low), n);
-    this->writeMem(this->regHL.low, result);
+    BYTE result = bitSet(readMem(regHL.low), n);
+    writeMem(regHL.low, result);
+
+    cout << "SET_n_HL" << endl;
 
     return 16;
 
@@ -4823,7 +4978,9 @@ int Emulator::SET_n_HL(int n) {
 */
 int Emulator::RES_n_r(BYTE& r, int n) {
 
-    r = this->bitReset(r, n);
+    r = bitReset(r, n);
+
+    cout << "RES_n_r" << endl;
 
     return 8;
 
@@ -4841,8 +4998,10 @@ int Emulator::RES_n_r(BYTE& r, int n) {
 int Emulator::RES_n_HL(int n) {
 
     // this works for utility function!
-    BYTE result = this->bitReset(this->readMem(this->regHL.low), n);
-    this->writeMem(this->regHL.low, result);
+    BYTE result = bitReset(readMem(regHL.low), n);
+    writeMem(regHL.low, result);
+
+    cout << "RES_n_HL" << endl;
 
     return 16;
 
@@ -4870,13 +5029,15 @@ CPU Control Commands
 int Emulator::CCF() {
 
     // Reset subtract and halfcarry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Toggling carry flag
-    this->regAF.low = this->isBitSet(this->regAF.low, FLAG_CARRY)
-        ? this->bitReset(this->regAF.low, FLAG_CARRY)
-        : this->bitSet(this->regAF.low, FLAG_CARRY);
+    regAF.low = isBitSet(regAF.low, FLAG_CARRY)
+        ? bitReset(regAF.low, FLAG_CARRY)
+        : bitSet(regAF.low, FLAG_CARRY);
+
+    cout << "CCF" << endl;
 
     return 4;
 
@@ -4898,11 +5059,13 @@ int Emulator::CCF() {
 int Emulator::SCF() {
     
     // Reset subtract and halfcarry flag
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_SUB);
-    this->regAF.low = this->bitReset(this->regAF.low, FLAG_HALFCARRY);
+    regAF.low = bitReset(regAF.low, FLAG_SUB);
+    regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
 
     // Set carry flag
-    this->regAF.low = this->bitSet(this->regAF.low, FLAG_CARRY);
+    regAF.low = bitSet(regAF.low, FLAG_CARRY);
+
+    cout << "SCF" << endl;
 
     return 4;
 
@@ -4920,7 +5083,7 @@ int Emulator::SCF() {
 int Emulator::NOP() {
 
     // No flags affected
-    //cout << "NOP" << endl;
+    // cout << "NOP" << endl;
     return 4;
 
 }
@@ -4934,7 +5097,9 @@ int Emulator::NOP() {
 */
 int Emulator::HALT() {
 
-    this->isHalted = true;
+    isHalted = true;
+
+    cout << "HALT" << endl;
 
     // Different docs say different things, we follow the gameboy manual.
     return 4;
@@ -4952,7 +5117,9 @@ int Emulator::HALT() {
 */
 int Emulator::STOP() {
     
-    return this->HALT();
+    cout << "STOP" << endl;
+
+    return HALT();
 
 }
 
@@ -4967,7 +5134,7 @@ int Emulator::STOP() {
 */
 int Emulator::DI() {
     
-    this->InterruptMasterEnabled = false;
+    InterruptMasterEnabled = false;
 
     cout << "DI" << endl;
 
@@ -4986,7 +5153,9 @@ int Emulator::DI() {
 */
 int Emulator::EI() {
 
-    this->InterruptMasterEnabled = true;
+    InterruptMasterEnabled = true;
+
+    cout << "EI" << endl;
 
     return 4;
 
@@ -5009,10 +5178,10 @@ Jump Commands
 */
 int Emulator::JP_nn() {
 
-    WORD lowByte = this->readMem(this->programCounter.regstr);
-    WORD highByte = this->readMem(this->programCounter.regstr + 1);
+    WORD lowByte = readMem(programCounter.regstr);
+    WORD highByte = readMem(programCounter.regstr + 1);
 
-    this->programCounter.regstr = (highByte << 8) | lowByte;
+    programCounter.regstr = (highByte << 8) | lowByte;
 
     cout << "JP_nn" << endl;
     return 16;
@@ -5030,7 +5199,9 @@ int Emulator::JP_nn() {
 */
 int Emulator::JP_HL() {
 
-    this->programCounter.regstr = this->regHL.regstr;
+    programCounter.regstr = regHL.regstr;
+
+    cout << "JP_HL" << endl;
 
     return 4;
 
@@ -5054,31 +5225,33 @@ int Emulator::JP_HL() {
 int Emulator::JP_f_nn(BYTE opcode) {
 
     // Get nn
-    WORD lowByte = this->readMem(this->programCounter.regstr);
-    WORD highByte = this->readMem(this->programCounter.regstr + 1);
+    WORD lowByte = readMem(programCounter.regstr);
+    WORD highByte = readMem(programCounter.regstr + 1);
     WORD nn = (highByte << 8) | lowByte;
 
     bool jump = false;
     switch ((opcode >> 3) & 0x03) {
         case 0x00: // NZ
-            jump = !(this->isBitSet(this->regAF.low, FLAG_ZERO));
+            jump = !(isBitSet(regAF.low, FLAG_ZERO));
             break;
         case 0x01: // Z
-            jump = this->isBitSet(this->regAF.low, FLAG_ZERO);
+            jump = isBitSet(regAF.low, FLAG_ZERO);
             break;
         case 0x02: // NC
-            jump = !(this->isBitSet(this->regAF.low, FLAG_CARRY));
+            jump = !(isBitSet(regAF.low, FLAG_CARRY));
             break;
         case 0x03: // C
-            jump = this->isBitSet(this->regAF.low, FLAG_CARRY);
+            jump = isBitSet(regAF.low, FLAG_CARRY);
             break;
     }
 
+    cout << "JP_f_nn" << endl;
+
     if (jump) {
-        this->programCounter.regstr = nn;
+        programCounter.regstr = nn;
         return 16;
     } else {
-        this->programCounter.regstr += 2;
+        programCounter.regstr += 2;
         return 12;
     }
 
@@ -5096,10 +5269,12 @@ int Emulator::JP_f_nn(BYTE opcode) {
 */
 int Emulator::JR_PCdd() {
 
-    SIGNED_BYTE dd = static_cast<SIGNED_BYTE>(this->readMem(this->programCounter.regstr));
-    this->programCounter.regstr++;
+    SIGNED_BYTE dd = static_cast<SIGNED_BYTE>(readMem(programCounter.regstr));
+    programCounter.regstr++;
 
-    this->programCounter.regstr += dd;
+    programCounter.regstr += dd;
+
+    cout << "JR_PCdd" << endl;
 
     return 12;
 
@@ -5121,29 +5296,29 @@ int Emulator::JR_PCdd() {
 */
 int Emulator::JR_f_PCdd(BYTE opcode) {
 
-    SIGNED_BYTE dd = static_cast<SIGNED_BYTE>(this->readMem(this->programCounter.regstr));
-    this->programCounter.regstr++;
+    SIGNED_BYTE dd = static_cast<SIGNED_BYTE>(readMem(programCounter.regstr));
+    programCounter.regstr++;
 
     bool jump = false;
     switch ((opcode >> 3) & 0x03) {
         case 0x00: // NZ
-            jump = !(this->isBitSet(this->regAF.low, FLAG_ZERO));
+            jump = !(isBitSet(regAF.low, FLAG_ZERO));
             break;
         case 0x01: // Z
-            jump = this->isBitSet(this->regAF.low, FLAG_ZERO);
+            jump = isBitSet(regAF.low, FLAG_ZERO);
             break;
         case 0x02: // NC
-            jump = !(this->isBitSet(this->regAF.low, FLAG_CARRY));
+            jump = !(isBitSet(regAF.low, FLAG_CARRY));
             break;
         case 0x03: // C
-            jump = this->isBitSet(this->regAF.low, FLAG_CARRY);
+            jump = isBitSet(regAF.low, FLAG_CARRY);
             break;
     }
 
     cout << "JR_f_PCDD" << endl;
 
     if (jump) {
-        this->programCounter.regstr += dd;
+        programCounter.regstr += dd;
         return 12;
     } else {
         return 8;
@@ -5163,19 +5338,21 @@ int Emulator::JR_f_PCdd(BYTE opcode) {
 int Emulator::CALL_nn() {
 
     // Get nn
-    WORD lowByte = this->readMem(this->programCounter.regstr);
-    WORD highByte = this->readMem(this->programCounter.regstr + 1);
-    this->programCounter.regstr += 2;
+    WORD lowByte = readMem(programCounter.regstr);
+    WORD highByte = readMem(programCounter.regstr + 1);
+    programCounter.regstr += 2;
     WORD nn = (highByte << 8) | lowByte;
 
     // Push PC onto stack
-    this->stackPointer.regstr--;
-    this->writeMem(this->stackPointer.regstr, this->programCounter.high);
-    this->stackPointer.regstr--;
-    this->writeMem(this->stackPointer.regstr, this->programCounter.low);    
+    stackPointer.regstr--;
+    writeMem(stackPointer.regstr, programCounter.high);
+    stackPointer.regstr--;
+    writeMem(stackPointer.regstr, programCounter.low);    
 
     // Set PC to nn
-    this->programCounter.regstr = nn;
+    programCounter.regstr = nn;
+
+    cout << "CALL_nn" << endl;
 
     return 24;
 
@@ -5198,37 +5375,39 @@ int Emulator::CALL_nn() {
 int Emulator::CALL_f_nn(BYTE opcode) {
 
     // Get nn
-    WORD lowByte = this->readMem(this->programCounter.regstr);
-    WORD highByte = this->readMem(this->programCounter.regstr + 1);
-    this->programCounter.regstr += 2;
+    WORD lowByte = readMem(programCounter.regstr);
+    WORD highByte = readMem(programCounter.regstr + 1);
+    programCounter.regstr += 2;
     WORD nn = (highByte << 8) | lowByte;
 
     bool call = false;
     switch ((opcode >> 3) & 0x03) {
         case 0x00: // NZ
-            call = !(this->isBitSet(this->regAF.low, FLAG_ZERO));
+            call = !(isBitSet(regAF.low, FLAG_ZERO));
             break;
         case 0x01: // Z
-            call = this->isBitSet(this->regAF.low, FLAG_ZERO);
+            call = isBitSet(regAF.low, FLAG_ZERO);
             break;
         case 0x02: // NC
-            call = !(this->isBitSet(this->regAF.low, FLAG_CARRY));
+            call = !(isBitSet(regAF.low, FLAG_CARRY));
             break;
         case 0x03: // C
-            call = this->isBitSet(this->regAF.low, FLAG_CARRY);
+            call = isBitSet(regAF.low, FLAG_CARRY);
             break;
     }
+
+    cout << "CALL_f_nn" << endl;
 
     if (call) {
 
         // Push PC onto stack
-        this->stackPointer.regstr--;
-        this->writeMem(this->stackPointer.regstr, this->programCounter.high); 
-        this->stackPointer.regstr--;
-        this->writeMem(this->stackPointer.regstr, this->programCounter.low);    
+        stackPointer.regstr--;
+        writeMem(stackPointer.regstr, programCounter.high); 
+        stackPointer.regstr--;
+        writeMem(stackPointer.regstr, programCounter.low);    
 
         // Set PC to nn
-        this->programCounter.regstr = nn;
+        programCounter.regstr = nn;
 
         return 24;
 
@@ -5251,13 +5430,15 @@ int Emulator::CALL_f_nn(BYTE opcode) {
 int Emulator::RET() {
 
     // Pop address from stack
-    WORD lowByte = this->readMem(this->stackPointer.regstr);
-    this->stackPointer.regstr++;
-    WORD highByte = this->readMem(this->stackPointer.regstr);
-    this->stackPointer.regstr++;
+    WORD lowByte = readMem(stackPointer.regstr);
+    stackPointer.regstr++;
+    WORD highByte = readMem(stackPointer.regstr);
+    stackPointer.regstr++;
 
     // Set PC to address
-    this->programCounter.regstr = (highByte << 8) | lowByte;
+    programCounter.regstr = (highByte << 8) | lowByte;
+
+    cout << "RET" << endl;
 
     return 16;
 
@@ -5283,29 +5464,31 @@ int Emulator::RET_f(BYTE opcode) {
     bool doRET = false;
     switch ((opcode >> 3) & 0x03) {
         case 0x00: // NZ
-            doRET = !(this->isBitSet(this->regAF.low, FLAG_ZERO));
+            doRET = !(isBitSet(regAF.low, FLAG_ZERO));
             break;
         case 0x01: // Z
-            doRET = this->isBitSet(this->regAF.low, FLAG_ZERO);
+            doRET = isBitSet(regAF.low, FLAG_ZERO);
             break;
         case 0x02: // NC
-            doRET = !(this->isBitSet(this->regAF.low, FLAG_CARRY));
+            doRET = !(isBitSet(regAF.low, FLAG_CARRY));
             break;
         case 0x03: // C
-            doRET = this->isBitSet(this->regAF.low, FLAG_CARRY);
+            doRET = isBitSet(regAF.low, FLAG_CARRY);
             break;
     }
+
+    cout << "RET_f" << endl;
 
     if (doRET) {
 
         // Pop address from stack
-        WORD lowByte = this->readMem(this->stackPointer.regstr);
-        this->stackPointer.regstr++;
-        WORD highByte = this->readMem(this->stackPointer.regstr);
-        this->stackPointer.regstr++;
+        WORD lowByte = readMem(stackPointer.regstr);
+        stackPointer.regstr++;
+        WORD highByte = readMem(stackPointer.regstr);
+        stackPointer.regstr++;
 
         // Set PC to address
-        this->programCounter.regstr = (highByte << 8) | lowByte;
+        programCounter.regstr = (highByte << 8) | lowByte;
 
         return 20;
 
@@ -5327,16 +5510,18 @@ int Emulator::RET_f(BYTE opcode) {
 int Emulator::RETI() {
 
     // Pop address from stack
-    WORD lowByte = this->readMem(this->stackPointer.regstr);
-    this->stackPointer.regstr++;
-    WORD highByte = this->readMem(this->stackPointer.regstr);
-    this->stackPointer.regstr++;
+    WORD lowByte = readMem(stackPointer.regstr);
+    stackPointer.regstr++;
+    WORD highByte = readMem(stackPointer.regstr);
+    stackPointer.regstr++;
 
     // Set PC to address
-    this->programCounter.regstr = (highByte << 8) | lowByte;
+    programCounter.regstr = (highByte << 8) | lowByte;
 
     // Enable interrupts
-    this->InterruptMasterEnabled = true;
+    InterruptMasterEnabled = true;
+
+    cout << "RETI" << endl;
 
     return 16;
 
@@ -5365,14 +5550,16 @@ int Emulator::RETI() {
 int Emulator::RST_n(BYTE opcode) {
 
     // Push PC onto stack
-    this->stackPointer.regstr--;
-    this->writeMem(this->stackPointer.regstr, this->programCounter.high);
-    this->stackPointer.regstr--;
-    this->writeMem(this->stackPointer.regstr, this->programCounter.low);    
+    stackPointer.regstr--;
+    writeMem(stackPointer.regstr, programCounter.high);
+    stackPointer.regstr--;
+    writeMem(stackPointer.regstr, programCounter.low);    
 
     // Set PC to n
     BYTE t = ((opcode >> 3) & 0x07);
-    this->programCounter.regstr = (WORD)(t * 0x08);
+    programCounter.regstr = (WORD)(t * 0x08);
+
+    cout << "RST_n" << endl;
 
     return 16;
     

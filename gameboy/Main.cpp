@@ -31,7 +31,7 @@ void doRender() {
 
 }
 
-void processInput(Emulator& emulator, SDL_Event& event) {
+void processInput(Emulator& emulator, SDL_Event& event, bool& gameRunning) {
 
     if (event.type == SDL_KEYDOWN) {
         int key = -1;
@@ -44,6 +44,7 @@ void processInput(Emulator& emulator, SDL_Event& event) {
             case SDLK_LEFT:     key = 1; break;
             case SDLK_UP:       key = 2; break;
             case SDLK_DOWN:     key = 3; break;
+            case SDLK_ESCAPE:   gameRunning = false;
         }
         if (key != -1) {
             emulator.buttonPressed(key);
@@ -125,8 +126,10 @@ int main(int argc, char** argv) {
     // string romPath = "marioland.gb";
     // string romPath = "marioland4.gb";
 
-    // string romPath = "../../gb-test-roms/cpu_instrs/individual/01-special.gb";
-    // string romPath = "../../gb-test-roms/cpu_instrs/individual/02-interrupts.gb";
+    string romPath = "../../gb-test-roms/cpu_instrs/individual/01-special.gb";
+    // string romPath = "../../gb-test-roms/cpu_instrs/individual/02-interrupts.gb"; // PASSED
+
+    // Banking here
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/03-op sp,hl.gb";
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/04-op r,imm.gb";
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/05-op rp.gb";
@@ -136,7 +139,7 @@ int main(int argc, char** argv) {
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/09-op r,r.gb";
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/10-bit ops.gb";
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/11-op a,(hl).gb";
-    string romPath = "../../gb-test-roms/cpu_instrs/cpu_instrs.gb";
+    // string romPath = "../../gb-test-roms/cpu_instrs/cpu_instrs.gb";
 
     if (!emulator.loadGame(romPath)) {
         cout << "Something wrong occured while loading!" << endl;
@@ -156,7 +159,7 @@ int main(int argc, char** argv) {
                 gameRunning = false;
                 continue;
             }
-            processInput(emulator, event);
+            processInput(emulator, event, gameRunning);
         }
 
         emulator.update();
