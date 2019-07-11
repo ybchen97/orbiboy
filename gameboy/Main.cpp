@@ -122,14 +122,16 @@ int main(int argc, char** argv) {
     emulator.setRenderGraphics(&doRender);
 
     // Load game
-    // string romPath = "Tetris.gb";
+    string romPath = "Tetris.gb";
     // string romPath = "marioland.gb";
     // string romPath = "marioland4.gb";
 
-    string romPath = "../../gb-test-roms/cpu_instrs/individual/01-special.gb";
-    // string romPath = "../../gb-test-roms/cpu_instrs/individual/02-interrupts.gb"; // PASSED
+    // string romPath = "../../gb-test-roms/cpu_instrs/cpu_instrs.gb"; // Passed all but first one
+    // string romPath = "../../gb-test-roms/cpu_instrs/individual/01-special.gb"; // FAILED
 
-    // Banking here
+    // All Passed
+    // string romPath = "../../gb-test-roms/cpu_instrs/opus5.gb";
+    // string romPath = "../../gb-test-roms/cpu_instrs/individual/02-interrupts.gb";
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/03-op sp,hl.gb";
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/04-op r,imm.gb";
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/05-op rp.gb";
@@ -139,7 +141,6 @@ int main(int argc, char** argv) {
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/09-op r,r.gb";
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/10-bit ops.gb";
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/11-op a,(hl).gb";
-    // string romPath = "../../gb-test-roms/cpu_instrs/cpu_instrs.gb";
 
     if (!emulator.loadGame(romPath)) {
         cout << "Something wrong occured while loading!" << endl;

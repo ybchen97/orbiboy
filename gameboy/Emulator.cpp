@@ -430,7 +430,7 @@ int Emulator::executeOpcode(BYTE opcode) {
         case 0xA4: cycles = AND_r(regHL.high); break;
         case 0xA5: cycles = AND_r(regHL.low); break;
         case 0xA6: cycles = AND_HL();
-        case 0xA7: cycles = AND_r(regBC.high); break;
+        case 0xA7: cycles = AND_r(regAF.high); break;
 
         // AND n 
         case 0xE6: cycles = AND_n(); break;
@@ -443,7 +443,7 @@ int Emulator::executeOpcode(BYTE opcode) {
         case 0xAC: cycles = XOR_r(regHL.high); break;
         case 0xAD: cycles = XOR_r(regHL.low); break;
         case 0xAE: cycles = XOR_HL();
-        case 0xAF: cycles = XOR_r(regBC.high); break;
+        case 0xAF: cycles = XOR_r(regAF.high); break;
 
         // XOR n
         case 0xEE: cycles = XOR_n(); break;
@@ -456,7 +456,7 @@ int Emulator::executeOpcode(BYTE opcode) {
         case 0xB4: cycles = OR_r(regHL.high); break;
         case 0xB5: cycles = OR_r(regHL.low); break;
         case 0xB6: cycles = OR_HL();
-        case 0xB7: cycles = OR_r(regBC.high); break;
+        case 0xB7: cycles = OR_r(regAF.high); break;
 
         // OR n 
         case 0xF6: cycles = OR_n(); break;
@@ -469,7 +469,7 @@ int Emulator::executeOpcode(BYTE opcode) {
         case 0xBC: cycles = CP_r(regHL.high); break;
         case 0xBD: cycles = CP_r(regHL.low); break;
         case 0xBE: cycles = CP_HL();
-        case 0xBF: cycles = CP_r(regBC.high); break;
+        case 0xBF: cycles = CP_r(regAF.high); break;
 
         // CP n
         case 0xFE: cycles = CP_n(); break;
@@ -795,7 +795,7 @@ int Emulator::executeCBOpcode() {
         case 0x74: cycles = BIT_n_r(regHL.high, 6); break;
         case 0x75: cycles = BIT_n_r(regHL.low, 6); break;
         case 0x76: cycles = BIT_n_HL(6); break;
-        case 0x77: cycles = BIT_n_r(regAF.high, 4); break;
+        case 0x77: cycles = BIT_n_r(regAF.high, 6); break;
 
         // BIT 7, r
         case 0x78: cycles = BIT_n_r(regBC.high, 7); break;
@@ -804,8 +804,8 @@ int Emulator::executeCBOpcode() {
         case 0x7B: cycles = BIT_n_r(regDE.low, 7); break;
         case 0x7C: cycles = BIT_n_r(regHL.high, 7); break;
         case 0x7D: cycles = BIT_n_r(regHL.low, 7); break;
-        case 0x7E: cycles = BIT_n_HL(6); break;
-        case 0x77F:BIT_n_r(regAF.high, 7); break;
+        case 0x7E: cycles = BIT_n_HL(7); break;
+        case 0x7F: cycles = BIT_n_r(regAF.high, 7); break;
 
         // RES 0, r
         case 0x80: cycles = RES_n_r(regBC.high, 0); break;
@@ -875,7 +875,7 @@ int Emulator::executeCBOpcode() {
         case 0xB4: cycles = RES_n_r(regHL.high, 6); break;
         case 0xB5: cycles = RES_n_r(regHL.low, 6); break;
         case 0xB6: cycles = RES_n_HL(6); break;
-        case 0xB7: cycles = RES_n_r(regAF.high, 4); break;
+        case 0xB7: cycles = RES_n_r(regAF.high, 6); break;
 
         // RES 7, r
         case 0xB8: cycles = RES_n_r(regBC.high, 7); break;
@@ -884,8 +884,8 @@ int Emulator::executeCBOpcode() {
         case 0xBB: cycles = RES_n_r(regDE.low, 7); break;
         case 0xBC: cycles = RES_n_r(regHL.high, 7); break;
         case 0xBD: cycles = RES_n_r(regHL.low, 7); break;
-        case 0xBE: cycles = RES_n_HL(6); break;
-        case 0xB7F:RES_n_r(regAF.high, 7); break;
+        case 0xBE: cycles = RES_n_HL(7); break;
+        case 0xBF: cycles = RES_n_r(regAF.high, 7); break;
 
         // SET 0, r
         case 0xC0: cycles = SET_n_r(regBC.high, 0); break;
@@ -955,7 +955,7 @@ int Emulator::executeCBOpcode() {
         case 0xF4: cycles = SET_n_r(regHL.high, 6); break;
         case 0xF5: cycles = SET_n_r(regHL.low, 6); break;
         case 0xF6: cycles = SET_n_HL(6); break;
-        case 0xF7: cycles = SET_n_r(regAF.high, 4); break;
+        case 0xF7: cycles = SET_n_r(regAF.high, 6); break;
 
         // SET 7, r
         case 0xF8: cycles = SET_n_r(regBC.high, 7); break;
@@ -964,7 +964,7 @@ int Emulator::executeCBOpcode() {
         case 0xFB: cycles = SET_n_r(regDE.low, 7); break;
         case 0xFC: cycles = SET_n_r(regHL.high, 7); break;
         case 0xFD: cycles = SET_n_r(regHL.low, 7); break;
-        case 0xFE: cycles = SET_n_HL(6); break;
+        case 0xFE: cycles = SET_n_HL(7); break;
         case 0xFF: cycles = SET_n_r(regAF.high, 7); break;
     }
 
@@ -2526,7 +2526,7 @@ int Emulator::POP_rr(Register& reg) {
     reg.high = readMem(stackPointer.regstr);
     stackPointer.regstr++;
 
-    if (reg.regstr == regAF.regstr) {
+    if (&reg == &regAF) {
         regAF.regstr &= 0xFFF0;
     }
 
@@ -2728,7 +2728,7 @@ int Emulator::ADC_A_r(BYTE reg) {
 int Emulator::ADC_A_n() {
     BYTE carry = isBitSet(regAF.low, FLAG_CARRY) ? 0x01 : 0x00;
     BYTE toAdd = carry + readMem(programCounter.regstr);
-    BYTE result = regAF.high + carry + toAdd;
+    BYTE result = regAF.high + toAdd;
     programCounter.regstr++;
 
     // Reset the flags
@@ -2742,6 +2742,7 @@ int Emulator::ADC_A_n() {
     // Half carry flag 
     if (((toAdd ^ regAF.high ^ result) & 0x10) == 0x10) {
         regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
+        assert(((regAF.high & 0x0F) + (toAdd & 0x0F)) > 0x0F);
     }
 
     // Carry flag
@@ -2884,6 +2885,7 @@ int Emulator::SUB_n() {
     // Carry flag
     if (regAF.high < n) {
         regAF.low = bitSet(regAF.low, FLAG_CARRY);
+        assert((regAF.high & 0xFF) < (n & 0xFF));
     }
 
     regAF.high = result;
@@ -3346,7 +3348,7 @@ int Emulator::OR_n() {
 }
 
 /*
-    OR HL  (0xB6)
+    OR (HL)  (0xB6)
 
     Set register A to bitwise OR register A and content of memory location specified by HL.
 
@@ -3414,6 +3416,7 @@ int Emulator::CP_r(BYTE reg) {
     // Carry flag
     if (regAF.high < reg) {
         regAF.low = bitSet(regAF.low, FLAG_CARRY);
+        assert((regAF.high & 0xFF) < (reg & 0xFF));
     }
 
     cout << "CP_r" << endl;
@@ -3461,6 +3464,7 @@ int Emulator::CP_n() {
     // Carry flag
     if (regAF.high < n) {
         regAF.low = bitSet(regAF.low, FLAG_CARRY);
+        assert((regAF.high & 0xFF) < (n & 0xFF));
     }
 
     cout << "CP_n" << endl;
@@ -3766,11 +3770,11 @@ int Emulator::DAA() {
 int Emulator::CPL() {
     BYTE result = regAF.high ^ 0xFF;
 
-    // Half carry flag
-    regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
+    // Subtract flag
+    regAF.low = bitSet(regAF.low, FLAG_SUB);
 
-    // Carry flag
-    regAF.low = bitSet(regAF.low, FLAG_CARRY);
+    // Half Carry flag
+    regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
 
     regAF.high = result;
 
@@ -5228,6 +5232,7 @@ int Emulator::JP_f_nn(BYTE opcode) {
     WORD lowByte = readMem(programCounter.regstr);
     WORD highByte = readMem(programCounter.regstr + 1);
     WORD nn = (highByte << 8) | lowByte;
+    programCounter.regstr += 2;
 
     bool jump = false;
     switch ((opcode >> 3) & 0x03) {
@@ -5251,7 +5256,6 @@ int Emulator::JP_f_nn(BYTE opcode) {
         programCounter.regstr = nn;
         return 16;
     } else {
-        programCounter.regstr += 2;
         return 12;
     }
 
