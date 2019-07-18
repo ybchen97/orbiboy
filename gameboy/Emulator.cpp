@@ -138,27 +138,38 @@ bool Emulator::loadGame(string file_path) {
 
     memset(cartridgeMem, 0, sizeof(cartridgeMem));
     
-    //load in the game
-    FILE* in;
-    in = fopen(file_path.c_str(), "rb") ;
+    // //load in the game
+    // FILE* in;
+    // in = fopen(file_path.c_str(), "rb") ;
 
-    // check rom exists
-    if (in == NULL) {
-        printf("Cannot load game file ERROR!!!");
-        return false;
-    }
+    // // check rom exists
+    // if (in == NULL) {
+    //     printf("Cannot load game file ERROR!!!");
+    //     return false;
+    // }
 
-    // Get file size
-    fseek(in, 0, SEEK_END);
-    int fileSize = ftell(in);
-    rewind(in);
+    // // Get file size
+    // fseek(in, 0, SEEK_END);
+    // int fileSize = ftell(in);
+    // rewind(in);
     
-    // Read file into cartridgeMem
-    fread(cartridgeMem, fileSize, 1, in);
-    fclose(in);
+    // // Read file into cartridgeMem
+    // fread(cartridgeMem, fileSize, 1, in);
+    // fclose(in);
 
-    // Copy ROM Banks 0 & 1 to internal memory
-    memcpy(internalMem, cartridgeMem, 0x8000) ; // this is read only and never changes
+    // // Copy ROM Banks 0 & 1 to internal memory
+    // memcpy(internalMem, cartridgeMem, 0x8000) ; // this is read only and never changes
+
+        // read rom into vector
+    ifstream file(file_path.c_str(), ios::binary);
+    // assert(file.good());
+
+    // resize & read rom
+    file.seekg(0, ios::end);
+    streampos size = file.tellg();
+    file.seekg(0, ios::beg);
+    file.read(reinterpret_cast<char *>(&cartridgeMem[0]), size);
+    copy_n(&cartridgeMem[0], 0x8000, &internalMem[0]);
 
     return true;
 }
@@ -194,7 +205,7 @@ int Emulator::executeNextOpcode() {
     BYTE opcode = readMem(programCounter.regstr);
 
     // if (opcode != 0) {
-    //     cout << "opcode: " << hex << (int) opcode << endl;
+    //     //cout << "opcode: " << hex << (int) opcode << endl;
     // }
 
     if (isHalted) {
@@ -1019,7 +1030,7 @@ void Emulator::writeMem(WORD address, BYTE data) {
 
     // write attempts to ROM
     if (address < 0x8000) {
-        cout << "banking occured" << endl;
+        //cout << "banking occured" << endl;
         handleBanking(address, data);
     }
 
@@ -1040,7 +1051,7 @@ void Emulator::writeMem(WORD address, BYTE data) {
     }
 
     else if ((address >= 0xFEA0) && (address <= 0xFEFF)) {
-        cout << "Something wrong in WriteMem. Unusable location." << endl;
+        //cout << "Something wrong in WriteMem. Unusable location." << endl;
         //assert(false);
     }
 
@@ -1079,7 +1090,8 @@ void Emulator::writeMem(WORD address, BYTE data) {
                     timerUpdateConstant = 256; 
                     break; // 16384Hz
                 default:
-                    cout << "Something is wrong!" << endl;
+                    break;
+                    //cout << "Something is wrong!" << endl;
             }
         }
     }
@@ -1835,7 +1847,7 @@ void Emulator::renderTiles(BYTE lcdControl) {
         BYTE colourBit0 = isBitSet(b1, bit) ? 0b01 : 0b00;
         BYTE colourBit1 = isBitSet(b2, bit) ? 0b10 : 0b00;
 
-        // cout << "Palette: " << (int) readMem(0xFF47) << " | colour bits: " << (int) (colourBit0 + colourBit1) << " | Colour: ";
+        // //cout << "Palette: " << (int) readMem(0xFF47) << " | colour bits: " << (int) (colourBit0 + colourBit1) << " | Colour: ";
 
         // Get the colour
         COLOUR colour = getColour(colourBit1 + colourBit0, 0xFF47);
@@ -1848,23 +1860,23 @@ void Emulator::renderTiles(BYTE lcdControl) {
                 red = 255;
                 green = 255;
                 blue = 255;
-                // cout << "white" << endl;
+                // //cout << "white" << endl;
                 break;
             case LIGHT_GRAY:
                 red = 0xCC;
                 green = 0xCC;
                 blue = 0xCC;
-                // cout << "light gray" << endl;
+                // //cout << "light gray" << endl;
                 break;
             case DARK_GRAY:
                 red = 0x77;
                 green = 0x77;
                 blue = 0x77;
-                // cout << "dark gray" << endl;
+                // //cout << "dark gray" << endl;
                 break;
             default:
                 red = green = blue = 0;
-                // cout << "black" << endl;
+                // //cout << "black" << endl;
                 break;
         }
 
@@ -2086,7 +2098,7 @@ START OF OPCODES
 int Emulator::LD_r_R(BYTE& loadTo, BYTE loadFrom) { 
     loadTo = loadFrom; // to is regXX.high/low, from is regXX.high/low
 
-    cout << "LD_r_R" << endl;
+    //cout << "LD_r_R" << endl;
 
     return 4; 
 }
@@ -2106,7 +2118,7 @@ int Emulator::LD_r_n(BYTE& reg) {
     programCounter.regstr++;
     reg = n;
 
-    cout << "LD_r_n" << endl;
+    //cout << "LD_r_n" << endl;
 
     return 8;
 }
@@ -2124,7 +2136,7 @@ int Emulator::LD_r_n(BYTE& reg) {
 int Emulator::LD_r_HL(BYTE& reg) {
     reg = readMem(regHL.regstr);
 
-    cout << "LD_r_HL" << endl;
+    //cout << "LD_r_HL" << endl;
 
     return 8;
 }
@@ -2141,7 +2153,7 @@ int Emulator::LD_r_HL(BYTE& reg) {
 int Emulator::LD_HL_r(BYTE reg) {
     writeMem(regHL.regstr, reg);
 
-    cout << "LD_HL_r" << endl;
+    //cout << "LD_HL_r" << endl;
 
     return 8;
 }
@@ -2160,7 +2172,7 @@ int Emulator::LD_HL_n() {
     programCounter.regstr++;
     writeMem(regHL.regstr, imm);
 
-    cout << "LD_HL_n" << endl;
+    //cout << "LD_HL_n" << endl;
 
     return 12;
 }
@@ -2177,7 +2189,7 @@ int Emulator::LD_HL_n() {
 int Emulator::LD_A_BC() {
     regAF.high = readMem(regBC.regstr);
 
-    cout << "LD_A_BC" << endl;
+    //cout << "LD_A_BC" << endl;
 
     return 8;
 }
@@ -2194,7 +2206,7 @@ int Emulator::LD_A_BC() {
 int Emulator::LD_A_DE() {
     regAF.high = readMem(regDE.regstr);
 
-    cout << "LD_A_DE" << endl;
+    //cout << "LD_A_DE" << endl;
 
     return 8;
 }
@@ -2214,7 +2226,7 @@ int Emulator::LD_A_nn() {
     programCounter.regstr += 2;
     regAF.high = readMem(nn);
 
-    cout << "LD_A_nn" << endl;
+    //cout << "LD_A_nn" << endl;
 
     return 16;
 }
@@ -2231,7 +2243,7 @@ int Emulator::LD_A_nn() {
 int Emulator::LD_BC_A() {
     writeMem(regBC.regstr, regAF.high);
 
-    cout << "LD_BC_A" << endl;
+    //cout << "LD_BC_A" << endl;
 
     return 8;
 }
@@ -2250,7 +2262,7 @@ int Emulator::LD_DE_A() {
 
     assert(internalMem[regDE.regstr] == regAF.high);
 
-    cout << "LD_DE_A" << endl;
+    //cout << "LD_DE_A" << endl;
 
     return 8;
 }
@@ -2270,7 +2282,7 @@ int Emulator::LD_nn_A() {
     programCounter.regstr += 2;
     writeMem(nn, regAF.high);
 
-    cout << "LD_nn_A" << endl;
+    //cout << "LD_nn_A" << endl;
 
     return 16;
 }
@@ -2290,7 +2302,7 @@ int Emulator::LD_A_FF00n() {
     programCounter.regstr++;
     regAF.high = readMem(0xFF00 + n);
 
-    cout << "LD_A_FF00n" << endl;
+    //cout << "LD_A_FF00n" << endl;
 
     return 12;
 }
@@ -2310,7 +2322,7 @@ int Emulator::LD_FF00n_A() {
     programCounter.regstr++;
     writeMem(0xFF00 + n, regAF.high);
 
-    cout << "LD_FF00n_A" << endl;
+    //cout << "LD_FF00n_A" << endl;
 
     return 12;
 }
@@ -2328,7 +2340,7 @@ int Emulator::LD_FF00n_A() {
 int Emulator::LD_A_FF00C() {
     regAF.high = readMem(0xFF00 + regBC.low);
 
-    cout << "LD_A_FF00C" << endl;
+    //cout << "LD_A_FF00C" << endl;
 
     return 8;
 }
@@ -2346,7 +2358,7 @@ int Emulator::LD_A_FF00C() {
 int Emulator::LD_FF00C_A() {
     writeMem(0xFF00 + regBC.low, regAF.high);
 
-    cout << "LD_FF00C_A" << endl;
+    //cout << "LD_FF00C_A" << endl;
 
     return 8;
 }
@@ -2364,7 +2376,7 @@ int Emulator::LDI_HL_A() {
     writeMem(regHL.regstr, regAF.high);
     regHL.regstr++;
 
-    cout << "LDI_HL_A" << endl;
+    //cout << "LDI_HL_A" << endl;
 
     return 8;
 }
@@ -2382,7 +2394,7 @@ int Emulator::LDI_A_HL() {
     regAF.high = readMem(regHL.regstr);
     regHL.regstr++;
 
-    cout << "LDI_A_HL" << endl;
+    //cout << "LDI_A_HL" << endl;
 
     return 8;
 }
@@ -2400,7 +2412,7 @@ int Emulator::LDD_HL_A() {
     writeMem(regHL.regstr, regAF.high);
     regHL.regstr--;
 
-    cout << "LDD_HL_A" << endl;
+    //cout << "LDD_HL_A" << endl;
 
     return 8;
 }
@@ -2418,7 +2430,7 @@ int Emulator::LDD_A_HL() {
     regAF.high = readMem(regHL.regstr);
     regHL.regstr--;
 
-    cout << "LDD_A_HL" << endl;
+    //cout << "LDD_A_HL" << endl;
 
     return 8;
 }
@@ -2445,7 +2457,7 @@ int Emulator::LD_rr_nn(Register& reg) {
     programCounter.regstr += 2;
     reg.regstr = nn;
 
-    cout << "LD_rr_nn" << endl;
+    //cout << "LD_rr_nn" << endl;
 
     return 12;
 }
@@ -2462,7 +2474,7 @@ int Emulator::LD_rr_nn(Register& reg) {
 int Emulator::LD_SP_HL() {
     stackPointer.regstr = regHL.regstr;
 
-    cout << "LD_SP_HL" << endl;
+    //cout << "LD_SP_HL" << endl;
 
     return 8;
 }
@@ -2484,7 +2496,7 @@ int Emulator::LD_nn_SP() {
     writeMem(nn + 1, stackPointer.high);
     writeMem(nn, stackPointer.low);
 
-    cout << "LD_nn_SP" << endl;
+    //cout << "LD_nn_SP" << endl;
 
     return 20;
 }
@@ -2505,7 +2517,7 @@ int Emulator::PUSH_rr(Register reg) {
     stackPointer.regstr--;
     writeMem(stackPointer.regstr, reg.low);
 
-    cout << "PUSH_rr" << endl;
+    //cout << "PUSH_rr" << endl;
 
     return 16;
 }
@@ -2530,7 +2542,7 @@ int Emulator::POP_rr(Register& reg) {
         regAF.regstr &= 0xFFF0;
     }
 
-    cout << "POP_rr" << endl;
+    //cout << "POP_rr" << endl;
 
     return 12;
 }
@@ -2578,7 +2590,7 @@ int Emulator::ADD_A_r(BYTE regR) {
 
     regAF.high = result;
 
-    cout << "ADD_A_r" << endl;
+    //cout << "ADD_A_r" << endl;
 
     return 4;
 }
@@ -2621,7 +2633,7 @@ int Emulator::ADD_A_n() {
 
     regAF.high = result;
 
-    cout << "ADD_A_n" << endl;
+    //cout << "ADD_A_n" << endl;
 
     return 8;
 }
@@ -2663,7 +2675,7 @@ int Emulator::ADD_A_HL() {
 
     regAF.high = result;
 
-    cout << "ADD_A_HL" << endl;
+    //cout << "ADD_A_HL" << endl;
 
     return 8;
 }
@@ -2707,7 +2719,7 @@ int Emulator::ADC_A_r(BYTE reg) {
 
     regAF.high = result;
 
-    cout << "ADC_A_r" << endl;
+    //cout << "ADC_A_r" << endl;
 
     return 4;
 }
@@ -2752,7 +2764,7 @@ int Emulator::ADC_A_n() {
 
     regAF.high = result;
 
-    cout << "ADC_A_n" << endl;
+    //cout << "ADC_A_n" << endl;
 
     return 8;
 }
@@ -2795,7 +2807,7 @@ int Emulator::ADC_A_HL() {
 
     regAF.high = result;
 
-    cout << "ADC_A_HL" << endl;
+    //cout << "ADC_A_HL" << endl;
 
     return 8;
 }
@@ -2841,7 +2853,7 @@ int Emulator::SUB_r(BYTE reg) {
 
     regAF.high = result;
 
-    cout << "SUB_r" << endl;
+    //cout << "SUB_r" << endl;
 
     return 4;
 }
@@ -2890,7 +2902,7 @@ int Emulator::SUB_n() {
 
     regAF.high = result;
 
-    cout << "SUB_n" << endl;
+    //cout << "SUB_n" << endl;
 
     return 8;
 }
@@ -2936,7 +2948,7 @@ int Emulator::SUB_HL() {
 
     regAF.high = result;
 
-    cout << "SUB_HL" << endl;
+    //cout << "SUB_HL" << endl;
 
     return 8;
 }
@@ -2984,7 +2996,7 @@ int Emulator::SBC_A_r(BYTE reg) {
 
     regAF.high = result;
 
-    cout << "SBC_A_r" << endl;
+    //cout << "SBC_A_r" << endl;
 
     return 4;
 }
@@ -3033,7 +3045,7 @@ int Emulator::SBC_A_n() {
 
     regAF.high = result;
 
-    cout << "SBC_A_n" << endl;
+    //cout << "SBC_A_n" << endl;
 
     return 8;
 }
@@ -3080,7 +3092,7 @@ int Emulator::SBC_A_HL() {
 
     regAF.high = result;
 
-    cout << "SBC_A_HL" << endl;
+    //cout << "SBC_A_HL" << endl;
 
     return 8;
 }
@@ -3115,7 +3127,7 @@ int Emulator::AND_r(BYTE reg) {
 
     regAF.high = result;
 
-    cout << "AND_r" << endl;
+    //cout << "AND_r" << endl;
 
     return 4;
 }
@@ -3150,7 +3162,7 @@ int Emulator::AND_n() {
 
     regAF.high = result;
 
-    cout << "AND_n" << endl;
+    //cout << "AND_n" << endl;
 
     return 8;
 }
@@ -3184,7 +3196,7 @@ int Emulator::AND_HL() {
 
     regAF.high = result;
 
-    cout << "AND_HL" << endl;
+    //cout << "AND_HL" << endl;
 
     return 8;
 }
@@ -3215,7 +3227,7 @@ int Emulator::XOR_r(BYTE reg) {
 
     regAF.high = result;
 
-    cout << "XOR_r" << endl;
+    //cout << "XOR_r" << endl;
 
     return 4;
 }
@@ -3247,7 +3259,7 @@ int Emulator::XOR_n() {
 
     regAF.high = result;
 
-    cout << "XOR_n" << endl;
+    //cout << "XOR_n" << endl;
 
     return 8;
 }
@@ -3278,7 +3290,7 @@ int Emulator::XOR_HL() {
 
     regAF.high = result;
 
-    cout << "XOR_HL" << endl;
+    //cout << "XOR_HL" << endl;
 
     return 8;
 }
@@ -3310,7 +3322,7 @@ int Emulator::OR_r(BYTE reg) {
 
     regAF.high = result;
 
-    cout << "OR_r" << endl;
+    //cout << "OR_r" << endl;
 
     return 4;
 }
@@ -3342,7 +3354,7 @@ int Emulator::OR_n() {
 
     regAF.high = result;
 
-    cout << "OR_n" << endl;
+    //cout << "OR_n" << endl;
 
     return 8;
 }
@@ -3373,7 +3385,7 @@ int Emulator::OR_HL() {
 
     regAF.high = result;
 
-    cout << "OR_HL" << endl;
+    //cout << "OR_HL" << endl;
 
     return 8;
 }
@@ -3419,7 +3431,7 @@ int Emulator::CP_r(BYTE reg) {
         assert((regAF.high & 0xFF) < (reg & 0xFF));
     }
 
-    cout << "CP_r" << endl;
+    //cout << "CP_r" << endl;
 
     return 4;
 }
@@ -3467,7 +3479,7 @@ int Emulator::CP_n() {
         assert((regAF.high & 0xFF) < (n & 0xFF));
     }
 
-    cout << "CP_n" << endl;
+    //cout << "CP_n" << endl;
 
     return 8;
 }
@@ -3512,7 +3524,7 @@ int Emulator::CP_HL() {
         regAF.low = bitSet(regAF.low, FLAG_CARRY);
     }
 
-    cout << "CP_HL" << endl;
+    //cout << "CP_HL" << endl;
 
     return 8;
 }
@@ -3555,7 +3567,7 @@ int Emulator::INC_r(BYTE& reg) {
         regAF.low = bitReset(regAF.low, FLAG_HALFCARRY);
     }
 
-    cout << "INC_r" << endl;
+    //cout << "INC_r" << endl;
 
     return 4;
 }
@@ -3600,7 +3612,7 @@ int Emulator::INC_HL() {
 
     writeMem(regHL.regstr, HLdata);
 
-    cout << "INC_HL" << endl;
+    //cout << "INC_HL" << endl;
 
     return 12;
 }
@@ -3642,7 +3654,7 @@ int Emulator::DEC_r(BYTE& reg) {
 
     reg = result;
 
-    cout << "DEC_r" << endl;
+    //cout << "DEC_r" << endl;
 
     return 4;
 }
@@ -3684,7 +3696,7 @@ int Emulator::DEC_HL() {
 
     writeMem(regHL.regstr, result);
 
-    cout << "DEC_HL" << endl;
+    //cout << "DEC_HL" << endl;
 
     return 12;
 }
@@ -3749,7 +3761,7 @@ int Emulator::DAA() {
 
     regAF.high = (BYTE) result;
 
-    cout << "DAA" << endl;
+    //cout << "DAA" << endl;
 
     return 4;
 }
@@ -3778,7 +3790,7 @@ int Emulator::CPL() {
 
     regAF.high = result;
 
-    cout << "CPL" << endl;
+    //cout << "CPL" << endl;
 
     return 4;
 }
@@ -3824,7 +3836,7 @@ int Emulator::ADD_HL_rr(WORD rr) {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "ADD_HL_rr" << endl;
+    //cout << "ADD_HL_rr" << endl;
 
     return 8;
 
@@ -3844,7 +3856,7 @@ int Emulator::INC_rr(WORD& rr) {
 
     rr++;
 
-    cout << "INC_rr" << endl;
+    //cout << "INC_rr" << endl;
 
     return 8;
 
@@ -3864,7 +3876,7 @@ int Emulator::DEC_rr(WORD& rr) {
 
     rr--;
 
-    cout << "DEC_rr" << endl;
+    //cout << "DEC_rr" << endl;
 
     return 8;
 
@@ -3908,7 +3920,7 @@ int Emulator::ADD_SP_dd() {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "ADD_SP_dd" << endl;
+    //cout << "ADD_SP_dd" << endl;
 
     return 16;
 
@@ -3952,7 +3964,7 @@ int Emulator::LD_HL_SPdd() {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "LD_HL_SPdd" << endl;
+    //cout << "LD_HL_SPdd" << endl;
 
     return 12;
 
@@ -4001,7 +4013,7 @@ int Emulator::RLCA() {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "RLCA" << endl;
+    //cout << "RLCA" << endl;
 
     return 4;
 
@@ -4044,7 +4056,7 @@ int Emulator::RLA() {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "RLA" << endl;
+    //cout << "RLA" << endl;
 
     return 4;
 
@@ -4086,7 +4098,7 @@ int Emulator::RRCA() {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "RRCA" << endl;
+    //cout << "RRCA" << endl;
 
     return 4;
 }
@@ -4128,7 +4140,7 @@ int Emulator::RRA() {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "RRA" << endl;
+    //cout << "RRA" << endl;
 
     return 4;
 
@@ -4175,7 +4187,7 @@ int Emulator::RLC_r(BYTE& r) {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "RLC_r" << endl;
+    //cout << "RLC_r" << endl;
 
     return 8;
 
@@ -4221,7 +4233,7 @@ int Emulator::RLC_HL() {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "RLC_HL" << endl;
+    //cout << "RLC_HL" << endl;
 
     return 16;
 
@@ -4269,7 +4281,7 @@ int Emulator::RL_r(BYTE& r) {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "RL_r" << endl;
+    //cout << "RL_r" << endl;
 
     return 8;
 
@@ -4317,7 +4329,7 @@ int Emulator::RL_HL() {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "RL_HL" << endl;
+    //cout << "RL_HL" << endl;
 
     return 16;
 
@@ -4364,7 +4376,7 @@ int Emulator::RRC_r(BYTE& r) {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "RRC_r" << endl;
+    //cout << "RRC_r" << endl;
 
     return 8;
 
@@ -4410,7 +4422,7 @@ int Emulator::RRC_HL() {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "RRC_HL" << endl;
+    //cout << "RRC_HL" << endl;
 
     return 16;
 
@@ -4458,7 +4470,7 @@ int Emulator::RR_r(BYTE& r) {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "RR_r" << endl;
+    //cout << "RR_r" << endl;
 
     return 8;
 
@@ -4506,7 +4518,7 @@ int Emulator::RR_HL() {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "RR_HL" << endl;
+    //cout << "RR_HL" << endl;
 
     return 16;
 
@@ -4550,7 +4562,7 @@ int Emulator::SLA_r(BYTE& r) {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "SLA_r" << endl;
+    //cout << "SLA_r" << endl;
 
     return 8;
 
@@ -4593,7 +4605,7 @@ int Emulator::SLA_HL() {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "SLA_HL" << endl;
+    //cout << "SLA_HL" << endl;
 
     return 16;
 
@@ -4633,7 +4645,7 @@ int Emulator::SWAP_r(BYTE& r) {
         ? bitSet(regAF.low, FLAG_ZERO) 
         : bitReset(regAF.low, FLAG_ZERO);
 
-    cout << "SWAP_r" << endl;
+    //cout << "SWAP_r" << endl;
 
     return 8;
 
@@ -4672,7 +4684,7 @@ int Emulator::SWAP_HL() {
         ? bitSet(regAF.low, FLAG_ZERO) 
         : bitReset(regAF.low, FLAG_ZERO);
 
-    cout << "SWAP_HL" << endl;
+    //cout << "SWAP_HL" << endl;
 
     return 16;
 
@@ -4717,7 +4729,7 @@ int Emulator::SRA_r(BYTE& r) {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "SRA_r" << endl;
+    //cout << "SRA_r" << endl;
 
     return 8;
 
@@ -4761,7 +4773,7 @@ int Emulator::SRA_HL() {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "SRA_HL" << endl;
+    //cout << "SRA_HL" << endl;
 
     return 16;
 
@@ -4809,7 +4821,7 @@ int Emulator::SRL_r(BYTE& r) {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "SRL_r" << endl;
+    //cout << "SRL_r" << endl;
 
     return 8;
 
@@ -4856,7 +4868,7 @@ int Emulator::SRL_HL() {
         ? bitSet(regAF.low, FLAG_CARRY)
         : bitReset(regAF.low, FLAG_CARRY);
 
-    cout << "SRL_HL" << endl;
+    //cout << "SRL_HL" << endl;
 
     return 16;
 
@@ -4892,7 +4904,7 @@ int Emulator::BIT_n_r(BYTE& r, int n) {
     regAF.low = bitReset(regAF.low, FLAG_SUB);
     regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
 
-    cout << "BIT_n_r" << endl;
+    //cout << "BIT_n_r" << endl;
 
     return 8;
 
@@ -4923,7 +4935,7 @@ int Emulator::BIT_n_HL(int n) {
     regAF.low = bitReset(regAF.low, FLAG_SUB);
     regAF.low = bitSet(regAF.low, FLAG_HALFCARRY);
 
-    cout << "BIT_n_HL" << endl;
+    //cout << "BIT_n_HL" << endl;
 
     return 12;
 
@@ -4943,7 +4955,7 @@ int Emulator::SET_n_r(BYTE& r, int n) {
 
     r = bitSet(r, n);
 
-    cout << "SET_n_r" << endl;
+    //cout << "SET_n_r" << endl;
 
     return 8;
 
@@ -4964,7 +4976,7 @@ int Emulator::SET_n_HL(int n) {
     BYTE result = bitSet(readMem(regHL.low), n);
     writeMem(regHL.low, result);
 
-    cout << "SET_n_HL" << endl;
+    //cout << "SET_n_HL" << endl;
 
     return 16;
 
@@ -4984,7 +4996,7 @@ int Emulator::RES_n_r(BYTE& r, int n) {
 
     r = bitReset(r, n);
 
-    cout << "RES_n_r" << endl;
+    //cout << "RES_n_r" << endl;
 
     return 8;
 
@@ -5005,7 +5017,7 @@ int Emulator::RES_n_HL(int n) {
     BYTE result = bitReset(readMem(regHL.low), n);
     writeMem(regHL.low, result);
 
-    cout << "RES_n_HL" << endl;
+    //cout << "RES_n_HL" << endl;
 
     return 16;
 
@@ -5041,7 +5053,7 @@ int Emulator::CCF() {
         ? bitReset(regAF.low, FLAG_CARRY)
         : bitSet(regAF.low, FLAG_CARRY);
 
-    cout << "CCF" << endl;
+    //cout << "CCF" << endl;
 
     return 4;
 
@@ -5069,7 +5081,7 @@ int Emulator::SCF() {
     // Set carry flag
     regAF.low = bitSet(regAF.low, FLAG_CARRY);
 
-    cout << "SCF" << endl;
+    //cout << "SCF" << endl;
 
     return 4;
 
@@ -5087,7 +5099,7 @@ int Emulator::SCF() {
 int Emulator::NOP() {
 
     // No flags affected
-    // cout << "NOP" << endl;
+    // //cout << "NOP" << endl;
     return 4;
 
 }
@@ -5103,7 +5115,7 @@ int Emulator::HALT() {
 
     isHalted = true;
 
-    cout << "HALT" << endl;
+    //cout << "HALT" << endl;
 
     // Different docs say different things, we follow the gameboy manual.
     return 4;
@@ -5121,7 +5133,7 @@ int Emulator::HALT() {
 */
 int Emulator::STOP() {
     
-    cout << "STOP" << endl;
+    //cout << "STOP" << endl;
 
     return HALT();
 
@@ -5140,7 +5152,7 @@ int Emulator::DI() {
     
     InterruptMasterEnabled = false;
 
-    cout << "DI" << endl;
+    //cout << "DI" << endl;
 
     return 4;
 
@@ -5159,7 +5171,7 @@ int Emulator::EI() {
 
     InterruptMasterEnabled = true;
 
-    cout << "EI" << endl;
+    //cout << "EI" << endl;
 
     return 4;
 
@@ -5187,7 +5199,7 @@ int Emulator::JP_nn() {
 
     programCounter.regstr = (highByte << 8) | lowByte;
 
-    cout << "JP_nn" << endl;
+    //cout << "JP_nn" << endl;
     return 16;
 
 }
@@ -5205,7 +5217,7 @@ int Emulator::JP_HL() {
 
     programCounter.regstr = regHL.regstr;
 
-    cout << "JP_HL" << endl;
+    //cout << "JP_HL" << endl;
 
     return 4;
 
@@ -5250,7 +5262,7 @@ int Emulator::JP_f_nn(BYTE opcode) {
             break;
     }
 
-    cout << "JP_f_nn" << endl;
+    //cout << "JP_f_nn" << endl;
 
     if (jump) {
         programCounter.regstr = nn;
@@ -5278,7 +5290,7 @@ int Emulator::JR_PCdd() {
 
     programCounter.regstr += dd;
 
-    cout << "JR_PCdd" << endl;
+    //cout << "JR_PCdd" << endl;
 
     return 12;
 
@@ -5319,7 +5331,7 @@ int Emulator::JR_f_PCdd(BYTE opcode) {
             break;
     }
 
-    cout << "JR_f_PCDD" << endl;
+    //cout << "JR_f_PCDD" << endl;
 
     if (jump) {
         programCounter.regstr += dd;
@@ -5356,7 +5368,7 @@ int Emulator::CALL_nn() {
     // Set PC to nn
     programCounter.regstr = nn;
 
-    cout << "CALL_nn" << endl;
+    //cout << "CALL_nn" << endl;
 
     return 24;
 
@@ -5400,7 +5412,7 @@ int Emulator::CALL_f_nn(BYTE opcode) {
             break;
     }
 
-    cout << "CALL_f_nn" << endl;
+    //cout << "CALL_f_nn" << endl;
 
     if (call) {
 
@@ -5442,7 +5454,7 @@ int Emulator::RET() {
     // Set PC to address
     programCounter.regstr = (highByte << 8) | lowByte;
 
-    cout << "RET" << endl;
+    //cout << "RET" << endl;
 
     return 16;
 
@@ -5481,7 +5493,7 @@ int Emulator::RET_f(BYTE opcode) {
             break;
     }
 
-    cout << "RET_f" << endl;
+    //cout << "RET_f" << endl;
 
     if (doRET) {
 
@@ -5525,7 +5537,7 @@ int Emulator::RETI() {
     // Enable interrupts
     InterruptMasterEnabled = true;
 
-    cout << "RETI" << endl;
+    //cout << "RETI" << endl;
 
     return 16;
 
@@ -5563,7 +5575,7 @@ int Emulator::RST_n(BYTE opcode) {
     BYTE t = ((opcode >> 3) & 0x07);
     programCounter.regstr = (WORD)(t * 0x08);
 
-    cout << "RST_n" << endl;
+    //cout << "RST_n" << endl;
 
     return 16;
     

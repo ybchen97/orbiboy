@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <cassert>
+#include <fstream>
 
 // For the flag bits in register F
 #define FLAG_ZERO 7

@@ -4,7 +4,12 @@
 #include <thread>
 #include <SDL2/SDL.h>
 
+
 #include "Emulator.hpp"
+
+#ifdef __EMSCRIPTEN__
+#include "emscripten.h"
+#endif
 
 using namespace std;
 
@@ -14,12 +19,13 @@ const chrono::duration<float, milli> timePerFrame(millisPerFrame);
 SDL_Renderer* sdlRenderer;
 SDL_Texture* sdlTexture;
 Emulator emulator;
+bool continueGame;
 
 void render(SDL_Renderer* renderer, SDL_Texture* texture, Emulator& emu) {
 
     SDL_UpdateTexture(texture, NULL, emu.displayPixels, 160 * sizeof(Uint32));
     SDL_RenderClear(renderer);
-    const SDL_Rect dest = {.x = 0, .y = 0, .w = 160, .h = 144};
+    const SDL_Rect dest = {.x = 0, .y = 0, .w = 160*4, .h = 144*4};
     SDL_RenderCopy(renderer, texture, NULL, &dest);
     SDL_RenderPresent(renderer);
 
@@ -68,6 +74,60 @@ void processInput(Emulator& emulator, SDL_Event& event, bool& gameRunning) {
 
 }
 
+void mainloop() {
+    bool gameRunning = true;
+
+    // Emulation loop
+    SDL_Event event;
+    auto previous = chrono::high_resolution_clock::now();
+
+        
+        // Process user input
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                gameRunning = false;
+                continue;
+            }
+            processInput(emulator, event, gameRunning);
+        }
+
+        emulator.update();
+
+        // Sleep to use up the rest of the frame time
+        auto current = chrono::high_resolution_clock::now();
+        auto timeElapsed = current - previous;
+        if (timeElapsed < timePerFrame) {
+            this_thread::sleep_for(chrono::duration<float, milli> (timePerFrame - timeElapsed));
+        }
+
+        previous = chrono::high_resolution_clock::now();
+
+    if (!gameRunning) { 
+        #ifdef __EMSCRIPTEN__
+            emscripten_cancel_main_loop();
+        #endif
+
+        SDL_Quit();
+        continueGame = false;
+    }
+}
+
+// Loading function abstracted so it can be called by javascript from the client
+extern "C" {
+void load(string romPath) {
+
+    emulator.resetCPU();
+    emulator.setRenderGraphics(&doRender);
+
+    if (!emulator.loadGame(romPath)) {
+        cout << "Something wrong occured while loading!" << endl;
+        exit(4);
+    }
+
+}
+}
+
+extern "C" {
 int main(int argc, char** argv) {
 
     // Screen dimensions
@@ -88,8 +148,8 @@ int main(int argc, char** argv) {
         "orbiboy",
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
-        windowWidth,
-        windowHeight,
+        windowWidth*4,
+        windowHeight*4,
         SDL_WINDOW_SHOWN
     );
     if (window == nullptr) {
@@ -142,42 +202,23 @@ int main(int argc, char** argv) {
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/10-bit ops.gb";
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/11-op a,(hl).gb";
 
-    if (!emulator.loadGame(romPath)) {
-        cout << "Something wrong occured while loading!" << endl;
-        exit(4);
-    }
+    // if (!emulator.loadGame(romPath)) {
+    //     cout << "Something wrong occured while loading!" << endl;
+    //     exit(4);
+    // }
 
-    bool gameRunning = true;
+    load(romPath);
 
-    // Emulation loop
-    SDL_Event event;
-    auto previous = chrono::high_resolution_clock::now();
-    while (gameRunning) {
-        
-        // Process user input
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                gameRunning = false;
-                continue;
-            }
-            processInput(emulator, event, gameRunning);
+    #ifdef __EMSCRIPTEN__
+        emscripten_set_main_loop(mainloop, 0, 1);
+    #else
+        continueGame = true;
+        while (continueGame) {
+            mainloop();
         }
-
-        emulator.update();
-
-        // Sleep to use up the rest of the frame time
-        auto current = chrono::high_resolution_clock::now();
-        auto timeElapsed = current - previous;
-        if (timeElapsed < timePerFrame) {
-            this_thread::sleep_for(chrono::duration<float, milli> (timePerFrame - timeElapsed));
-        }
-
-        previous = chrono::high_resolution_clock::now();
-
-    }
-
-    SDL_Quit();
+    #endif
 
     return 0;
 
+}
 }
