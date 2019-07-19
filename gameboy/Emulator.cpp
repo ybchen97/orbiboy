@@ -2700,7 +2700,7 @@ int Emulator::ADD_A_HL() {
 int Emulator::ADC_A_r(BYTE reg) {
     BYTE carry = isBitSet(regAF.low, FLAG_CARRY) ? 0x01 : 0x00;
     BYTE toAdd = carry + reg;
-    BYTE result = regAF.high + carry + toAdd;
+    BYTE result = regAF.high + toAdd;
 
     // Reset the flags
     regAF.low &= 0x00;
@@ -2788,7 +2788,7 @@ int Emulator::ADC_A_n() {
 int Emulator::ADC_A_HL() {
     BYTE carry = isBitSet(regAF.low, FLAG_CARRY) ? 0x01 : 0x00;
     BYTE toAdd = carry + readMem(regHL.regstr);
-    BYTE result = regAF.high + carry + toAdd;
+    BYTE result = regAF.high + toAdd;
 
     // Reset the flags
     regAF.low &= 0x00;

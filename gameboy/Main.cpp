@@ -179,12 +179,12 @@ int main(int argc, char** argv) {
     );
 
     // Load game
-    string romPath = "Tetris.gb";
+    //string romPath = "Tetris.gb";
     // string romPath = "marioland.gb";
     // string romPath = "marioland4.gb";
 
     // string romPath = "../../gb-test-roms/cpu_instrs/cpu_instrs.gb"; // Passed all but first one
-    // string romPath = "../../gb-test-roms/cpu_instrs/individual/01-special.gb"; // FAILED
+    string romPath = "../../gb-test-roms/cpu_instrs/individual/01-special.gb"; // FAILED
 
     // All Passed
     // string romPath = "../../gb-test-roms/cpu_instrs/opus5.gb";
