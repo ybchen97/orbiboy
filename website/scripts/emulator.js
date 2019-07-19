@@ -38,8 +38,8 @@ Module.expectedDataFileDownloads++;
     } else {
       throw 'using preloaded data can only be done on a web page or in a web worker';
     }
-    var PACKAGE_NAME = 'wasm/emulator.data';
-    var REMOTE_PACKAGE_BASE = 'wasm/emulator.data';
+    var PACKAGE_NAME = '../wasm/emulator.data';
+    var REMOTE_PACKAGE_BASE = '../wasm/emulator.data';
     if (typeof Module['locateFilePackage'] === 'function' && !Module['locateFile']) {
       Module['locateFile'] = Module['locateFilePackage'];
       err('warning: you defined Module.locateFilePackage, that has been renamed to Module.locateFile (using your locateFilePackage for now)');
@@ -193,7 +193,7 @@ Module.expectedDataFileDownloads++;
   }
 
  }
- loadPackage({"files": [{"start": 0, "audio": 0, "end": 32768, "filename": "/Tetris.gb"}], "remote_package_size": 32768, "package_uuid": "46ec1363-9cd2-43cd-8f6e-a65830653274"});
+ loadPackage({"files": [{"start": 0, "audio": 0, "end": 32768, "filename": "/Tetris.gb"}], "remote_package_size": 32768, "package_uuid": "3491a18d-ac67-4536-8632-52b1ec7ea977"});
 
 })();
 

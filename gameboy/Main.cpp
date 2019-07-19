@@ -25,7 +25,7 @@ void render(SDL_Renderer* renderer, SDL_Texture* texture, Emulator& emu) {
 
     SDL_UpdateTexture(texture, NULL, emu.displayPixels, 160 * sizeof(Uint32));
     SDL_RenderClear(renderer);
-    const SDL_Rect dest = {.x = 0, .y = 0, .w = 160*4, .h = 144*4};
+    const SDL_Rect dest = {.x = 0, .y = 0, .w = 160*2, .h = 144*2};
     SDL_RenderCopy(renderer, texture, NULL, &dest);
     SDL_RenderPresent(renderer);
 
@@ -150,8 +150,8 @@ int main(int argc, char** argv) {
         "orbiboy",
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
-        windowWidth*4,
-        windowHeight*4,
+        windowWidth*2,
+        windowHeight*2,
         SDL_WINDOW_SHOWN
     );
     if (window == nullptr) {
