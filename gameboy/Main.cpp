@@ -116,6 +116,8 @@ void mainloop() {
 extern "C" {
 void load(string romPath) {
 
+    // Initialize emulator
+    emulator = Emulator();
     emulator.resetCPU();
     emulator.setRenderGraphics(&doRender);
 
@@ -175,11 +177,6 @@ int main(int argc, char** argv) {
         SDL_TEXTUREACCESS_STREAMING,
         160, 144
     );
-
-    // Initialize emulator
-    emulator = Emulator();
-    emulator.resetCPU();
-    emulator.setRenderGraphics(&doRender);
 
     // Load game
     string romPath = "Tetris.gb";

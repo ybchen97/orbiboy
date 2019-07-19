@@ -137,7 +137,22 @@ void Emulator::resetCPU() {
 bool Emulator::loadGame(string file_path) {
 
     memset(cartridgeMem, 0, sizeof(cartridgeMem));
+
+    // read rom into vector
+    ifstream file(file_path.c_str(), ios::binary);
+    // assert(file.good());
+
+    // resize & read rom
+    file.seekg(0, ios::end);
+    streampos size = file.tellg();
+    file.seekg(0, ios::beg);
+    file.read(reinterpret_cast<char *>(&cartridgeMem[0]), size);
     
+    // Copy ROM banks 0 & 1 to internal memory
+    copy_n(&cartridgeMem[0], 0x8000, &internalMem[0]);
+
+    return true;
+
     // //load in the game
     // FILE* in;
     // in = fopen(file_path.c_str(), "rb") ;
@@ -160,18 +175,6 @@ bool Emulator::loadGame(string file_path) {
     // // Copy ROM Banks 0 & 1 to internal memory
     // memcpy(internalMem, cartridgeMem, 0x8000) ; // this is read only and never changes
 
-        // read rom into vector
-    ifstream file(file_path.c_str(), ios::binary);
-    // assert(file.good());
-
-    // resize & read rom
-    file.seekg(0, ios::end);
-    streampos size = file.tellg();
-    file.seekg(0, ios::beg);
-    file.read(reinterpret_cast<char *>(&cartridgeMem[0]), size);
-    copy_n(&cartridgeMem[0], 0x8000, &internalMem[0]);
-
-    return true;
 }
 
 void Emulator::update() { // MAIN UPDATE LOOP
@@ -1001,7 +1004,7 @@ BYTE Emulator::readMem(WORD address) const {
     // If reading from the switchable external RAM banking area
     else if ((address >= 0xA000) && (address <= 0xBFFF)) {
         // if in ROM mode, only RAM bank 0 can be accessed
-        assert(ROMBanking == (currentRAMBank == 0));
+        // assert(ROMBanking == (currentRAMBank == 0));
         WORD newAddress = (currentRAMBank * 0x2000) + (address - 0xA000);
         return RAMBanks[newAddress];
     }
