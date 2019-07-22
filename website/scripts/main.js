@@ -8,22 +8,20 @@ selectRomBtn.addEventListener('click', () => {
 
 realRomInput.addEventListener('change', (event) => {
   const name = realRomInput.value.split(/\\|\//).pop();
-  const truncated = name.length > 15
-    ? name.slice(0, 14) + '...'
+  const truncated = (name.length > 13)
+    ? name.slice(0, 11) + '...'
     : name;
 
   selectRomBtn.textContent = truncated;
-
-  romHeading.textContent = "Now playing " + name;
+  romHeading.textContent = name.substring(0, name.indexOf('.'));
 
   console.log(event.target.files[0].name);
   loadFile(event.target, 'rom.gb');
-  Module.ccall('load', null, ['string'], ['rom.gb']);
 });
 
 // Set up file system
 const setupFS = () => {
-  // load files from indexedDB
+  // load files that were stored in indexedDB from previous sessions
   FS.mkdir('/rom');
   FS.mount(IDBFS, {}, '/rom');
   FS.syncfs(true, (err) => {
@@ -32,8 +30,9 @@ const setupFS = () => {
       console.log('no roms found!');
       return;
     }
+
+    // Reading name of the previously used file from filename.txt
     lastFilename = FS.readFile('filename.txt', { encoding: 'utf8' });
-    // wtf
     document.querySelector('#rom-select').textContent = lastFilename + '.gb';
     // if (!FS.analyzePath('ram.sav').exists) return;
     // document.getElementById('ram').labels[0].innerHTML = lastFilename + '.sav';
@@ -49,12 +48,15 @@ const loadFile = (input, filename) => {
   const file = input.files[0];
   let fr = new FileReader();
   fr.readAsArrayBuffer(file);
+  // Writing the file to system
   fr.onload = () => {
     const data = new Uint8Array(fr.result);
     FS.writeFile(filename, data);
+    Module.ccall('load', null, ['string'], ['rom.gb']);
   };
-  document.querySelector('#rom-select').textContent = file.name;
   lastFilename = file.name.replace(/\.[^/.]+$/, '');
+
+  // storing name of file as filename.txt
   FS.writeFile('filename.txt', lastFilename);
 };
 
@@ -71,3 +73,18 @@ var Module = {
   })(),
   onRuntimeInitialized: setupFS
 };
+
+// Pause play button
+let pauseMenu = document.querySelector('.pauseMenu');
+let pausePlayButton = document.querySelector('.pauseMenu button');
+let currentState = document.querySelector('#state');
+pauseMenu.addEventListener('click', () => {
+  pausePlayButton.classList.toggle('paused');
+  if (currentState.textContent === 'PLAY') {
+    currentState.textContent = 'PAUSE';
+    Module.ccall('togglePause', null, null, null);
+  } else {
+    currentState.textContent = 'PLAY'
+    Module.ccall('togglePause', null, null, null);
+  }
+});

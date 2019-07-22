@@ -6,26 +6,36 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <title>Orbiboy</title>
   <link rel="stylesheet" href="styles/style.css">
-  <link href="https://fonts.googleapis.com/css?family=Nunito&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:400,600|ZCOOL+KuaiLe&display=swap" rel="stylesheet">
 </head>
 
 <body>
-  <div class="menu-buttons">
+  <div class="container">
     <input type="file" id="real-input" hidden>
     <ul>
-      <li><button id="rom-select">Select ROM</button></li>
-      <li><button>Load Save Game</button></li>
-      <li><button>Download Save Game</button></li>
-      <li>
+      <li class="logo">
+        <img src="images/orbiboy-inverse.png" alt="Orbiboy">
+      </li>
+      <li class="btn"><button id="rom-select">Select ROM</button></li>
+      <li class="btn"><button>Load Save</button></li>
+      <li class="btn"><button>Download Save</button></li>
+      <li class="icon">
         <a href="https://github.com/ybchen97/orbiboy" target="_blank">
-          <img class="header-icon" src="https://github.githubassets.com/favicon.ico" alt="GitHub Source">
+          <img class="header-icon" src="images/GitHub-Mark-Light-64px.png" alt="GitHub Source">
         </a>
       </li>
     </ul>
   </div>
-  <h1 id="romHeading">Please Select a ROM</h1>
 
-  <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1 width="320" height="288"></canvas>
+  <div class="canvasWrapper">
+    <h1 id="romHeading">Select a ROM</h1>
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1 width="320"
+      height="288"></canvas>
+    <ul class="pauseMenu">
+      <li><button></button></li>
+      <li><h1 id="state">PLAY</h1></li>
+    </ul>
+  </div>
 
   <script type='text/javascript' src="scripts/main.js"></script>
   <script async type="text/javascript" src="scripts/emulator.js"></script>

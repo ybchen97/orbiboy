@@ -1,1 +1,2 @@
-emcc -std=c++17 -Wall -g -lm Main.cpp Emulator.cpp -o emulator.html -s USE_SDL=2 -s EXPORTED_FUNCTIONS='["_load","_main"]' -s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]' -s WASM=1 -s FORCE_FILESYSTEM=1 -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 --preload-file Tetris.gb
+emcc -std=c++17 -Wall -g -lm Main.cpp Emulator.cpp -o emulator.html -s USE_SDL=2
+-s EXPORTED_FUNCTIONS='["_load","_main","_togglePause"]' -s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall", "cwrap"]' -s WASM=1 -s FORCE_FILESYSTEM=1 -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 --preload-file Tetris.gb

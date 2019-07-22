@@ -20,6 +20,20 @@ SDL_Renderer* sdlRenderer;
 SDL_Texture* sdlTexture;
 Emulator emulator;
 bool continueGame;
+bool pauseGame;
+
+extern "C" {
+void togglePause() {
+    if (pauseGame) {
+        pauseGame = false;
+        #ifdef __EMSCRIPTEN__
+            emscripten_resume_main_loop();
+        #endif
+    } else {
+        pauseGame = true;
+    }
+}
+}
 
 void render(SDL_Renderer* renderer, SDL_Texture* texture, Emulator& emu) {
 
@@ -75,6 +89,13 @@ void processInput(Emulator& emulator, SDL_Event& event, bool& gameRunning) {
 }
 
 void mainloop() {
+
+    #ifdef __EMSCRIPTEN__
+        if (pauseGame) {
+            emscripten_pause_main_loop();
+        }
+    #endif
+
     bool gameRunning = true;
 
     // Emulation loop
@@ -110,6 +131,7 @@ void mainloop() {
         SDL_Quit();
         continueGame = false;
     }
+
 }
 
 // Loading function abstracted so it can be called by javascript from the client
@@ -207,6 +229,7 @@ int main(int argc, char** argv) {
     load(romPath);
 
     #ifdef __EMSCRIPTEN__
+        pauseGame = true;
         emscripten_set_main_loop(mainloop, 0, 1);
     #else
         continueGame = true;

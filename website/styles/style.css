@@ -1,64 +1,155 @@
 html {
-    font-size: 10px;
-    font-family: 'Nunito', sans-serif;
-    background-color: #f3f3f3;
+    background-color: white;
 }
 
 body {
     width: 100%;
     margin: 0 auto;
-    background-color: #f3f3f3;
 }
 
 button {
-    font-family: inherit;
-    font-size: 1em;
+    cursor: pointer;
 }
 
-.menu-buttons {
+div.container ul {
     width: 100%;
-    background-color: white;
-    display: flex;
-}
-
-.menu-buttons ul {
-    padding: 10px;
+    background-color: black;
     list-style-type: none;
-    flex: 2;
-    display: flex;
-}
-  
-.menu-buttons li {
-    display: inline-block;
-    text-align: center;
-    flex: 1;
-}
-
-.menu-buttons li button {
-    text-transform: uppercase;
-    font-size: 16px;
-}
-
-h1 #romHeading {
     margin: 0;
-    letter-spacing: 1px;
-    font-size: 30px;
-    text-align: center;
+    padding: 0;
 }
 
-p {
+div.container ul:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+div.container li {
+    float: left;
+}
+
+div.container li.logo img {
+    display: block;
+    height: 40px;
+    padding: 10px 20px;
+    padding-left: 40px;
+}
+
+div.container li button {
+    text-transform: uppercase;
+    font-family: 'Nunito', sans-serif;
     font-size: 18px;
-    line-height: 2;
-    letter-spacing: 1px;
+    font-weight: 600;
+    color: white;
+    background-color: black;
+    border: none;
+    padding: 18px 30px;
+    outline: none;
+    -webkit-transition-duration: 0.2s; /* Safari */
+    transition-duration: 0.2s;
+}
+
+div.container li button:hover {
+    color: black;
+    background-color: white;
+}
+
+div.container li button:focus {
+    padding-bottom: 13px;
+    border-bottom: 5px solid white;
+}
+
+div.container li button#rom-select {
+    width: 200px;
+}
+
+div.container li.icon {
+    float: right;
+    padding: 14px 20px;
 }
 
 img.header-icon {
     display: block;
-    margin: 0 auto;
-    width: 16px;
+    width: 32px;
+}
+
+img.header-icon:hover,
+img.header-icon:focus {
+    opacity: 0.8;
+}
+
+div.canvasWrapper {
+    display: block;
+    margin: 60px auto auto;
+    padding: 0;
+    background-color: black;
+    width: 320px;
+    border: 20px solid black;
+    border-radius: 5%;
+}
+
+div.canvasWrapper h1 {
+    display: block;
+    letter-spacing: 2px;
+    font-family: 'ZCOOL KuaiLe', cursive;
+    font-size: 30px;
+    font-weight: 600;
+    color: white;
+}
+
+div.canvasWrapper h1#romHeading {
+    margin: auto;
+    padding-bottom: 15px;
+    text-align: center;
+    text-transform: uppercase;
+    overflow: hidden;
 }
 
 canvas {
     display: block;
-    border: 10px solid #d9d9d9;
+    padding: 0;
+    margin: auto;
+    background-color: white;
+}
+
+.pauseMenu {
+    margin: 0;
+    padding: 5px 0 0 0;
+    list-style-type: none;
+    text-align: center;
+    cursor: pointer;
+}
+
+.pauseMenu li {
+    display: inline-block;
+}
+
+.pauseMenu button {
+    display: block;
+    background: transparent;
+    box-sizing: border-box;
+    width: 0;
+    height: 0;
+    padding: 0;
+    
+    border-color: transparent transparent transparent white;
+    transition: 100ms all ease;
+    
+    /* play state */
+    border-style: solid;
+    border-width: 15px 0 15px 25px;
+}
+
+/* paused state */
+.pauseMenu button.paused {
+    height: 30px;
+    border-style: double;
+    border-width: 0px 0 0px 25px; 
+}
+
+.pauseMenu li h1 {
+    margin: 0;
+    padding: 10px 20px 0 20px;
+    font-size: 40px;
 }
