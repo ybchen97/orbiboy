@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
     );
 
     // Load game
-    string romPath = "Tetris.gb";
+    // string romPath = "Tetris.gb";
     // string romPath = "marioland.gb";
     // string romPath = "marioland4.gb";
 
@@ -232,7 +232,7 @@ int main(int argc, char** argv) {
     // string romPath = "../../gb-test-roms/cpu_instrs/opus5.gb";
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/02-interrupts.gb";
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/03-op sp,hl.gb";
-    // string romPath = "../../gb-test-roms/cpu_instrs/individual/04-op r,imm.gb";
+    string romPath = "../../gb-test-roms/cpu_instrs/individual/04-op r,imm.gb";
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/05-op rp.gb";
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/06-ld r,r.gb";
     // string romPath = "../../gb-test-roms/cpu_instrs/individual/07-jr,jp,call,ret,rst.gb";
@@ -254,7 +254,7 @@ int main(int argc, char** argv) {
         emscripten_set_main_loop(mainloop, 0, 1);
     #else
         load(romPath);
-        loadState(savePath);
+        // loadState(savePath);
         saveGame = false;
         gameRunning = true;
         while (gameRunning) {

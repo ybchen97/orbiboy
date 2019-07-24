@@ -1,5 +1,5 @@
 html {
-    background-color: white;
+    background-color: #ffffff;
 }
 
 body {
@@ -13,7 +13,7 @@ button {
 
 div.container ul {
     width: 100%;
-    background-color: black;
+    background-color: #2d3142;
     list-style-type: none;
     margin: 0;
     padding: 0;
@@ -41,8 +41,8 @@ div.container li button {
     font-family: 'Nunito', sans-serif;
     font-size: 18px;
     font-weight: 600;
-    color: white;
-    background-color: black;
+    color: #ffffff;
+    background-color: inherit;
     border: none;
     padding: 18px 30px;
     outline: none;
@@ -51,13 +51,13 @@ div.container li button {
 }
 
 div.container li button:hover {
-    color: black;
-    background-color: white;
+    color: #ffffff;
+    background-color: #ef8354;
 }
 
 div.container li button:focus {
     padding-bottom: 13px;
-    border-bottom: 5px solid white;
+    border-bottom: 5px solid #ffffff;
 }
 
 div.container li button#rom-select {
@@ -83,9 +83,9 @@ div.canvasWrapper {
     display: block;
     margin: 60px auto auto;
     padding: 0;
-    background-color: black;
+    background-color: #2d3142;
     width: 320px;
-    border: 20px solid black;
+    border: 20px solid #2d3142;
     border-radius: 5%;
 }
 
@@ -95,7 +95,7 @@ div.canvasWrapper h1 {
     font-family: 'ZCOOL KuaiLe', cursive;
     font-size: 30px;
     font-weight: 600;
-    color: white;
+    color: #ffffff;
 }
 
 div.canvasWrapper h1#romHeading {
