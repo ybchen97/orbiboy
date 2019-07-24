@@ -308,6 +308,19 @@ int Emulator::executeNextOpcode() {
     int clockCycles;
 
     BYTE opcode = readMem(programCounter.regstr);
+    
+  
+    //int step;
+    //cout << "Step?";
+    //cin >> step;
+
+    //cout << "Opcode: 0x" << hex << (int)opcode << endl;
+    //cout << "PC: 0x" << hex << programCounter.regstr << endl;
+    //cout << "SP: 0x" << hex << stackPointer.regstr << endl;
+    //cout << "A: 0x" << hex << (int)regAF.high << "    F: 0x" << hex << (int)regAF.low << endl;
+    //cout << "B: 0x" << hex << (int)regBC.high << "    C: 0x" << hex << (int)regBC.low << endl;
+    //cout << "D: 0x" << hex << (int)regDE.high << "    E: 0x" << hex << (int)regDE.low << endl;
+    //cout << "H: 0x" << hex << (int)regHL.high << "    L: 0x" << hex << (int)regHL.low << endl;
 
     // if (opcode != 0) {
     //     //cout << "opcode: " << hex << (int) opcode << endl;
@@ -545,7 +558,7 @@ int Emulator::executeOpcode(BYTE opcode) {
         case 0xA3: cycles = AND_r(regDE.low); break;
         case 0xA4: cycles = AND_r(regHL.high); break;
         case 0xA5: cycles = AND_r(regHL.low); break;
-        case 0xA6: cycles = AND_HL();
+        case 0xA6: cycles = AND_HL(); break;
         case 0xA7: cycles = AND_r(regAF.high); break;
 
         // AND n 
@@ -558,7 +571,7 @@ int Emulator::executeOpcode(BYTE opcode) {
         case 0xAB: cycles = XOR_r(regDE.low); break;
         case 0xAC: cycles = XOR_r(regHL.high); break;
         case 0xAD: cycles = XOR_r(regHL.low); break;
-        case 0xAE: cycles = XOR_HL();
+        case 0xAE: cycles = XOR_HL(); break;
         case 0xAF: cycles = XOR_r(regAF.high); break;
 
         // XOR n
@@ -571,7 +584,7 @@ int Emulator::executeOpcode(BYTE opcode) {
         case 0xB3: cycles = OR_r(regDE.low); break;
         case 0xB4: cycles = OR_r(regHL.high); break;
         case 0xB5: cycles = OR_r(regHL.low); break;
-        case 0xB6: cycles = OR_HL();
+        case 0xB6: cycles = OR_HL(); break;
         case 0xB7: cycles = OR_r(regAF.high); break;
 
         // OR n 
@@ -584,7 +597,7 @@ int Emulator::executeOpcode(BYTE opcode) {
         case 0xBB: cycles = CP_r(regDE.low); break;
         case 0xBC: cycles = CP_r(regHL.high); break;
         case 0xBD: cycles = CP_r(regHL.low); break;
-        case 0xBE: cycles = CP_HL();
+        case 0xBE: cycles = CP_HL(); break;
         case 0xBF: cycles = CP_r(regAF.high); break;
 
         // CP n
