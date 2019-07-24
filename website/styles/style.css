@@ -141,8 +141,8 @@ canvas {
     border-width: 15px 0 15px 25px;
 }
 
-/* paused state */
-.pauseMenu button.paused {
+/* pause state */
+.pauseMenu button.pause {
     height: 30px;
     border-style: double;
     border-width: 0px 0 0px 25px; 

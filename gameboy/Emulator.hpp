@@ -44,8 +44,12 @@ class Emulator {
         uint32_t displayPixels[160 * 144];
 
         // FUNCTIONS
-        void resetCPU();
         bool loadGame(string);
+        void saveGame(string);
+        void loadState(string);
+        void saveState(string);
+
+        void resetCPU();
         void update();
         void buttonPressed(int);
         void buttonReleased(int);

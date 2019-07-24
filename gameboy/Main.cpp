@@ -19,21 +19,9 @@ const chrono::duration<float, milli> timePerFrame(millisPerFrame);
 SDL_Renderer* sdlRenderer;
 SDL_Texture* sdlTexture;
 Emulator emulator;
-bool continueGame;
+bool gameRunning;
 bool pauseGame;
-
-extern "C" {
-void togglePause() {
-    if (pauseGame) {
-        pauseGame = false;
-        #ifdef __EMSCRIPTEN__
-            emscripten_resume_main_loop();
-        #endif
-    } else {
-        pauseGame = true;
-    }
-}
-}
+bool saveGame;
 
 void render(SDL_Renderer* renderer, SDL_Texture* texture, Emulator& emu) {
 
@@ -51,7 +39,7 @@ void doRender() {
 
 }
 
-void processInput(Emulator& emulator, SDL_Event& event, bool& gameRunning) {
+void processInput(Emulator& emulator, SDL_Event& event) {
 
     if (event.type == SDL_KEYDOWN) {
         int key = -1;
@@ -64,7 +52,10 @@ void processInput(Emulator& emulator, SDL_Event& event, bool& gameRunning) {
             case SDLK_LEFT:     key = 1; break;
             case SDLK_UP:       key = 2; break;
             case SDLK_DOWN:     key = 3; break;
-            case SDLK_ESCAPE:   gameRunning = false;
+            case SDLK_ESCAPE:   gameRunning = false; break;
+            #ifndef __EMSCRIPTEN__
+            case SDLK_i:        saveGame = true; break;
+            #endif
         }
         if (key != -1) {
             emulator.buttonPressed(key);
@@ -88,6 +79,48 @@ void processInput(Emulator& emulator, SDL_Event& event, bool& gameRunning) {
 
 }
 
+extern "C" {
+void togglePause() {
+    if (pauseGame) {
+        pauseGame = false;
+        #ifdef __EMSCRIPTEN__
+            emscripten_resume_main_loop();
+        #endif
+    } else {
+        pauseGame = true;
+    }
+}
+}
+
+// Loading function abstracted so it can be called by javascript from the client
+extern "C" {
+void load(string romFile) {
+
+    // Initialize emulator
+    emulator = Emulator();
+    emulator.resetCPU();
+    emulator.setRenderGraphics(&doRender);
+
+    if (!emulator.loadGame(romFile)) {
+        cout << "Something wrong occured while loading!" << endl;
+        exit(4);
+    }
+
+}
+}
+
+extern "C" {
+void loadState(string saveFile) {
+    emulator.loadState(saveFile);
+}
+}
+
+extern "C" {
+void saveState(string fileName) {
+    emulator.saveState(fileName);
+}
+}
+
 void mainloop() {
 
     #ifdef __EMSCRIPTEN__
@@ -109,10 +142,15 @@ void mainloop() {
                 gameRunning = false;
                 continue;
             }
-            processInput(emulator, event, gameRunning);
+            processInput(emulator, event);
         }
 
         emulator.update();
+        if (saveGame) {
+            cout << "saving game now" << endl;
+            emulator.saveState("savefile.sav");
+            saveGame = false;
+        }
 
         // Sleep to use up the rest of the frame time
         auto current = chrono::high_resolution_clock::now();
@@ -126,29 +164,11 @@ void mainloop() {
     if (!gameRunning) { 
         #ifdef __EMSCRIPTEN__
             emscripten_cancel_main_loop();
-        #endif
-
+        #else
         SDL_Quit();
-        continueGame = false;
+        #endif
     }
 
-}
-
-// Loading function abstracted so it can be called by javascript from the client
-extern "C" {
-void load(string romPath) {
-
-    // Initialize emulator
-    emulator = Emulator();
-    emulator.resetCPU();
-    emulator.setRenderGraphics(&doRender);
-
-    if (!emulator.loadGame(romPath)) {
-        cout << "Something wrong occured while loading!" << endl;
-        exit(4);
-    }
-
-}
 }
 
 extern "C" {
@@ -226,14 +246,18 @@ int main(int argc, char** argv) {
     //     exit(4);
     // }
 
-    load(romPath);
+    string savePath = "savefile.sav";
+
 
     #ifdef __EMSCRIPTEN__
         pauseGame = true;
         emscripten_set_main_loop(mainloop, 0, 1);
     #else
-        continueGame = true;
-        while (continueGame) {
+        load(romPath);
+        loadState(savePath);
+        saveGame = false;
+        gameRunning = true;
+        while (gameRunning) {
             mainloop();
         }
     #endif

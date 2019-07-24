@@ -11,14 +11,16 @@
 
 <body>
   <div class="container">
-    <input type="file" id="real-input" hidden>
+    <input type="file" id="rom-input" hidden>
+    <input type="file" id="save-input" hidden>
     <ul>
       <li class="logo">
         <img src="images/orbiboy-inverse.png" alt="Orbiboy">
       </li>
       <li class="btn"><button id="rom-select">Select ROM</button></li>
-      <li class="btn"><button>Load Save</button></li>
-      <li class="btn"><button>Download Save</button></li>
+      <li class="btn"><button id="save-select">Select Save</button></li>
+      <li class="btn"><button id="load-game">Load</button></li>
+      <li class="btn"><button id="download">Download Save</button></li>
       <li class="icon">
         <a href="https://github.com/ybchen97/orbiboy" target="_blank">
           <img class="header-icon" src="images/GitHub-Mark-Light-64px.png" alt="GitHub Source">
@@ -37,6 +39,7 @@
     </ul>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js"></script>
   <script type='text/javascript' src="scripts/main.js"></script>
   <script async type="text/javascript" src="scripts/emulator.js"></script>
 </body>

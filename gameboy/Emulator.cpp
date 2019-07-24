@@ -49,6 +49,100 @@ https://gekkio.fi/files/gb-docs/gbctr.pdf
 
 /*
 ********************************************************************************
+SAVING AND LOADING STATES
+********************************************************************************
+*/
+
+void Emulator::saveState(string fileName) {
+
+    cout << "called from saveState() | filename: " << fileName << endl;
+
+    ofstream fileStream(fileName, ios::binary);
+    
+    // Registers
+    fileStream.write(reinterpret_cast<const char*>(&regAF.regstr), sizeof(regAF.regstr));
+    fileStream.write(reinterpret_cast<const char*>(&regBC.regstr), sizeof(regBC.regstr));
+    fileStream.write(reinterpret_cast<const char*>(&regDE.regstr), sizeof(regDE.regstr));
+    fileStream.write(reinterpret_cast<const char*>(&regHL.regstr), sizeof(regHL.regstr));
+    fileStream.write(reinterpret_cast<const char*>(&programCounter.regstr), sizeof(programCounter.regstr));
+    fileStream.write(reinterpret_cast<const char*>(&stackPointer.regstr), sizeof(stackPointer.regstr));
+
+    // Memory items
+    fileStream.write(reinterpret_cast<const char*>(&internalMem[0]), sizeof(internalMem));
+    fileStream.write(reinterpret_cast<const char*>(&cartridgeMem[0]), sizeof(cartridgeMem));
+    fileStream.write(reinterpret_cast<const char*>(&currentROMBank), sizeof(currentROMBank));
+    fileStream.write(reinterpret_cast<const char*>(&RAMBanks[0]), sizeof(RAMBanks));
+    fileStream.write(reinterpret_cast<const char*>(&currentRAMBank), sizeof(currentRAMBank));
+    
+    fileStream.write(reinterpret_cast<const char*>(&enableRAM), sizeof(enableRAM));
+    fileStream.write(reinterpret_cast<const char*>(&MBC1), sizeof(MBC1));
+    fileStream.write(reinterpret_cast<const char*>(&MBC2), sizeof(MBC2));
+    fileStream.write(reinterpret_cast<const char*>(&ROMBanking), sizeof(ROMBanking));
+
+    // Timer attributes
+    fileStream.write(reinterpret_cast<const char*>(&timerCounter), sizeof(timerCounter));
+    fileStream.write(reinterpret_cast<const char*>(&timerUpdateConstant), sizeof(timerUpdateConstant));
+    fileStream.write(reinterpret_cast<const char*>(&dividerCounter), sizeof(dividerCounter));
+
+    // Interrupt
+    fileStream.write(reinterpret_cast<const char*>(&InterruptMasterEnabled), sizeof(InterruptMasterEnabled));
+    fileStream.write(reinterpret_cast<const char*>(&isHalted), sizeof(isHalted));
+
+    // Joypad
+    fileStream.write(reinterpret_cast<const char*>(&joypadState), sizeof(joypadState));
+
+    // Graphics
+    fileStream.write(reinterpret_cast<const char*>(&displayPixels[0]), sizeof(displayPixels));
+    fileStream.write(reinterpret_cast<const char*>(&scanlineCycleCount), sizeof(scanlineCycleCount));
+
+    cout << "reached end of saveState function" << endl;
+
+}
+
+void Emulator::loadState(string fileName) {
+
+    ifstream fileStream(fileName, ios::binary);
+
+    // Registers
+    fileStream.read(reinterpret_cast<char*>(&regAF.regstr), sizeof(regAF.regstr));
+    fileStream.read(reinterpret_cast<char*>(&regBC.regstr), sizeof(regBC.regstr));
+    fileStream.read(reinterpret_cast<char*>(&regDE.regstr), sizeof(regDE.regstr));
+    fileStream.read(reinterpret_cast<char*>(&regHL.regstr), sizeof(regHL.regstr));
+    fileStream.read(reinterpret_cast<char*>(&programCounter.regstr), sizeof(programCounter.regstr));
+    fileStream.read(reinterpret_cast<char*>(&stackPointer.regstr), sizeof(stackPointer.regstr));
+
+    // Memory items
+    fileStream.read(reinterpret_cast<char*>(&internalMem[0]), sizeof(internalMem));
+    fileStream.read(reinterpret_cast<char*>(&cartridgeMem[0]), sizeof(cartridgeMem));
+    fileStream.read(reinterpret_cast<char*>(&currentROMBank), sizeof(currentROMBank));
+    fileStream.read(reinterpret_cast<char*>(&RAMBanks[0]), sizeof(RAMBanks));
+    fileStream.read(reinterpret_cast<char*>(&currentRAMBank), sizeof(currentRAMBank));
+    
+    fileStream.read(reinterpret_cast<char*>(&enableRAM), sizeof(enableRAM));
+    fileStream.read(reinterpret_cast<char*>(&MBC1), sizeof(MBC1));
+    fileStream.read(reinterpret_cast<char*>(&MBC2), sizeof(MBC2));
+    fileStream.read(reinterpret_cast<char*>(&ROMBanking), sizeof(ROMBanking));
+
+    // Timer attributes
+    fileStream.read(reinterpret_cast<char*>(&timerCounter), sizeof(timerCounter));
+    fileStream.read(reinterpret_cast<char*>(&timerUpdateConstant), sizeof(timerUpdateConstant));
+    fileStream.read(reinterpret_cast<char*>(&dividerCounter), sizeof(dividerCounter));
+
+    // Interrupt
+    fileStream.read(reinterpret_cast<char*>(&InterruptMasterEnabled), sizeof(InterruptMasterEnabled));
+    fileStream.read(reinterpret_cast<char*>(&isHalted), sizeof(isHalted));
+
+    // Joypad
+    fileStream.read(reinterpret_cast<char*>(&joypadState), sizeof(joypadState));
+
+    // Graphics
+    fileStream.read(reinterpret_cast<char*>(&displayPixels[0]), sizeof(displayPixels));
+    fileStream.read(reinterpret_cast<char*>(&scanlineCycleCount), sizeof(scanlineCycleCount));
+
+}
+
+/*
+********************************************************************************
 TOP LEVEL CPU FUNCTIONS
 ********************************************************************************
 */
@@ -174,6 +268,14 @@ bool Emulator::loadGame(string file_path) {
 
     // // Copy ROM Banks 0 & 1 to internal memory
     // memcpy(internalMem, cartridgeMem, 0x8000) ; // this is read only and never changes
+
+}
+
+void Emulator::saveGame(string fileName) {
+
+    // if (!MBC1 && !MBC2) return;
+    ofstream save_file(fileName, ios::binary);
+    save_file.write(reinterpret_cast<char *>(&RAMBanks[0]), 0x8000);
 
 }
 
