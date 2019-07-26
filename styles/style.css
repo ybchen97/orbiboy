@@ -11,7 +11,10 @@ button {
     cursor: pointer;
 }
 
-div.container ul {
+/*
+Top row of buttons
+*/
+.top-bar ul {
     width: 100%;
     background-color: #2d3142;
     list-style-type: none;
@@ -19,24 +22,24 @@ div.container ul {
     padding: 0;
 }
 
-div.container ul:after {
+.top-bar ul:after {
     content: "";
     display: table;
     clear: both;
 }
 
-div.container li {
+.top-bar li {
     float: left;
 }
 
-div.container li.logo img {
+.top-bar li.logo img {
     display: block;
     height: 40px;
     padding: 10px 20px;
     padding-left: 40px;
 }
 
-div.container li button {
+.top-bar li button {
     text-transform: uppercase;
     font-family: 'Nunito', sans-serif;
     font-size: 18px;
@@ -50,36 +53,39 @@ div.container li button {
     transition-duration: 0.2s;
 }
 
-div.container li button:hover {
+.top-bar li button:hover {
     color: #ffffff;
     background-color: #ef8354;
 }
 
-div.container li button:focus {
+.top-bar li button:focus {
     padding-bottom: 13px;
     border-bottom: 5px solid #ffffff;
 }
 
-div.container li button#rom-select {
+.top-bar li button#rom-select {
     width: 200px;
 }
 
-div.container li.icon {
+.top-bar li.icon {
     float: right;
     padding: 14px 20px;
 }
 
-img.header-icon {
+img.github-icon {
     display: block;
     width: 32px;
 }
 
-img.header-icon:hover,
-img.header-icon:focus {
+img.github-icon:hover,
+img.github-icon:focus {
     opacity: 0.8;
 }
 
-div.canvasWrapper {
+/* 
+Gameboy section
+*/
+.canvasWrapper {
     display: block;
     margin: 60px auto auto;
     padding: 0;
@@ -89,7 +95,7 @@ div.canvasWrapper {
     border-radius: 5%;
 }
 
-div.canvasWrapper h1 {
+.canvasWrapper h1 {
     display: block;
     letter-spacing: 2px;
     font-family: 'ZCOOL KuaiLe', cursive;
@@ -98,7 +104,7 @@ div.canvasWrapper h1 {
     color: #ffffff;
 }
 
-div.canvasWrapper h1#romHeading {
+.canvasWrapper h1#romHeading {
     margin: auto;
     padding-bottom: 15px;
     text-align: center;
@@ -113,6 +119,7 @@ canvas {
     background-color: white;
 }
 
+/* Pause play button */
 .pauseMenu {
     margin: 0;
     padding: 5px 0 0 0;

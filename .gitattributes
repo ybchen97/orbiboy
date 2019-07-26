@@ -1,2 +1,2 @@
-website/wasm/* linguist-generated=true
-website/scripts/emulator.js linguist-generated=true
+/wasm/* linguist-generated=true
+/scripts/emulator.js linguist-generated=true

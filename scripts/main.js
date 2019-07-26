@@ -80,6 +80,7 @@ const load = () => {
     Module.ccall('loadState', null, ['string'], ['savefile.sav']);
     console.log("save file exists");
   }
+  pauseMenu.click();
 };
 
 const save = () => {
@@ -115,6 +116,9 @@ pauseMenu.addEventListener('click', () => {
 });
 
 selectRomBtn.addEventListener('click', () => {
+  if (pausePlayButton.classList.contains('pause')) {
+    pauseMenu.click();
+  }
   romInput.click();
 });
 
@@ -136,6 +140,9 @@ romInput.addEventListener('change', (event) => {
 });
 
 selectSaveBtn.addEventListener('click', () => {
+  if (pausePlayButton.classList.contains('pause')) {
+    pauseMenu.click();
+  }
   saveInput.click();
 });
 

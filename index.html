@@ -10,7 +10,7 @@
 </head>
 
 <body>
-  <div class="container">
+  <div class="top-bar">
     <input type="file" id="rom-input" hidden>
     <input type="file" id="save-input" hidden>
     <ul>
@@ -23,23 +23,29 @@
       <li class="btn"><button id="download">Download Save</button></li>
       <li class="icon">
         <a href="https://github.com/ybchen97/orbiboy" target="_blank">
-          <img class="header-icon" src="images/GitHub-Mark-Light-64px.png" alt="GitHub Source">
+          <img class="github-icon" src="images/GitHub-Mark-Light-64px.png" alt="GitHub Source">
         </a>
       </li>
     </ul>
   </div>
 
-  <div class="canvasWrapper">
-    <h1 id="romHeading">Select a ROM</h1>
-    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1 width="320"
-      height="288"></canvas>
-    <ul class="pauseMenu">
-      <li><button></button></li>
-      <li><h1 id="state">PLAY</h1></li>
-    </ul>
-  </div>
-  <aside></aside>
+  <main>
+    <section class="canvasWrapper">
+      <h1 id="romHeading">Select a ROM</h1>
+      <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1 width="320"
+        height="288"></canvas>
+      <ul class="pauseMenu">
+        <li><button></button></li>
+        <li>
+          <h1 id="state">PLAY</h1>
+        </li>
+      </ul>
+    </section>
 
+    <section>
+
+    </section>
+  </main>
   <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js"></script>
   <script type='text/javascript' src="scripts/main.js"></script>
   <script async type="text/javascript" src="scripts/emulator.js"></script>
