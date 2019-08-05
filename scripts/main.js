@@ -178,3 +178,22 @@ var Module = {
   })(),
   onRuntimeInitialized: setupFS
 };
+
+// Instructions modal
+let instrBtn = document.querySelector('#instructions');
+let modal = document.querySelector('.modal');
+// let closeBtn = document.querySelector('.close');
+
+instrBtn.addEventListener('click', () => {
+  modal.classList.toggle('pressed');
+});
+
+// closeBtn.addEventListener('click', () => {
+//   modal.classList.toggle('pressed');
+// });
+
+window.addEventListener('click', (e) => {
+  if (e.target == modal) {
+    modal.classList.toggle('pressed');
+  }
+});
