@@ -30,21 +30,29 @@
   </div>
 
   <main>
-    <section class="canvasWrapper">
-      <h1 id="romHeading">Select a ROM</h1>
-      <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1 width="320"
-        height="288"></canvas>
-      <ul class="pauseMenu">
-        <li><button></button></li>
-        <li>
-          <h1 id="state">PLAY</h1>
-        </li>
-      </ul>
-    </section>
+    <div class="container">
+      <section class="spacer"></section>
 
-    <section>
+      <section class="canvasWrapper">
+        <h1 id="romHeading">Select a ROM</h1>
+        <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1 width="320"
+          height="288"></canvas>
+        <ul class="pauseMenu">
+          <li><button></button></li>
+          <li>
+            <h1 id="state">PLAY</h1>
+          </li>
+        </ul>
+      </section>
 
-    </section>
+      <section class="instructions">
+        <h2>Keyboard Mappings</h2>
+        <p><kbd>A</kbd> & <kbd>S</kbd> for buttons A & B</p>
+        <p><kbd>&larr;</kbd> <kbd>&uarr;</kbd> <kbd>&rarr;</kbd> <kbd>&darr;</kbd> for directions</p>
+        <p><kbd>Spacebar</kbd> for Select</p>
+        <p><kbd>Enter&larrhk;</kbd> for Start</p>
+      </section>
+    </div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.2/dist/FileSaver.min.js"></script>
   <script type='text/javascript' src="scripts/main.js"></script>
