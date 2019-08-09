@@ -1,5 +1,7 @@
 # Orbiboy: A Browser based GameBoy Emulator
-Orbiboy is a project about developing a Gameboy emulator that runs on modern web browsers. The emulator is written entirely in C++, and subsequently compiled into [WebAssembly](https://webassembly.org/) via [Emscripten](https://github.com/emscripten-core/emscripten) to be deployed on our [website](https://ybchen97.github.io/orbiboy/). This project is done together with [tanyyhh](https://github.com/tanyyhh) as part of a school project under National University of Singapore called Orbital.
+Orbiboy is a project about developing a Gameboy emulator that runs on modern web browsers. The emulator is written entirely in C++, and subsequently compiled into [WebAssembly](https://webassembly.org/) via [Emscripten](https://github.com/emscripten-core/emscripten) to be deployed on our website. This project is done together with [tanyyhh](https://github.com/tanyyhh) as part of a school project under National University of Singapore called Orbital.
+
+Check it out [here](https://ybchen97.github.io/orbiboy/).
 
 ## Components
 On the emulator side, we have emulated most of the components of the Gameboy architecture as shown below:
