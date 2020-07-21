@@ -4,6 +4,11 @@ Orbiboy is a project about developing a Gameboy emulator that runs on modern web
 Check out our [video demo](https://www.youtube.com/watch?v=uQO6GjQrqEI&t=9s).  
 [Emulator](https://ybchen97.github.io/orbiboy/).
 
+## How to Use
+1. Choose a ROM file by pressing "Select ROM".
+2. Press "Load".
+3. Enjoy!
+
 ## Components
 On the emulator side, we have emulated most of the components of the Gameboy architecture as shown below:
 - CPU
